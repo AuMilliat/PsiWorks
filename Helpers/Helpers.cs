@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using nuitrack;
 
-namespace Groups
+namespace Helpers
 {
     public class Helpers
     {

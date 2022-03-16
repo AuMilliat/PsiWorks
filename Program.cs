@@ -5,6 +5,7 @@ using Microsoft.Psi.Remoting;
 using NuitrackComponent;
 using Groups.Instant;
 using Groups.Integrated;
+using BodyDetection;
 
 class Program
 {
@@ -16,8 +17,12 @@ class Program
         configNuitrack.ActivationKey = "license:34821:ZvAVGW03StUh056F";
         //configNuitrack.OutputColor = false;
         //configNuitrack.OutputDepth = false;
-
         NuitrackSensor sensor = new NuitrackSensor(p, configNuitrack);
+
+        /*** BODY DETECTOR ***/
+        // Basic configuration for the moment.
+        BodyDetectionConfiguration bodyDetectionConfiguration = new BodyDetectionConfiguration();
+        BodyDetection.BodyDetection bodyDetection = new BodyDetection.BodyDetection(p, bodyDetectionConfiguration);
 
         /*** INSTANT GROUPS ***/
         // Basic configuration for the moment.
@@ -33,7 +38,8 @@ class Program
 
 
         /*** Linkage ***/
-        sensor.Bodies.BridgeTo(frameGroups);
+        sensor.Bodies.BridgeTo(bodyDetection);
+        bodyDetection.OutBodiesPositions.BridgeTo(frameGroups);
         frameGroups.OutInstantGroups.BridgeTo(intgratedGroups);
 
         /*** DATA STORING FOR PSI STUDIO ***/
