@@ -1,11 +1,8 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.1.32228.430
+VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PsiWork_Console", "PsiWork_Console.csproj", "{E0CB3589-5396-4838-995D-516D945F2200}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroundTruthGroups", "..\GroundTruthGroups\GroundTruthGroups.csproj", "{7D44FD44-BC9C-4BF4-9725-96FB51740231}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +14,6 @@ Global
 		{E0CB3589-5396-4838-995D-516D945F2200}.Debug|Any CPU.Build.0 = Debug|x64
 		{E0CB3589-5396-4838-995D-516D945F2200}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0CB3589-5396-4838-995D-516D945F2200}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7D44FD44-BC9C-4BF4-9725-96FB51740231}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7D44FD44-BC9C-4BF4-9725-96FB51740231}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7D44FD44-BC9C-4BF4-9725-96FB51740231}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7D44FD44-BC9C-4BF4-9725-96FB51740231}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

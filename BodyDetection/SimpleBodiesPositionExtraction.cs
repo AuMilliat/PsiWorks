@@ -3,9 +3,9 @@ using Microsoft.Psi.Components;
 using Microsoft.Psi.AzureKinect;
 using nuitrack;
 
-namespace BodyDetection
+namespace BodiesDetection
 {
-    public class BodyDetectionConfiguration
+    public class SimpleBodiesPositionExtractionConfiguration
     {
         /// <summary>
         /// Gets or sets the joint used as global position for the algorithm for Nuitrack.
@@ -17,7 +17,7 @@ namespace BodyDetection
         /// </summary>
         public Microsoft.Azure.Kinect.BodyTracking.JointId AzureJointAsPosition { get; set; } = Microsoft.Azure.Kinect.BodyTracking.JointId.Pelvis;
     }
-    public class BodyDetection : Subpipeline
+    public class SimpleBodiesPositionExtraction : Subpipeline
     {
 
         /// <summary>
@@ -28,33 +28,43 @@ namespace BodyDetection
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
-        private Connector<List<Skeleton>> BodiesNuitrackInConnector;
+        private Connector<List<Skeleton>> InBodiesNuitrackConnector;
 
         // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<List<Skeleton>> NuitrackBodiesIn => BodiesNuitrackInConnector.In;
+        public Receiver<List<Skeleton>> InBodiesNuitrack => InBodiesNuitrackConnector.In;
 
         /// <summary>
         /// Gets the azure connector of lists of currently tracked bodies.
         /// </summary>
-        private Connector<List<AzureKinectBody>> BodiesAzureInConnector;
+        private Connector<List<AzureKinectBody>> InBodiesAzureConnector;
 
         // Receiver that encapsulates the input list of Azure skeletons
-        public Receiver<List<AzureKinectBody>> BodiesAzureIn => BodiesAzureInConnector.In;
+        public Receiver<List<AzureKinectBody>> InBodiesAzure => InBodiesAzureConnector.In;
 
-        private BodyDetectionConfiguration Configuration { get; }
+        /// <summary>
+        /// Gets the azure connector of lists of currently tracked bodies.
+        /// </summary>
+        private Connector<List<Helpers.SimplifiedBody>> InBodiesSimplifiedConnector;
 
-        public BodyDetection(Pipeline parent, BodyDetectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
-          : base(parent, name, defaultDeliveryPolicy)
+        // Receiver that encapsulates the input list of Azure skeletons
+        public Receiver<List<Helpers.SimplifiedBody>> InBodiesSimplified => InBodiesSimplifiedConnector.In;
+
+        private SimpleBodiesPositionExtractionConfiguration Configuration { get; }
+
+        public SimpleBodiesPositionExtraction(Pipeline parent, SimpleBodiesPositionExtractionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
+            : base(parent, name, defaultDeliveryPolicy)
         {
             if (configuration == null)
-                Configuration = new BodyDetectionConfiguration();
+                Configuration = new SimpleBodiesPositionExtractionConfiguration();
             else
                 Configuration = configuration;
-            BodiesNuitrackInConnector = CreateInputConnectorFrom<List<Skeleton>>(parent, nameof(BodiesNuitrackInConnector));
-            BodiesAzureInConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(parent, nameof(BodiesAzureInConnector));
+            InBodiesNuitrackConnector = CreateInputConnectorFrom<List<Skeleton>>(parent, nameof(InBodiesNuitrackConnector));
+            InBodiesAzureConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(parent, nameof(InBodiesAzureConnector));
+            InBodiesSimplifiedConnector = CreateInputConnectorFrom<List<Helpers.SimplifiedBody>>(parent, nameof(InBodiesSimplifiedConnector));
             OutBodiesPositions = parent.CreateEmitter<Dictionary<uint, System.Numerics.Vector3>>(this, nameof(OutBodiesPositions));
-            BodiesAzureInConnector.Out.Do(Process);
-            BodiesNuitrackInConnector.Out.Do(Process);
+            InBodiesAzureConnector.Out.Do(Process);
+            InBodiesNuitrackConnector.Out.Do(Process);
+            InBodiesSimplifiedConnector.Out.Do(Process);
         }
 
         private void Process(List<Skeleton> bodies, Envelope envelope)
@@ -75,6 +85,17 @@ namespace BodyDetection
             foreach (var skeleton in bodies)
             {
                 skeletons.Add(skeleton.TrackingId, Helpers.Helpers.AzureToSystem(skeleton.Joints[Configuration.AzureJointAsPosition].Pose.Origin));
+            }
+            OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
+        }
+
+        private void Process(List<Helpers.SimplifiedBody> bodies, Envelope envelope)
+        {
+            Dictionary<uint, System.Numerics.Vector3> skeletons = new Dictionary<uint, System.Numerics.Vector3>();
+
+            foreach (var skeleton in bodies)
+            {
+                skeletons.Add(skeleton.Id, skeleton.Joints[Configuration.AzureJointAsPosition].Item2);
             }
             OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
         }

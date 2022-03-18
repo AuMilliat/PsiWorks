@@ -20,10 +20,10 @@ namespace Groups.Entry
         /// <summary>
         /// Gets list of instant groups.
         /// </summary>
-        private Connector<Dictionary<uint, List<uint>>> InstantGroupsInConnector;
+        private Connector<Dictionary<uint, List<uint>>> InInstantGroupsConnector;
 
         // Receiver that encapsulates the instant groups
-        public Receiver<Dictionary<uint, List<uint>>> InstantGroupsIn => InstantGroupsInConnector.In;
+        public Receiver<Dictionary<uint, List<uint>>> InInstantGroups => InInstantGroupsConnector.In;
 
         private EntryGroupsConfiguration Configuration { get; }
         public EntryGroups(Pipeline parent, EntryGroupsConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
@@ -33,9 +33,9 @@ namespace Groups.Entry
                 Configuration = new EntryGroupsConfiguration();
             else
                 Configuration = configuration;
-            InstantGroupsInConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InstantGroupsInConnector));
+            InInstantGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InInstantGroupsConnector));
             OutFormedEntryGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutFormedEntryGroups));
-            InstantGroupsInConnector.Out.Do(Process);
+            InInstantGroupsConnector.Out.Do(Process);
         }
 
         private Dictionary<uint, DateTime> groupDateTime = new Dictionary<uint, DateTime>();

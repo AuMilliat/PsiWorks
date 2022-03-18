@@ -23,10 +23,10 @@ namespace Groups.Instant
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
-        private Connector<Dictionary<uint, System.Numerics.Vector3>> BodiesPositionInConnector;
+        private Connector<Dictionary<uint, System.Numerics.Vector3>> InBodiesPositionConnector;
 
         // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<Dictionary<uint, System.Numerics.Vector3>> BodiesPositionIn => BodiesPositionInConnector.In;
+        public Receiver<Dictionary<uint, System.Numerics.Vector3>> InBodiesPosition => InBodiesPositionConnector.In;
 
         
         private InstantGroupsConfiguration Configuration { get; }
@@ -37,9 +37,9 @@ namespace Groups.Instant
                 Configuration = new InstantGroupsConfiguration();
             else
                 Configuration = configuration;
-            BodiesPositionInConnector = CreateInputConnectorFrom<Dictionary<uint, System.Numerics.Vector3>>(parent, nameof(BodiesPositionInConnector));
+            InBodiesPositionConnector = CreateInputConnectorFrom<Dictionary<uint, System.Numerics.Vector3>>(parent, nameof(InBodiesPositionConnector));
             OutInstantGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutInstantGroups));
-            BodiesPositionInConnector.Out.Do(Process);
+            InBodiesPositionConnector.Out.Do(Process);
         }
 
         private void Process(Dictionary<uint, System.Numerics.Vector3> skeletons, Envelope envelope)

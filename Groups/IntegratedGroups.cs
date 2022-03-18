@@ -30,10 +30,10 @@ namespace Groups.Integrated
         /// <summary>
         /// Gets list of instant groups.
         /// </summary>
-        private Connector<Dictionary<uint, List<uint>>> InstantGroupsInConnector;
+        private Connector<Dictionary<uint, List<uint>>> InInstantGroupsConnector;
 
         // Receiver that encapsulates the instant groups
-        public Receiver<Dictionary<uint, List<uint>>> InstantGroupsIn => InstantGroupsInConnector.In;
+        public Receiver<Dictionary<uint, List<uint>>> InInstantGroups => InInstantGroupsConnector.In;
 
         private IntegratedGroupsConfiguration Configuration { get; }
         public IntegratedGroups(Pipeline parent, IntegratedGroupsConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
@@ -43,9 +43,9 @@ namespace Groups.Integrated
                 Configuration = new IntegratedGroupsConfiguration();
             else
                 Configuration = configuration;
-            InstantGroupsInConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InstantGroupsInConnector));
+            InInstantGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InInstantGroupsConnector));
             OutIntegratedGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutIntegratedGroups));
-            InstantGroupsInConnector.Out.Do(Process);
+            InInstantGroupsConnector.Out.Do(Process);
         }
 
         private Dictionary<uint ,DateTime> bodyDateTime = new Dictionary<uint, DateTime>();

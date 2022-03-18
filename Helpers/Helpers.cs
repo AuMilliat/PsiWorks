@@ -33,6 +33,16 @@ namespace Helpers
             return new System.Numerics.Vector3((float)vect.X, (float)vect.X, (float)vect.Z);
         }
 
+        static public Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel FloatToConfidence(float confidence)
+        {
+            if(confidence == 0f)
+                return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.None;
+            if (confidence < 0.33f)
+                return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Low;
+            if (confidence < 0.66f)
+                return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
+            return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.High;
+        }
 
     }
 }
