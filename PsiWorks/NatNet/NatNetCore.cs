@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using NatNetML;
+using MathNet.Spatial.Euclidean;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
 
@@ -126,8 +127,8 @@ namespace NatNetComponent
                             {
                                 RigidBody rigidB = new RigidBody();
                                 rigidB.name = rb.Name;
-                                rigidB.position = new System.Numerics.Vector3(rbData.x, rbData.y, rbData.z);
-                                rigidB.orientation = new System.Numerics.Quaternion(rbData.qx, rbData.qy, rbData.qz, rbData.qw);
+                                rigidB.position = new Vector3D(rbData.x, rbData.y, rbData.z);
+                                rigidB.orientation = new Quaternion(rbData.qx, rbData.qy, rbData.qz, rbData.qw);
                                 rigidBodies.Add(rigidB);
                             }
                         }

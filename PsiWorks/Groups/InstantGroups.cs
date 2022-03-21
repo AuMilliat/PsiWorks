@@ -1,7 +1,7 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Components;
-using Helpers;
-using nuitrack;
+using MathNet.Spatial.Euclidean;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace Groups.Instant
 {
@@ -10,7 +10,7 @@ namespace Groups.Instant
         /// <summary>
         /// Gets or sets the distance threshold between skeletons for constitute a grou^p.
         /// </summary>
-        public float DistanceThreshold { get; set; } = 800;
+        public double DistanceThreshold { get; set; } = 800.0;
     }
 
     public class InstantGroups : Subpipeline
@@ -23,10 +23,10 @@ namespace Groups.Instant
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
-        private Connector<Dictionary<uint, System.Numerics.Vector3>> InBodiesPositionConnector;
+        private Connector<Dictionary<uint, Vector3D>> InBodiesPositionConnector;
 
         // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<Dictionary<uint, System.Numerics.Vector3>> InBodiesPosition => InBodiesPositionConnector.In;
+        public Receiver<Dictionary<uint, Vector3D>> InBodiesPosition => InBodiesPositionConnector.In;
 
         
         private InstantGroupsConfiguration Configuration { get; }
@@ -37,19 +37,19 @@ namespace Groups.Instant
                 Configuration = new InstantGroupsConfiguration();
             else
                 Configuration = configuration;
-            InBodiesPositionConnector = CreateInputConnectorFrom<Dictionary<uint, System.Numerics.Vector3>>(parent, nameof(InBodiesPositionConnector));
+            InBodiesPositionConnector = CreateInputConnectorFrom<Dictionary<uint,   Vector3D>>(parent, nameof(InBodiesPositionConnector));
             OutInstantGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutInstantGroups));
             InBodiesPositionConnector.Out.Do(Process);
         }
 
-        private void Process(Dictionary<uint, System.Numerics.Vector3> skeletons, Envelope envelope)
+        private void Process(Dictionary<uint,  Vector3D> skeletons, Envelope envelope)
         {
             Dictionary<uint, List<uint>> rawGroups = new Dictionary<uint, List<uint>>();
             for (int iterator1 = 0; iterator1 < skeletons.Count; iterator1++)
             {
                 for (int iterator2 = iterator1+1; iterator2 < skeletons.Count; iterator2++)
                 {
-                    float distance = System.Numerics.Vector3.Distance(skeletons.ElementAt(iterator1).Value, skeletons.ElementAt(iterator2).Value);
+                    double distance = MathNet.Numerics.Distance.SSD(skeletons.ElementAt(iterator1).Value.ToVector(), skeletons.ElementAt(iterator2).Value.ToVector());
                     if (distance > Configuration.DistanceThreshold)
                         continue;
 

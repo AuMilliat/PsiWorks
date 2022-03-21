@@ -170,31 +170,31 @@ class Program
 
         // Application
         RemoteImporter importer = new RemoteImporter(p, ReplayDescriptor.ReplayAll.Interval, "localhost");
-        Console.WriteLine("connecting");
-        if (!importer.Connected.WaitOne(-1))
-        {
-            throw new Exception("could not connect to server");
-        }
-        Console.WriteLine("connected");
-        var group1 = importer.Importer.OpenStream<uint>("Group1");
-        var group2 = importer.Importer.OpenStream<uint>("Group2");
-        var group3 = importer.Importer.OpenStream<uint>("Group3");
-        var group4 = importer.Importer.OpenStream<uint>("Group4");
-        var group5 = importer.Importer.OpenStream<uint>("Group5");
+        //Console.WriteLine("connecting");
+        //if (!importer.Connected.WaitOne(-1))
+        //{
+        //    throw new Exception("could not connect to server");
+        //}
+        //Console.WriteLine("connected");
+        //var group1 = importer.Importer.OpenStream<uint>("Group1");
+        //var group2 = importer.Importer.OpenStream<uint>("Group2");
+        //var group3 = importer.Importer.OpenStream<uint>("Group3");
+        //var group4 = importer.Importer.OpenStream<uint>("Group4");
+        //var group5 = importer.Importer.OpenStream<uint>("Group5");
         //group1.Do((e, s) => Console.WriteLine(e.ToString() + " "+ s.OriginatingTime));
         /*** DATA STORING FOR PSI STUDIO ***/
         var store = PsiStore.Create(p, "GroupsStoring", "F:\\Stores");
-        //store.Write(sensor0.ColorImage, "Color0");
+        store.Write(sensor0.ColorImage, "Color0");
         //store.Write(sensor0.DepthImage, "Depth0");
         store.Write(sensor0.Bodies, "Bodies0");
         //store.Write(sensor1.ColorImage, "Color1");
         //store.Write(sensor1.DepthImage, "Depth1");
         //store.Write(sensor1.Bodies, "Bodies1");
-        store.Write(group1, "Group1");
-        store.Write(group2, "Group2");
-        store.Write(group3, "Group3");
-        store.Write(group4, "Group4");
-        store.Write(group5, "Group5");
+        //store.Write(group1, "Group1");
+        //store.Write(group2, "Group2");
+        //store.Write(group3, "Group3");
+        //store.Write(group4, "Group4");
+        //store.Write(group5, "Group5");
         //p.Run();
     }
 
@@ -247,11 +247,11 @@ class Program
 
         /*** GROUPS TESTING ***/
         //GroupsTesting(p);
-        GroupsAzureTesting(p);
+        //GroupsAzureTesting(p);
 
         /*** Record Groups ***/
-        //GroupsRecording(p);
-        //GroupsUsingRecords(p);
+        GroupsRecording(p);
+        GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
         //HololensImporter(p);

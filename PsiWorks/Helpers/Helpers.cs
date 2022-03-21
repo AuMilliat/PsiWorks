@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using nuitrack;
+﻿using MathNet.Spatial.Euclidean;
 
 namespace Helpers
 {
@@ -23,14 +22,9 @@ namespace Helpers
             return value;
         }
 
-        static public System.Numerics.Vector3 NuitrackToSystem(nuitrack.Vector3 vect)
+        static public Vector3D NuitrackToMathNet(nuitrack.Vector3 vect)
         {
-            return new System.Numerics.Vector3(vect.X, vect.X, vect.Z);
-        }
-
-        static public System.Numerics.Vector3 AzureToSystem(MathNet.Spatial.Euclidean.Point3D vect)
-        {
-            return new System.Numerics.Vector3((float)vect.X, (float)vect.X, (float)vect.Z);
+            return new Vector3D(vect.X, vect.Y, vect.Z);
         }
 
         static public Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel FloatToConfidence(float confidence)

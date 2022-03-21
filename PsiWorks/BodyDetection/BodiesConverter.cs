@@ -1,6 +1,7 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using Microsoft.Psi.AzureKinect;
+using MathNet.Spatial.Euclidean;
 using nuitrack;
 
 namespace BodiesDetection
@@ -71,8 +72,8 @@ namespace BodiesDetection
             {
                 Helpers.SimplifiedBody body = new Helpers.SimplifiedBody(Helpers.SimplifiedBody.SensorOrigin.Azure, (uint)skeleton.ID);
                 foreach (var joint in skeleton.Joints)
-                    body.Joints.Add(NuiToAzure[joint.Type], new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel, System.Numerics.Vector3>
-                        (Helpers.Helpers.FloatToConfidence(joint.Confidence), Helpers.Helpers.NuitrackToSystem(joint.Real)));
+                    body.Joints.Add(NuiToAzure[joint.Type], new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel,   Vector3D>
+                        (Helpers.Helpers.FloatToConfidence(joint.Confidence), Helpers.Helpers.NuitrackToMathNet(joint.Real)));
                 returnedBodies.Add(body);
             }
             OutBodies.Post(returnedBodies, envelope.OriginatingTime);
@@ -85,8 +86,8 @@ namespace BodiesDetection
             {
                 Helpers.SimplifiedBody body = new Helpers.SimplifiedBody(Helpers.SimplifiedBody.SensorOrigin.Azure, skeleton.TrackingId);
                 foreach (var joint in skeleton.Joints)
-                    body.Joints.Add(joint.Key, new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel, System.Numerics.Vector3>
-                        (joint.Value.Confidence, Helpers.Helpers.AzureToSystem(joint.Value.Pose.Origin)));
+                    body.Joints.Add(joint.Key, new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel,   Vector3D>
+                        (joint.Value.Confidence, joint.Value.Pose.Origin.ToVector3D()));
                 returnedBodies.Add(body);
             }
             OutBodies.Post(returnedBodies, envelope.OriginatingTime);
