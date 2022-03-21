@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PsiWork_Console", "PsiWorks
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroundTruthGroups", "GroundTruthGroups\GroundTruthGroups.csproj", "{9C6F51AA-A0A5-4F94-ACD2-E49E28F1729F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsiGroupRecorder", "PsiGroupRecorder\PsiGroupRecorder.csproj", "{4F6B5EF4-CD58-4F82-A24D-C80187A49A6E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsiGroupsRecorder", "PsiGroupRecorder\PsiGroupsRecorder.csproj", "{4F6B5EF4-CD58-4F82-A24D-C80187A49A6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

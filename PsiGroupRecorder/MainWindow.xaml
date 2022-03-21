@@ -1,11 +1,11 @@
-﻿<Window x:Class="PsiGroupRecorder.MainWindow"
+﻿<Window x:Class="PsiGroupsRecorder.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:PsiGroupRecorder"
+        xmlns:local="clr-namespace:PsiGroupsRecorder"
         mc:Ignorable="d"
-        Title="PsiGroupRecorder" Height="450" Width="1200">
+        Title="PsiGroupsRecorder" Height="450" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>

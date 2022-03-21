@@ -13,7 +13,7 @@ using Microsoft.Psi.Components;
 using Microsoft.Psi.Imaging;
 using Image = Microsoft.Psi.Imaging.Image;
 
-namespace PsiGroupRecorder
+namespace PsiGroupsRecorder
 {
     public class AzureKinectBodyTrackerVisualizer : Subpipeline, IProducer<Shared<Image>>, INotifyPropertyChanged
     {

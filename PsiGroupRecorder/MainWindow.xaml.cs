@@ -3,7 +3,7 @@ using Microsoft.Psi;
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.AzureKinect;
 
-namespace PsiGroupRecorder
+namespace PsiGroupsRecorder
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
