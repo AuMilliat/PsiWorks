@@ -123,6 +123,9 @@ class Program
         /*** BODIES DETECTION ***/
         // Basic configuration for the moment.
         BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+        bodiesDetectionConfiguration.SendBodiesDuringCalibration = true;
+        bodiesDetectionConfiguration.DoCalibration = true;
+        bodiesDetectionConfiguration.ConfidenceLevelForCalibration = Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
         BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(p, bodiesDetectionConfiguration);
 
         /*** POSITION SELECTER ***/
@@ -247,11 +250,11 @@ class Program
 
         /*** GROUPS TESTING ***/
         //GroupsTesting(p);
-        //GroupsAzureTesting(p);
+        GroupsAzureTesting(p);
 
         /*** Record Groups ***/
-        GroupsRecording(p);
-        GroupsUsingRecords(p);
+        //GroupsRecording(p);
+        //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
         //HololensImporter(p);

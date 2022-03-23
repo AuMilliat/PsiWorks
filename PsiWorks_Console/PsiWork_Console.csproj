@@ -31,20 +31,16 @@
   </PropertyGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Kinect.BodyTracking" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.16.92.1-beta" />
-    <PackageReference Include="Microsoft.Psi.DeviceManagement" Version="0.16.92.1-beta" />
-    <PackageReference Include="Microsoft.Psi.Interop" Version="0.16.92.1-beta" />
-    <PackageReference Include="Microsoft.Psi.Runtime" Version="0.16.92.1-beta" />
-  </ItemGroup>
+	  <ProjectReference Include="..\PsiComponents\PsiComponents.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="NatNetML">
-      <HintPath>..\NatNet\NatNetML.dll</HintPath>
-    </Reference>
-    <Reference Include="nuitrack.net">
-      <HintPath>..\Nuitrack\nuitrack.net.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+	  <Reference Include="NatNetML">
+	    <HintPath>..\PsiComponents\NatNet\NatNetML.dll</HintPath>
+	  </Reference>
+	  <Reference Include="nuitrack.net">
+	    <HintPath>..\PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 
 </Project>

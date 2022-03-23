@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -13,7 +11,7 @@ using Microsoft.Psi.Components;
 using Microsoft.Psi.Imaging;
 using Image = Microsoft.Psi.Imaging.Image;
 
-namespace PsiGroupsRecorder
+namespace AzureKinectBodyTrackerVisualizer
 {
     public class AzureKinectBodyTrackerVisualizer : Subpipeline, IProducer<Shared<Image>>, INotifyPropertyChanged
     {

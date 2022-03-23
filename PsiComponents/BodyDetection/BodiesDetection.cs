@@ -4,6 +4,7 @@ using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using Microsoft.Azure.Kinect.BodyTracking;
 using Helpers;
+using pointmatcher.net;
 
 namespace BodiesDetection
 {
@@ -71,8 +72,9 @@ namespace BodiesDetection
         private BodiesDetectionConfiguration Configuration { get; }
 
         //Calibration stuff
-        private Tuple<List< Vector3D>, List< Vector3D>>? CalibrationJoints = null;
+        private Tuple<DataPoints, DataPoints> CalibrationJoints;
         private DateTime? CalibrationTime = null;
+        private uint JointAddedCount = 0;
 
         public BodiesDetection(Pipeline parent, BodiesDetectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
@@ -85,28 +87,29 @@ namespace BodiesDetection
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
             OutBodiesCalibrated = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesCalibrated));
             InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
-            if(Configuration.DoCalibration)
-            {
-                List<Vector3D> camera1 = new List<Vector3D>();
-                List<Vector3D> camera2 = new List<Vector3D>();
-                CalibrationJoints = new Tuple<List<Vector3D>, List<Vector3D>>(camera1, camera2);
-            }
+            DataPoints camera1 = new DataPoints();
+            camera1.points = new DataPoint[Configuration.NumberOfJoint];
+            DataPoints camera2 = new DataPoints();
+            camera2.points = new DataPoint[Configuration.NumberOfJoint];
+            CalibrationJoints = new Tuple<DataPoints, DataPoints>(camera1, camera2);
         }
 
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
         {
-            if (Configuration.DoCalibration && bodies.Item1.Count == bodies.Item2.Count && bodies.Item1.Count == 1)
+            if (Configuration.DoCalibration)
             {
-                Configuration.DoCalibration = DoCalibration(bodies.Item1[0], bodies.Item2[0], envelope.OriginatingTime);
-                if (Configuration.SendBodiesDuringCalibration)
+                if (bodies.Item1.Count == bodies.Item2.Count && bodies.Item1.Count == 1)
                 {
-                    if (Configuration.SendBodiesInCamera1Space)
-                        OutBodiesCalibrated.Post(bodies.Item1, envelope.OriginatingTime);
-                    else
-                        OutBodiesCalibrated.Post(bodies.Item2, envelope.OriginatingTime);
+                    Configuration.DoCalibration = DoCalibration(bodies.Item1[0], bodies.Item2[0], envelope.OriginatingTime);
+                    if (Configuration.SendBodiesDuringCalibration)
+                    {
+                        if (Configuration.SendBodiesInCamera1Space)
+                            OutBodiesCalibrated.Post(bodies.Item1, envelope.OriginatingTime);
+                        else
+                            OutBodiesCalibrated.Post(bodies.Item2, envelope.OriginatingTime);
+                    }
                 }
-                else
-                    return;
+                return;
             }
           
             
@@ -140,30 +143,35 @@ namespace BodiesDetection
             if (CalibrationTime != null)
             {
                 TimeSpan interval = (TimeSpan)(time - CalibrationTime);
-                if(interval.TotalMilliseconds < 5000)
-                    return false;
+                if(interval.TotalMilliseconds < 5)
+                    return true;
             }
             CalibrationTime = time;
-            if (CalibrationJoints == null)
-            {
-                List<Vector3D> lCamera1 = new List<Vector3D>();
-                List<Vector3D> lCamera2 = new List<Vector3D>();
-                CalibrationJoints = new Tuple<List<Vector3D>, List<Vector3D>>(lCamera1, lCamera2);
-            }
             for(JointId iterator = JointId.Pelvis; iterator < JointId.Count; iterator++)
             {
                 if (camera1.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration &&
                     camera2.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration)
                 {
-                    CalibrationJoints.Item1.Add(camera1.Joints[iterator].Item2);
-                    CalibrationJoints.Item2.Add(camera1.Joints[iterator].Item2);
+                    CalibrationJoints.Item1.points.Append(VectorToDataPoint(camera1.Joints[iterator].Item2));
+                    CalibrationJoints.Item2.points.Append(VectorToDataPoint(camera2.Joints[iterator].Item2));
+                    JointAddedCount++;
                 }
             }
-            if (CalibrationJoints.Item1.Count >= Configuration.NumberOfJoint)
+            if (JointAddedCount >= Configuration.NumberOfJoint)
             {
-                return true;
+                ICP icp = new ICP();
+                EuclideanTransform transform = new EuclideanTransform();
+                EuclideanTransform baseT = icp.Compute(CalibrationJoints.Item1, CalibrationJoints.Item2, transform);
+                return false;
             }
-            return false;
+            return true;
+        }
+
+        private DataPoint VectorToDataPoint(Vector3D point)
+        {
+            DataPoint retValue = new DataPoint();
+            retValue.point = new System.Numerics.Vector3((float)point.X, (float)point.Y, (float)point.Z);
+            return retValue;
         }
 
         //public static void ICP_run()
@@ -196,14 +204,14 @@ namespace BodiesDetection
         //    dummy_p1.SetRow(0, P_points.Row(0));
         //    dummy_p2.SetRow(0, P_points.Row(1));
         //    dummy_p3.SetRow(0, P_points.Row(2));
-            
+
         //    /// P deki her bir noktadan p nin agirlik merkezinin koordinatlari cikartiliyor(ZERO MEAN) yeni bir matris icerisine kaydediliyor.
         //    Matrix<double> P_prime = (dummy_p1 - Mu_p[0, 0]).Stack(dummy_p2 - Mu_p[1, 0]).Stack(dummy_p3 - Mu_p[2, 0]);
         //    ///Y matrisinin X ve Y koordinatlarini iceren satirlari farkli matrislere aliniyor
         //    dummy_y1.SetRow(0, Y.Row(0));
         //    dummy_y2.SetRow(0, Y.Row(1));
         //    dummy_y3.SetRow(0, Y.Row(2));
-           
+
         //    /// P deki her bir noktadan p nin agirlik merkezinin koordinatlari cikartiliyor(ZERO MEAN) yeni bir matris icerisine kaydediliyor.
         //    Matrix<double> Y_prime = (dummy_y1 - Mu_y[0, 0]).Stack((dummy_y2 - Mu_y[1, 0]).Stack(dummy_y3 - Mu_y[2, 0]));
         //    /// -X -Y -Z koordinat matrisleri aliniyor.
@@ -221,7 +229,7 @@ namespace BodiesDetection
 
         //    Pz.SetRow(0, P_prime.Row(2));
         //    Yz.SetRow(0, Y_prime.Row(2));
-     
+
 
         //    var Sxx = Px * Yx.Transpose();
         //    var Sxy = Px * Yy.Transpose();
@@ -262,13 +270,13 @@ namespace BodiesDetection
         //    t = Mu_y - s * R * Mu_p;
 
         //    ///hata hesabi     
-           
+
         //        for (int i = 0; i < Np; i++)
         //        {
         //            d = Y.Column(i).Subtract(P_points.Column(i));
         //            err += d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
         //        }
-            
+
         //    Tuple<Matrix<double>, Matrix<double>, double> ret = new Tuple<Matrix<double>, Matrix<double>, double>(R, t, err);
         //    return ret;
         //}

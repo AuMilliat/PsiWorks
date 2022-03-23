@@ -10,10 +10,6 @@ namespace PsiGroupsRecorder
     /// </summary>
     public partial class MainWindow : Window
     {
-        public string Status { get; set; } = "Status: Offline";
-
-        private readonly string StatusBase = "Status: ";
-
         public AzureKinectBodyTrackerVisualizer Visu0 { get; }
         public AzureKinectBodyTrackerVisualizer Visu1 { get; }
 
@@ -41,7 +37,6 @@ namespace PsiGroupsRecorder
             {
                 throw new Exception("could not connect to server");
             }
-            Status = StatusBase + "Connected!";
             var group1 = importer.Importer.OpenStream<uint>("Group1");
             var group2 = importer.Importer.OpenStream<uint>("Group2");
             var group3 = importer.Importer.OpenStream<uint>("Group3");
@@ -63,6 +58,8 @@ namespace PsiGroupsRecorder
             var store = PsiStore.Create(pipeline, "GroupsStoring", "F:\\Stores");
             store.Write(sensor0.Bodies, "Bodies0");
             store.Write(sensor1.Bodies, "Bodies1");
+            store.Write(sensor0.DepthDeviceCalibrationInfo, "CalibBodies0");
+            store.Write(sensor1.DepthDeviceCalibrationInfo, "CalibBodies1");
             store.Write(group1, "Group1");
             store.Write(group2, "Group2");
             store.Write(group3, "Group3");
