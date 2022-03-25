@@ -4,16 +4,43 @@ using Microsoft.Psi.AzureKinect;
 using Groups.Instant;
 using Groups.Integrated;
 using BodiesDetection;
+using CalibrationByBodies;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace PsiWork_WPF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        #region INotifyPropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<T>.Default.Equals(field, value))
+            {
+                field = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+        #endregion
+
         public AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer Visu0 { get; }
         public AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer Visu1 { get; }
+
+        private string status = "";
+        public string Status
+        {
+            get => status;
+            set => SetProperty(ref status, value);
+        }
+        public void DelegateMethod(string status)
+        {
+            Status = status;
+        }
 
         private Pipeline pipeline;
         public MainWindow()
@@ -48,12 +75,16 @@ namespace PsiWork_WPF
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
             BodiesConverter bodiesConverter1 = new BodiesConverter(pipeline, "kinectecConverter1");
 
+            /*** CALIBRATION BY BODIES ***/
+            CalibrationByBodiesConfiguration calibrationByBodiesConfiguration = new CalibrationByBodiesConfiguration();
+            calibrationByBodiesConfiguration.ConfidenceLevelForCalibration = Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
+            calibrationByBodiesConfiguration.SetStatus = DelegateMethod;
+            CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
+
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
             BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
             bodiesDetectionConfiguration.SendBodiesDuringCalibration = true;
-            bodiesDetectionConfiguration.DoCalibration = true;
-            bodiesDetectionConfiguration.ConfidenceLevelForCalibration = Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
             BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(pipeline, bodiesDetectionConfiguration);
 
             /*** POSITION SELECTER ***/
@@ -77,8 +108,8 @@ namespace PsiWork_WPF
             /*** LINKAGE ***/
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
-            bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
-            bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+            bodiesConverter0.OutBodies.PipeTo(calibrationByBodies.InCamera1Bodies);
+            bodiesConverter1.OutBodies.PipeTo(calibrationByBodies.InCamera2Bodies);
             //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
             //positionExtraction.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
             //frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);

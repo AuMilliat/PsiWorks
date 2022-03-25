@@ -14,12 +14,12 @@
     <ProjectReference Include="..\PsiComponents\PsiComponents.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="NatNetML">
-			<HintPath>..\NatNet\NatNetML.dll</HintPath>
-		</Reference>
-		<Reference Include="nuitrack.net">
-			<HintPath>..\Nuitrack\nuitrack.net.dll</HintPath>
-		</Reference>
-	</ItemGroup>
+  <ItemGroup>
+    <Reference Include="NatNetML">
+      <HintPath>..\PsiComponents\NatNet\NatNetML.dll</HintPath>
+    </Reference>
+    <Reference Include="nuitrack.net">
+      <HintPath>..\PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

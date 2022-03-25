@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.5.4823" />
     <PackageReference Include="Microsoft.Azure.Kinect.BodyTracking" Version="1.1.1" />
     <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.16.92.1-beta" />
     <PackageReference Include="Microsoft.Psi.DeviceManagement" Version="0.16.92.1-beta" />
