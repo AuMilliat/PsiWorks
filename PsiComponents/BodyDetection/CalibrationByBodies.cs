@@ -150,6 +150,7 @@ namespace CalibrationByBodies
                     JointAddedCount++;
                 }
             }
+            Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
             if (JointAddedCount >= Configuration.NumberOfJoint)
             {
                 Emgu.CV.UMat outputArray = new Emgu.CV.UMat();
@@ -207,6 +208,8 @@ namespace CalibrationByBodies
                     TestingArray[JointAddedCount++]= MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), CalculateTransform(camera2.Joints[iterator].Item2).ToVector());
                 }
             }
+            Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
+
             if (JointAddedCount >= Configuration.NumberOfJoint)
             {
                 var statistics = Statistics.MeanStandardDeviation(TestingArray);
