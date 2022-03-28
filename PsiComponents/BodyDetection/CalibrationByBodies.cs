@@ -31,6 +31,11 @@ namespace CalibrationByBodies
         public double AllowedMaxStdDeviation { get; set; } = 0.1;
 
         /// <summary>
+        /// Connect Synch event receiver
+        /// </summary>
+        public bool SynchedCalibration { get; set; } = true;
+
+        /// <summary>
         /// Pouet Status.
         /// </summary>
         public delegate void DelegateStatus(string status);
@@ -42,6 +47,14 @@ namespace CalibrationByBodies
         /// Gets the emitter of groups detected.
         /// </summary>
         public Emitter<Matrix<double>> OutCalibration { get; private set; }
+
+        /// <summary>
+        /// Synch signals for capturing skeletons.
+        /// </summary>
+        private Connector<bool> InSynchEventConnector;
+
+        // Receiver that encapsulates the synch signal.
+        public Receiver<bool> InSynchEvent => InSynchEventConnector.In;
 
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
@@ -80,7 +93,15 @@ namespace CalibrationByBodies
             InCamera1BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera1BodiesConnector));
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
             OutCalibration = parent.CreateEmitter<Matrix<double>>(this, nameof(OutCalibration));
-            InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
+            
+            if(Configuration.SynchedCalibration)
+            {
+                InSynchEventConnector = CreateInputConnectorFrom<bool>(parent, nameof(InSynchEventConnector));
+                InSynchEventConnector.Pair(InCamera1BodiesConnector).Pair(InCamera2BodiesConnector).Do(Process);
+            }
+            else
+                InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
+
             Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJoint];
             Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJoint];
             CalibrationJoints = new Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]>(camera1, camera2);
@@ -88,6 +109,10 @@ namespace CalibrationByBodies
             Configuration.SetStatus("Collecting data...");
         }
 
+        private void Process((bool, List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
+        {
+            Process((bodies.Item2, bodies.Item3), envelope);
+        }
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
         {
             switch(CalibrationState)

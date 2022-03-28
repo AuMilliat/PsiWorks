@@ -1,20 +1,48 @@
 ﻿using System.Windows;
 using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
+using Microsoft.Psi.Components;
 using Groups.Instant;
 using Groups.Integrated;
 using BodiesDetection;
 using CalibrationByBodies;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace PsiWork_WPF
 {
+    internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
+    {
+        public Emitter<string> Out { get; private set; }
+
+        public KeyboardReader(Pipeline pipeline)
+        {
+            Out = pipeline.CreateEmitter<string>(this, nameof(this.Out));
+        }
+
+        public void Start(Action<DateTime> notifyCompletionTime)
+        {
+            notifyCompletionTime(DateTime.MaxValue);
+        }
+
+        public void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
+        {
+            notifyCompleted();
+        }
+
+        public void Capture(string message)
+        {
+            Out.Post(message, DateTime.UtcNow);
+        }
+    }
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window, INotifyPropertyChanged, IProducer<bool>
     {
+        public Emitter<bool> Out { get; private set; }
+
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -48,6 +76,7 @@ namespace PsiWork_WPF
             DataContext = this;
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create(enableDiagnostics: true);
+            Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             /*** KINECT SENSOR ***/
             AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
@@ -106,6 +135,7 @@ namespace PsiWork_WPF
 
 
             /*** LINKAGE ***/
+            Out.PipeTo(calibrationByBodies.InSynchEvent);
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
             bodiesConverter0.OutBodies.PipeTo(calibrationByBodies.InCamera1Bodies);
@@ -124,6 +154,19 @@ namespace PsiWork_WPF
             // Stop correctly the pipeline.
             pipeline.Dispose();
             base.OnClosing(e);
+            var window = Window.GetWindow(this);
+            window.KeyDown -= HandleKeyPress;
+        }
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            var window = Window.GetWindow(this);
+            window.KeyDown += HandleKeyPress;
+        }
+
+        private void HandleKeyPress(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+                Out.Post(true, DateTime.UtcNow);
         }
     }
 }
