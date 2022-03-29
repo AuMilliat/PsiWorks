@@ -4,6 +4,7 @@ using MathNet.Spatial.Euclidean;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using Microsoft.Azure.Kinect.BodyTracking;
+using System.IO;
 using Helpers;
 
 namespace CalibrationByBodies
@@ -40,6 +41,11 @@ namespace CalibrationByBodies
         /// </summary>
         public delegate void DelegateStatus(string status);
         public DelegateStatus? SetStatus = null;
+
+        /// <summary>
+        /// Pouet Status.
+        /// </summary>
+        public string StoringPath { get; set; } = "./Calib.csv";
     }
     public class CalibrationByBodies : Subpipeline
     {
@@ -78,7 +84,7 @@ namespace CalibrationByBodies
         private Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]> CalibrationJoints;
         private DateTime? CalibrationTime = null;
         private int JointAddedCount = 0;
-        private enum ECalibrationState { Idle, Running, Testing};
+        private enum ECalibrationState { Idle, Running, Testing };
         private ECalibrationState CalibrationState = ECalibrationState.Running;
         Matrix<double> TransformationMatrix = Matrix<double>.Build.Dense(1,1);
         private double[] TestingArray;
@@ -183,6 +189,7 @@ namespace CalibrationByBodies
                 {
                     OutCalibration.Post(TransformationMatrix, time);
                     Configuration.SetStatus("Calibration Done");
+                    StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
             }
@@ -205,7 +212,7 @@ namespace CalibrationByBodies
                 {
                     if (JointAddedCount >= Configuration.NumberOfJoint)
                         break;
-                    TestingArray[JointAddedCount++]= MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), CalculateTransform(camera2.Joints[iterator].Item2).ToVector());
+                    TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), CalculateTransform(camera2.Joints[iterator].Item2).ToVector());
                 }
             }
             Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
@@ -218,6 +225,7 @@ namespace CalibrationByBodies
                 {
                     Configuration.SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
                     OutCalibration.Post(TransformationMatrix, time);
+                    StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
                 else
@@ -250,7 +258,12 @@ namespace CalibrationByBodies
         {
             CalibrationTime = null;
             JointAddedCount = 0;
+        }
 
+        private void StoreCalibrationMatrix()
+        {
+            if(Configuration.StoringPath.Length > 4)
+                File.WriteAllText(Configuration.StoringPath, TransformationMatrix.ToMatrixString());
         }
     }
 }
