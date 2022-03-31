@@ -7,6 +7,7 @@ using Groups.Integrated;
 using BodiesDetection;
 using NatNetComponent;
 using LabJackComponent;
+using LabJack.LabJackUD;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -247,16 +248,39 @@ class Program
     {
         /*** LABJACK ***/
         LabJackCoreConfiguration ljConfiguration = new LabJackCoreConfiguration();
+        Commands commands = new Commands();
+        commands.PutCommands = new List<PutCommand>();
+        commands.RequestCommands = new List<RequestCommand>();
+        commands.ResponseCommand.GetterType = ResponseCommand.GetType.First_Next;
+
+        PutCommand putCommand = new PutCommand();
+        putCommand.IoType = LJUD.IO.PUT_CONFIG;
+        putCommand.Channel =LJUD.CHANNEL.AIN_RESOLUTION;
+        putCommand.Val = 0;
+        putCommand.X1 = new byte[1];
+
+        RequestCommand requestCommand = new RequestCommand();
+        requestCommand.IoType = LJUD.IO.GET_AIN;
+        requestCommand.Channel = LJUD.CHANNEL.IP_ADDRESS;
+        requestCommand.Val = 2;
+        requestCommand.X1 = 0;
+        requestCommand.UserData = 0;
+
+        commands.PutCommands.Add(putCommand);
+        commands.RequestCommands.Add(requestCommand);
+
+        ljConfiguration.Commands = commands;
+
         LabJackSensor labJack = new LabJackSensor(p, ljConfiguration);
 
         /*** NATNET ***/
-        NatNetCoreConfiguration nnConfiguration = new NatNetCoreConfiguration();
-        NatNetSensor natNetSensor = new NatNetSensor(p, nnConfiguration);
+        //NatNetCoreConfiguration nnConfiguration = new NatNetCoreConfiguration();
+        //NatNetSensor natNetSensor = new NatNetSensor(p, nnConfiguration);
 
         /*** DATA STORING FOR PSI STUDIO ***/
         var store = PsiStore.Create(p, "VetoStoring", "F:\\Stores");        
         store.Write(labJack.OutDoubleValue, "Sensor");
-        store.Write(natNetSensor.OutRigidBodies, "OptiTrack");
+     //   store.Write(natNetSensor.OutRigidBodies, "OptiTrack");
     }
     static void Main(string[] args)
     {

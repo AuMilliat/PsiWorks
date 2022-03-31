@@ -35,6 +35,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Reference Include="LJUDDotNet">
+	    <HintPath>..\PsiComponents\LabJack\LJUDDotNet.dll</HintPath>
+	  </Reference>
 	  <Reference Include="NatNetML">
 	    <HintPath>..\PsiComponents\NatNet\NatNetML.dll</HintPath>
 	  </Reference>

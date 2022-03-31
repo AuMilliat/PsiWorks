@@ -27,7 +27,6 @@ namespace LabJackComponent
     { 
         public enum GetType { First_Next, E_Get };
         public GetType GetterType;
-        public LJUD.IO IoType;
     }
 
     public struct Commands

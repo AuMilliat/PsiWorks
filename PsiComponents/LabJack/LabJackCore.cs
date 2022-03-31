@@ -77,7 +77,7 @@ namespace LabJackComponent
                     }
                     break;
             }
-            if(ProcessCommands(Configuration.Commands))
+            if(ProcessCommands(Configuration.Commands) == false)
                 throw new Exception("LabJackCore: Failed to process configuration commands");
 
             CaptureThread = new Thread(new ThreadStart(CaptureThreadProcess));
