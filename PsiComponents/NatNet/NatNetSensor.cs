@@ -27,7 +27,7 @@ namespace NatNetComponent
         /// <summary>
         /// Gets the emitter of lists of currently tracked bodies.
         /// </summary>
-        public Emitter<List<RigidBody>> RigidBodies { get; private set; }
+        public Emitter<List<RigidBody>> OutRigidBodies { get; private set; }
 
         /// <summary>
         /// Gets the emitter of lists of currently tracked hands.
@@ -63,7 +63,7 @@ namespace NatNetComponent
             //this.ColorImage = NatNetCore.ColorImage.BridgeTo(pipeline, nameof(this.ColorImage)).Out;
             //this.DepthImage = NatNetCore.DepthImage.BridgeTo(pipeline, nameof(this.DepthImage)).Out;
             //this.Bodies = NatNetCore.Bodies.BridgeTo(pipeline, nameof(this.Bodies)).Out;
-            this.RigidBodies = NatNetCore.RigidBodies.BridgeTo(pipeline, nameof(this.RigidBodies)).Out;
+            this.OutRigidBodies = NatNetCore.OutRigidBodies.BridgeTo(pipeline, nameof(this.OutRigidBodies)).Out;
             //this.Users = NatNetCore.Users.BridgeTo(pipeline, nameof(this.Users)).Out;
             //this.Gestures = NatNetCore.Gestures.BridgeTo(pipeline, nameof(this.Gestures)).Out;
             //this.FrameRate = NatNetCore.FrameRate.BridgeTo(pipeline, nameof(this.FrameRate)).Out;

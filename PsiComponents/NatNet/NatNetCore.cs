@@ -38,7 +38,7 @@ namespace NatNetComponent
             Configuration = config ?? new NatNetCoreConfiguration();
 
             //this.Bodies = pipeline.CreateEmitter<List<Skeleton>>(this, nameof(this.Bodies));
-            this.RigidBodies = pipeline.CreateEmitter<List<RigidBody>>(this, nameof(this.RigidBodies));
+            OutRigidBodies = pipeline.CreateEmitter<List<RigidBody>>(this, nameof(this.OutRigidBodies));
             //this.ForcePlates = pipeline.CreateEmitter<List<ForcePlate>>(this, nameof(this.ForcePlates));
             //this.Gestures = pipeline.CreateEmitter<List<UserGesturesState>>(this, nameof(this.Gestures));
             //this.FrameRate = pipeline.CreateEmitter<double>(this, nameof(this.FrameRate));
@@ -62,7 +62,7 @@ namespace NatNetComponent
         /// <summary>
         /// Gets the emitter of lists of currently rigid bodies.
         /// </summary>
-        public Emitter<List<RigidBody>> RigidBodies { get; private set; }
+        public Emitter<List<RigidBody>> OutRigidBodies { get; private set; }
 
         /// <summary>
         /// Gets the emitter of lists of currently tracked users.
@@ -132,7 +132,7 @@ namespace NatNetComponent
                         }
                     }
                 }
-                this.RigidBodies.Post(rigidBodies, DateTime.FromFileTime((long)data.TransmitTimestamp));
+                OutRigidBodies.Post(rigidBodies, DateTime.UtcNow);
             }   
         }
 

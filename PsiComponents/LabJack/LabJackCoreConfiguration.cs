@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using LabJack.LabJackUD;
 
-namespace LabJack
+namespace LabJackComponent
 {
     public struct PutCommand
     {

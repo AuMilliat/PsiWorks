@@ -8,7 +8,7 @@ using Microsoft.Psi.Components;
 using LabJack.LabJackUD;
 
 
-namespace LabJack
+namespace LabJackComponent
 {
     internal class LabJackCore : ISourceComponent, IDisposable
     {

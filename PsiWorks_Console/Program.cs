@@ -5,7 +5,8 @@ using NuitrackComponent;
 using Groups.Instant;
 using Groups.Integrated;
 using BodiesDetection;
-
+using NatNetComponent;
+using LabJackComponent;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -124,8 +125,6 @@ class Program
         // Basic configuration for the moment.
         BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
         bodiesDetectionConfiguration.SendBodiesDuringCalibration = true;
-        bodiesDetectionConfiguration.DoCalibration = true;
-        bodiesDetectionConfiguration.ConfidenceLevelForCalibration = Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
         BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(p, bodiesDetectionConfiguration);
 
         /*** POSITION SELECTER ***/
@@ -243,14 +242,33 @@ class Program
         }
         Console.WriteLine("connected");
     }
+
+    static void LabJackNatNetTesting(Pipeline p)
+    {
+        /*** LABJACK ***/
+        LabJackCoreConfiguration ljConfiguration = new LabJackCoreConfiguration();
+        LabJackSensor labJack = new LabJackSensor(p, ljConfiguration);
+
+        /*** NATNET ***/
+        NatNetCoreConfiguration nnConfiguration = new NatNetCoreConfiguration();
+        NatNetSensor natNetSensor = new NatNetSensor(p, nnConfiguration);
+
+        /*** DATA STORING FOR PSI STUDIO ***/
+        var store = PsiStore.Create(p, "VetoStoring", "F:\\Stores");        
+        store.Write(labJack.OutDoubleValue, "Sensor");
+        store.Write(natNetSensor.OutRigidBodies, "OptiTrack");
+    }
     static void Main(string[] args)
     {
         // Enabling diagnotstics !!!
         Pipeline p = Pipeline.Create(enableDiagnostics: true);
 
+        LabJackNatNetTesting(p);
+
+
         /*** GROUPS TESTING ***/
         //GroupsTesting(p);
-        GroupsAzureTesting(p);
+        // GroupsAzureTesting(p);
 
         /*** Record Groups ***/
         //GroupsRecording(p);
