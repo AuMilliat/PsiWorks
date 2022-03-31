@@ -39,10 +39,7 @@ namespace Groups.Integrated
         public IntegratedGroups(Pipeline parent, IntegratedGroupsConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
             : base(parent, name, defaultDeliveryPolicy)
         {
-            if (configuration == null)
-                Configuration = new IntegratedGroupsConfiguration();
-            else
-                Configuration = configuration;
+            Configuration = configuration ?? new IntegratedGroupsConfiguration();
             InInstantGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InInstantGroupsConnector));
             OutIntegratedGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutIntegratedGroups));
             InInstantGroupsConnector.Out.Do(Process);

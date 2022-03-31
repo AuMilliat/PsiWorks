@@ -22,6 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="LJUDDotNet">
+      <HintPath>LabJack\LJUDDotNet.dll</HintPath>
+    </Reference>
     <Reference Include="NatNetML">
       <HintPath>NatNet\NatNetML.dll</HintPath>
     </Reference>
@@ -29,5 +32,4 @@
       <HintPath>Nuitrack\nuitrack.net.dll</HintPath>
     </Reference>
   </ItemGroup>
- 
 </Project>

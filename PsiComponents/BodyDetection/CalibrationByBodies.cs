@@ -92,10 +92,7 @@ namespace CalibrationByBodies
         public CalibrationByBodies(Pipeline parent, CalibrationByBodiesConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
         {
-            if (configuration == null)
-                Configuration = new CalibrationByBodiesConfiguration();
-            else
-                Configuration = configuration;
+            Configuration = configuration ?? new CalibrationByBodiesConfiguration();
             InCamera1BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera1BodiesConnector));
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
             OutCalibration = parent.CreateEmitter<Matrix<double>>(this, nameof(OutCalibration));

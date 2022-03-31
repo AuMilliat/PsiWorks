@@ -29,10 +29,7 @@ namespace Groups.Entry
         public EntryGroups(Pipeline parent, EntryGroupsConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
             : base(parent, name, defaultDeliveryPolicy)
         {
-            if (configuration == null)
-                Configuration = new EntryGroupsConfiguration();
-            else
-                Configuration = configuration;
+            Configuration = configuration ?? new EntryGroupsConfiguration();
             InInstantGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InInstantGroupsConnector));
             OutFormedEntryGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutFormedEntryGroups));
             InInstantGroupsConnector.Out.Do(Process);

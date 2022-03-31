@@ -8,8 +8,7 @@ namespace NatNetComponent
 {
     internal sealed class NatNetCore : ISourceComponent, IDisposable
     {
-        private readonly Pipeline pipeline;
-        private readonly NatNetCoreConfiguration configuration;
+        private readonly NatNetCoreConfiguration Configuration;
 
          /// <summary>
         /// The underlying NatNet device.
@@ -36,8 +35,7 @@ namespace NatNetComponent
         /// <param name="config">Configuration to use for the device.</param>
         public NatNetCore(Pipeline pipeline, NatNetCoreConfiguration? config = null)
         {
-            this.pipeline = pipeline;
-            this.configuration = config ?? new NatNetCoreConfiguration();
+            Configuration = config ?? new NatNetCoreConfiguration();
 
             //this.Bodies = pipeline.CreateEmitter<List<Skeleton>>(this, nameof(this.Bodies));
             this.RigidBodies = pipeline.CreateEmitter<List<RigidBody>>(this, nameof(this.RigidBodies));
@@ -108,7 +106,7 @@ namespace NatNetComponent
 
             /*  Processing and ouputting frame data every 200th frame.
                 This conditional statement is included in order to simplify the program output */
-            if (this.configuration.OutputRigidBodies)
+            if (Configuration.OutputRigidBodies)
             {
                 List<RigidBody> rigidBodies = new List<RigidBody>();
                 /*  Parsing Rigid Body Frame Data   */
@@ -148,9 +146,9 @@ namespace NatNetComponent
             lock (ConnexionOpenLock)
             {
                 NatNetClientML.ConnectParams connectParams = new NatNetClientML.ConnectParams();
-                connectParams.ConnectionType = this.configuration.ConnectionType;
-                connectParams.ServerAddress = this.configuration.ServerIP;
-                connectParams.LocalAddress =  this.configuration.LocalIP;
+                connectParams.ConnectionType = Configuration.ConnectionType;
+                connectParams.ServerAddress = Configuration.ServerIP;
+                connectParams.LocalAddress = Configuration.LocalIP;
                 mNatNet.Connect(connectParams);
             }
             try

@@ -55,10 +55,7 @@ namespace BodiesDetection
         public SimpleBodiesPositionExtraction(Pipeline parent, SimpleBodiesPositionExtractionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
             : base(parent, name, defaultDeliveryPolicy)
         {
-            if (configuration == null)
-                Configuration = new SimpleBodiesPositionExtractionConfiguration();
-            else
-                Configuration = configuration;
+            Configuration = configuration ?? new SimpleBodiesPositionExtractionConfiguration();
             InBodiesNuitrackConnector = CreateInputConnectorFrom<List<Skeleton>>(parent, nameof(InBodiesNuitrackConnector));
             InBodiesAzureConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(parent, nameof(InBodiesAzureConnector));
             InBodiesSimplifiedConnector = CreateInputConnectorFrom<List<Helpers.SimplifiedBody>>(parent, nameof(InBodiesSimplifiedConnector));
