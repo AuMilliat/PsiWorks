@@ -113,7 +113,6 @@ namespace PsiWork_WPF
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
             BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-            bodiesDetectionConfiguration.SendBodiesDuringCalibration = true;
             BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(pipeline, bodiesDetectionConfiguration);
 
             /*** POSITION SELECTER ***/
@@ -124,7 +123,7 @@ namespace PsiWork_WPF
             /*** INSTANT GROUPS ***/
             // Basic configuration for the moment.
             InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
-            InstantGroups frameGroups = new InstantGroups(pipeline, instantGroupsConfiguration);
+            InstantGroups instantGroups = new InstantGroups(pipeline, instantGroupsConfiguration);
 
             /*** INTEGRATED GROUPS ***/
             // Basic configuration for the moment.
@@ -140,9 +139,12 @@ namespace PsiWork_WPF
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
             bodiesConverter0.OutBodies.PipeTo(calibrationByBodies.InCamera1Bodies);
             bodiesConverter1.OutBodies.PipeTo(calibrationByBodies.InCamera2Bodies);
-            //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
-            //positionExtraction.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
-            //frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
+            calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
+            bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
+            bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+            positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
+            instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
 
             // RunAsync the pipeline in non-blocking mode.
