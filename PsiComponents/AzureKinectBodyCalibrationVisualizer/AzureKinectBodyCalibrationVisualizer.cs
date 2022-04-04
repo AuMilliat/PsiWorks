@@ -10,6 +10,8 @@ using Microsoft.Psi.Components;
 using Microsoft.Psi.Imaging;
 using Image = Microsoft.Psi.Imaging.Image;
 using AzureKinectBodyTrackerVisualizer;
+using Microsoft.Azure.Kinect.BodyTracking;
+using Helpers;
 
 namespace AzureKinectBodyCalibrationVisualizer
 {
@@ -29,14 +31,14 @@ namespace AzureKinectBodyCalibrationVisualizer
         }
         #endregion
 
-        private Connector<List<AzureKinectBody>> InBodiesMasterConnector;
-        private Connector<List<AzureKinectBody>> InBodiesSlaveConnector;
+        private Connector<List<SimplifiedBody>> InBodiesMasterConnector;
+        private Connector<List<SimplifiedBody>> InBodiesSlaveConnector;
         private Connector<Shared<Image>> InColorImageConnector;
         private Connector<IDepthDeviceCalibrationInfo> InCalibrationMasterConnector;
         private Connector<Matrix<double>> InCalibrationSlaveConnector;
 
-        public Receiver<List<AzureKinectBody>> InBodiesMaster => InBodiesMasterConnector.In;
-        public Receiver<List<AzureKinectBody>> InBodiesSlave => InBodiesSlaveConnector.In;
+        public Receiver<List<SimplifiedBody>> InBodiesMaster => InBodiesMasterConnector.In;
+        public Receiver<List<SimplifiedBody>> InBodiesSlave => InBodiesSlaveConnector.In;
         public Receiver<Shared<Image>> InColorImage => InColorImageConnector.In;
         public Receiver<IDepthDeviceCalibrationInfo> InCalibrationMaster => InCalibrationMasterConnector.In;
         public Receiver<Matrix<double>> InCalibrationSlave => InCalibrationSlaveConnector.In;
@@ -50,7 +52,7 @@ namespace AzureKinectBodyCalibrationVisualizer
             get => display.VideoImage;
         }
 
-       private bool mute = true;
+        private bool mute = true;
 
         public bool Mute
         {
@@ -74,13 +76,14 @@ namespace AzureKinectBodyCalibrationVisualizer
             set => SetProperty(ref lineThickness, value);
         }
 
-        private Matrix<double> slaveToMasterMatrix = Matrix<double>.Build.DenseIdentity(4,4);
+        private Matrix<double> slaveToMasterMatrix = Matrix<double>.Build.DenseIdentity(4, 4);
         private IDepthDeviceCalibrationInfo MasterCalibration = null;
-
+        private delegate MathNet.Spatial.Euclidean.Vector3D DelegateThatShouldBeLambda(MathNet.Spatial.Euclidean.Vector3D vector);
+        private DelegateThatShouldBeLambda Lambda;
         public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline) : base(pipeline)
         {
-            InBodiesMasterConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(pipeline, nameof(InBodiesMasterConnector));
-            InBodiesSlaveConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(pipeline, nameof(InBodiesSlaveConnector));
+            InBodiesMasterConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesMasterConnector));
+            InBodiesSlaveConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesSlaveConnector));
             InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImageConnector));
             InCalibrationMasterConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibrationMasterConnector));
             InCalibrationSlaveConnector = CreateInputConnectorFrom<Matrix<double>>(pipeline, nameof(InCalibrationSlaveConnector));
@@ -105,7 +108,7 @@ namespace AzureKinectBodyCalibrationVisualizer
             MasterCalibration = data.Item2;
             mute = false;
         }
-        private void Process(ValueTuple<List<AzureKinectBody>, List<AzureKinectBody>, Shared<Image>> data, Envelope envelope)
+        private void Process(ValueTuple<List<SimplifiedBody>, List<SimplifiedBody>, Shared<Image>> data, Envelope envelope)
         {
             if (Mute)
             {
@@ -119,8 +122,11 @@ namespace AzureKinectBodyCalibrationVisualizer
                 {
                     var bitmap = frame.Resource.ToBitmap();
                     Graphics graphics = Graphics.FromImage(bitmap);
-                    ProcessBodies(ref graphics, bodiesMaster, new Pen(Color.LightGreen, LineThickness), new SolidBrush(Color.Green));
-                    ProcessBodiesToTransform(ref graphics, bodiesSlave, new Pen(Color.LightSalmon, LineThickness), new SolidBrush(Color.Red));
+                    Font font = new Font(FontFamily.GenericSerif, 12);
+                    Lambda = DoNothing;
+                    ProcessBodies(ref graphics, bodiesMaster, new Pen(Color.LightGreen, LineThickness), new SolidBrush(Color.Green), font);
+                    Lambda = DoTransformation;
+                    ProcessBodies(ref graphics, bodiesSlave, new Pen(Color.LightSalmon, LineThickness), new SolidBrush(Color.Red), font);
                     using var img = ImagePool.GetOrCreate(frame.Resource.Width, frame.Resource.Height, frame.Resource.PixelFormat);
                     img.Resource.CopyFrom(bitmap);
                     Out.Post(img, envelope.OriginatingTime);
@@ -133,33 +139,27 @@ namespace AzureKinectBodyCalibrationVisualizer
         {
             display.Clear();
         }
-       
-        private void ProcessBodies(ref Graphics graphics, List<AzureKinectBody> bodies, Pen linePen, SolidBrush color)
+
+        private void ProcessBodies(ref Graphics graphics, List<SimplifiedBody> bodies, Pen linePen, SolidBrush color, Font font)
         {
             foreach (var body in bodies)
             {
                 foreach (var bone in AzureKinectBody.Bones)
                 {
-                    DrawLine(ref graphics, linePen, body.Joints[bone.ParentJoint].Pose.Origin, body.Joints[bone.ChildJoint].Pose.Origin, color);
+                    DrawLine(ref graphics, linePen, Lambda(body.Joints[bone.ParentJoint].Item2), Lambda(body.Joints[bone.ChildJoint].Item2), color);
                 }
+
+                MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                if (MasterCalibration.TryGetPixelPosition(body.Joints[JointId.Head].Item2.ToPoint3D(), out head))
+                    graphics.DrawString(body.Id.ToString(), font, color, new PointF((float)head.X, (float)head.Y));
             }
         }
-        private void ProcessBodiesToTransform(ref Graphics graphics, List<AzureKinectBody> bodies, Pen linePen, SolidBrush color)
-        {
-            foreach (var body in bodies)
-            {
-                foreach (var bone in AzureKinectBody.Bones)
-                {
-                    DrawLine(ref graphics, linePen, Helpers.Helpers.CalculateTransform(body.Joints[bone.ParentJoint].Pose.Origin.ToVector3D(), slaveToMasterMatrix).ToPoint3D(), Helpers.Helpers.CalculateTransform(body.Joints[bone.ChildJoint].Pose.Origin.ToVector3D(), slaveToMasterMatrix).ToPoint3D(), color);
-                }
-            }
-        }
-        private void DrawLine(ref Graphics graphics, Pen linePen, MathNet.Spatial.Euclidean.Point3D joint1, MathNet.Spatial.Euclidean.Point3D joint2, SolidBrush color)
+        private void DrawLine(ref Graphics graphics, Pen linePen, MathNet.Spatial.Euclidean.Vector3D joint1, MathNet.Spatial.Euclidean.Vector3D joint2, SolidBrush color)
         {
             MathNet.Spatial.Euclidean.Point2D p1 = new MathNet.Spatial.Euclidean.Point2D();
             MathNet.Spatial.Euclidean.Point2D p2 = new MathNet.Spatial.Euclidean.Point2D();
-            if (MasterCalibration.TryGetPixelPosition(joint1, out p1)
-                && MasterCalibration.TryGetPixelPosition(joint2, out p2))
+            if (MasterCalibration.TryGetPixelPosition(joint1.ToPoint3D(), out p1)
+                && MasterCalibration.TryGetPixelPosition(joint2.ToPoint3D(), out p2))
             {
                 var _p1 = new PointF((float)p1.X, (float)p1.Y);
                 var _p2 = new PointF((float)p2.X, (float)p2.Y);
@@ -168,5 +168,16 @@ namespace AzureKinectBodyCalibrationVisualizer
                 graphics.FillEllipse(color, _p2.X, _p2.Y, circleRadius, circleRadius);
             }
         }
+
+        public MathNet.Spatial.Euclidean.Vector3D DoNothing(MathNet.Spatial.Euclidean.Vector3D vect)
+        {
+            return vect;
+        }
+
+        public MathNet.Spatial.Euclidean.Vector3D DoTransformation(MathNet.Spatial.Euclidean.Vector3D vect)
+        {
+            return Helpers.Helpers.CalculateTransform(vect, slaveToMasterMatrix);
+        }
     }
+
 }

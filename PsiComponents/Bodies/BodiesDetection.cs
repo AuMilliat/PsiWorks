@@ -2,10 +2,10 @@
 using MathNet.Spatial.Euclidean;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
-using Microsoft.Azure.Kinect.BodyTracking;
 using Helpers;
+using Microsoft.Azure.Kinect.BodyTracking;
 
-namespace BodiesDetection
+namespace Bodies
 {
     public class BodiesDetectionConfiguration
     {

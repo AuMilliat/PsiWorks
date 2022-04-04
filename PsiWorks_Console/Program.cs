@@ -4,7 +4,7 @@ using Microsoft.Psi.AzureKinect;
 using NuitrackComponent;
 using Groups.Instant;
 using Groups.Integrated;
-using BodiesDetection;
+using Bodies;
 using NatNetComponent;
 using LabJackComponent;
 using LabJack.LabJackUD;
@@ -125,8 +125,7 @@ class Program
         /*** BODIES DETECTION ***/
         // Basic configuration for the moment.
         BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-        bodiesDetectionConfiguration.SendBodiesDuringCalibration = true;
-        BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(p, bodiesDetectionConfiguration);
+        BodiesDetection bodiesDetection = new BodiesDetection(p, bodiesDetectionConfiguration);
 
         /*** POSITION SELECTER ***/
         // Basic configuration for the moment.

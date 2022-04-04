@@ -10,6 +10,7 @@ using Microsoft.Psi.Calibration;
 using Microsoft.Psi.Components;
 using Microsoft.Psi.Imaging;
 using Image = Microsoft.Psi.Imaging.Image;
+using Helpers;
 
 namespace AzureKinectBodyTrackerVisualizer
 {
@@ -29,13 +30,13 @@ namespace AzureKinectBodyTrackerVisualizer
         }
         #endregion
 
-        private Connector<List<AzureKinectBody>> InBodiesConnector;
+        private Connector<List<SimplifiedBody>> InBodiesConnector;
 
         private Connector<IDepthDeviceCalibrationInfo> InCalibrationConnector;
 
         private Connector<Shared<Image>> InColorImageConnector;
 
-        public Receiver<List<AzureKinectBody>> InBodies => InBodiesConnector.In;
+        public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;
 
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
@@ -87,7 +88,7 @@ namespace AzureKinectBodyTrackerVisualizer
         private Dictionary<JointConfidenceLevel, SolidBrush> confidenceColor = new Dictionary<JointConfidenceLevel, SolidBrush>();
         public AzureKinectBodyTrackerVisualizer(Pipeline pipeline) : base(pipeline)
         {
-            InBodiesConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(pipeline, nameof(InBodies));
+            InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
             InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImage));
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));
@@ -111,7 +112,7 @@ namespace AzureKinectBodyTrackerVisualizer
             };
         }
  
-        private void Process(ValueTuple<List<AzureKinectBody>, IDepthDeviceCalibrationInfo, Shared<Image>> data, Envelope envelope)
+        private void Process(ValueTuple<List<SimplifiedBody>, IDepthDeviceCalibrationInfo, Shared<Image>> data, Envelope envelope)
         {
             if (Mute)
             {
@@ -126,6 +127,8 @@ namespace AzureKinectBodyTrackerVisualizer
                     var bitmap = frame.Resource.ToBitmap();
                     using var linePen = new Pen(Color.LightGreen, LineThickness);
                     using var graphics = Graphics.FromImage(bitmap);
+                    Font font = new Font(FontFamily.GenericSerif, 12);
+                    Brush brush = new SolidBrush(Color.Red);
                     SkeletonCount = SkeletonsCountBase + bodies.Count.ToString();
                     foreach (var body in bodies)
                     {
@@ -133,20 +136,21 @@ namespace AzureKinectBodyTrackerVisualizer
                         {
                             MathNet.Spatial.Euclidean.Point2D p1 = new MathNet.Spatial.Euclidean.Point2D();
                             MathNet.Spatial.Euclidean.Point2D p2 = new MathNet.Spatial.Euclidean.Point2D();
-                            if (calibration.TryGetPixelPosition(body.Joints[joint1].Pose.Origin, out p1) 
-                                && calibration.TryGetPixelPosition(body.Joints[joint2].Pose.Origin, out p2))
+                            if (calibration.TryGetPixelPosition(body.Joints[joint1].Item2.ToPoint3D(), out p1) 
+                                && calibration.TryGetPixelPosition(body.Joints[joint2].Item2.ToPoint3D(), out p2))
                             {
                                 var _p1 = new PointF((float)p1.X, (float)p1.Y);
                                 var _p2 = new PointF((float)p2.X, (float)p2.Y);
                                 graphics.DrawLine(linePen, _p1, _p2);
-                                graphics.FillEllipse(confidenceColor[body.Joints[joint1].Confidence], _p1.X, _p1.Y, circleRadius, circleRadius);
-                                graphics.FillEllipse(confidenceColor[body.Joints[joint2].Confidence], _p2.X, _p2.Y, circleRadius, circleRadius);
+                                graphics.FillEllipse(confidenceColor[body.Joints[joint1].Item1], _p1.X, _p1.Y, circleRadius, circleRadius);
+                                graphics.FillEllipse(confidenceColor[body.Joints[joint2].Item1], _p2.X, _p2.Y, circleRadius, circleRadius);
                             }
                         }
                         foreach (var bone in AzureKinectBody.Bones)
-                        {
                             drawLine(bone.ParentJoint, bone.ChildJoint);
-                        }
+                        MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                        if (calibration.TryGetPixelPosition(body.Joints[JointId.Head].Item2.ToPoint3D(), out head))
+                            graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y)); 
                     }
                     using var img = ImagePool.GetOrCreate(frame.Resource.Width, frame.Resource.Height, frame.Resource.PixelFormat);
                     img.Resource.CopyFrom(bitmap);

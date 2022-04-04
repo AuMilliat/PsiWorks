@@ -4,7 +4,7 @@ using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Components;
 using Groups.Instant;
 using Groups.Integrated;
-using BodiesDetection;
+using Bodies;
 using CalibrationByBodies;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -123,7 +123,7 @@ namespace PsiWork_WPF
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
             BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-            BodiesDetection.BodiesDetection bodiesDetection = new BodiesDetection.BodiesDetection(pipeline, bodiesDetectionConfiguration);
+            BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
 
             /*** POSITION SELECTER ***/
             // Basic configuration for the moment.

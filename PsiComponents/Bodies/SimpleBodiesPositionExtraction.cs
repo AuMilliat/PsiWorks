@@ -4,7 +4,7 @@ using Microsoft.Psi.AzureKinect;
 using MathNet.Spatial.Euclidean;
 using nuitrack;
 
-namespace BodiesDetection
+namespace Bodies
 {
     public class SimpleBodiesPositionExtractionConfiguration
     {
