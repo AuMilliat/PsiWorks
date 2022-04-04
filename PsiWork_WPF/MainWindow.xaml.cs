@@ -94,16 +94,16 @@ namespace PsiWork_WPF
             Visu0 = new AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
             Visu1 = new AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
             // Linkage
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
-            sensor0.Bodies.PipeTo(Visu0.InBodies);
-            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
-            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
-            sensor1.Bodies.PipeTo(Visu1.InBodies);
-            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
+           
 
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
             BodiesConverter bodiesConverter1 = new BodiesConverter(pipeline, "kinectecConverter1");
+
+            /*** BODIES IDENTIFICATION ***/
+            BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
+            BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
+            BodiesIdentification bodiesIdentification1 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
 
             /*** CALIBRATION BY BODIES ***/
             CalibrationByBodiesConfiguration calibrationByBodiesConfiguration = new CalibrationByBodiesConfiguration();
@@ -113,12 +113,7 @@ namespace PsiWork_WPF
 
             /*** CALIBRATION VISUALIZER ***/
             Calib = new AzureKinectBodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline);
-            // Linkage
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(Calib.InCalibrationMaster);
-            calibrationByBodies.OutCalibration.PipeTo(Calib.InCalibrationSlave);
-            sensor0.Bodies.PipeTo(Calib.InBodiesMaster);
-            sensor0.ColorImage.PipeTo(Calib.InColorImage);
-            sensor1.Bodies.PipeTo(Calib.InBodiesSlave);
+       
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -144,16 +139,52 @@ namespace PsiWork_WPF
 
 
             /*** LINKAGE ***/
-            Out.PipeTo(calibrationByBodies.InSynchEvent);
+            // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
+            //                                         -> Calibration -> Detector -> Extractor -> Instant -> Integrated
+            // Sensor1 -> Converter1 -> Identificator1 -> Visu0      |-> VisuCalib                       |-> Entry
+
+            //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+            //identificator0
+            bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+            //visu0
+            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(Visu0.InBodies);
+
+            //converter1
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
-            bodiesConverter0.OutBodies.PipeTo(calibrationByBodies.InCamera1Bodies);
-            bodiesConverter1.OutBodies.PipeTo(calibrationByBodies.InCamera2Bodies);
+            //identificator1
+            bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
+            //visu1
+            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
+            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(Visu1.InBodies);
+
+            //calib
+            Out.PipeTo(calibrationByBodies.InSynchEvent);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera1Bodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
+
+            //detector
             calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
             bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
             bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+
+            //visucalib
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(Calib.InCalibrationMaster);
+            sensor0.ColorImage.PipeTo(Calib.InColorImage);
+            calibrationByBodies.OutCalibration.PipeTo(Calib.InCalibrationSlave);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(Calib.InBodiesMaster);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(Calib.InBodiesSlave);
+
+            //extractor
             bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+
+            //Instant
             positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
+
+            //integrated
             instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
             // RunAsync the pipeline in non-blocking mode.

@@ -75,7 +75,7 @@ namespace Bodies
         private Connector<List<SimplifiedBody>> InCameraBodiesConnector;
 
         // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<List<SimplifiedBody>> InCamera1Bodies => InCameraBodiesConnector.In;
+        public Receiver<List<SimplifiedBody>> InCameraBodies => InCameraBodiesConnector.In;
 
         private BodiesIdentificationConfiguration Configuration { get; }
 
