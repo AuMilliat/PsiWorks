@@ -58,6 +58,7 @@ namespace PsiWork_WPF
 
         public AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer Visu0 { get; }
         public AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer Visu1 { get; }
+        public AzureKinectBodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer Calib { get; }
 
         private string status = "";
         public string Status
@@ -93,12 +94,12 @@ namespace PsiWork_WPF
             Visu0 = new AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
             Visu1 = new AzureKinectBodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
             // Linkage
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.CalibrationIn);
-            sensor0.Bodies.PipeTo(Visu0.BodiesIn);
-            sensor0.ColorImage.PipeTo(Visu0.ColorImageIn);
-            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.CalibrationIn);
-            sensor1.Bodies.PipeTo(Visu1.BodiesIn);
-            sensor1.ColorImage.PipeTo(Visu1.ColorImageIn);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
+            sensor0.Bodies.PipeTo(Visu0.InBodies);
+            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
+            sensor1.Bodies.PipeTo(Visu1.InBodies);
+            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
 
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
@@ -109,6 +110,15 @@ namespace PsiWork_WPF
             calibrationByBodiesConfiguration.ConfidenceLevelForCalibration = Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
             calibrationByBodiesConfiguration.SetStatus = DelegateMethod;
             CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
+
+            /*** CALIBRATION VISUALIZER ***/
+            Calib = new AzureKinectBodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline);
+            // Linkage
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(Calib.InCalibrationMaster);
+            calibrationByBodies.OutCalibration.PipeTo(Calib.InCalibrationSlave);
+            sensor0.Bodies.PipeTo(Calib.InBodiesMaster);
+            sensor0.ColorImage.PipeTo(Calib.InColorImage);
+            sensor1.Bodies.PipeTo(Calib.InBodiesSlave);
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -145,7 +155,6 @@ namespace PsiWork_WPF
             bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
             positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
             instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
-
 
             // RunAsync the pipeline in non-blocking mode.
             pipeline.RunAsync();

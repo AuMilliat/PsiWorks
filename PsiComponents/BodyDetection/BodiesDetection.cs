@@ -93,7 +93,7 @@ namespace BodiesDetection
             {
                 d1[bodyC1.Id] = bodyC1;
                 foreach (SimplifiedBody bodyC2 in camera2)
-                    distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.SSD(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2).ToVector()), bodyC2.Id));
+                    distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.SSD(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
             }
 
             List<Tuple<uint, uint>> correspondanceMap = new List<Tuple<uint, uint>>();
@@ -148,21 +148,11 @@ namespace BodiesDetection
             return accumulator;
         }
 
-        private Vector3D CalculateTransform(Vector3D origin)
-        {
-            Vector<double> v4Origin = Vector<double>.Build.Dense(4);
-            v4Origin[0] = origin.X;
-            v4Origin[1] = origin.Y;
-            v4Origin[2] = origin.Z;
-            v4Origin[3] = 1.0f;
-            var result = v4Origin * Configuration.Camera2ToCamera1Transformation;
-            return new Vector3D(result[0], result[1], result[2]);
-        }
         private SimplifiedBody TransformBody(SimplifiedBody body)
         {
             SimplifiedBody transformed = body;
             foreach (var joint in body.Joints)
-                transformed.Joints[joint.Key] = new Tuple<JointConfidenceLevel, Vector3D>(joint.Value.Item1, CalculateTransform(joint.Value.Item2));
+                transformed.Joints[joint.Key] = new Tuple<JointConfidenceLevel, Vector3D>(joint.Value.Item1, Helpers.Helpers.CalculateTransform(joint.Value.Item2, Configuration.Camera2ToCamera1Transformation)); ;
             return transformed;
         }
     }

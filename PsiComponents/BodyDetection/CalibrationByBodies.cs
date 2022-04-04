@@ -209,7 +209,7 @@ namespace CalibrationByBodies
                 {
                     if (JointAddedCount >= Configuration.NumberOfJoint)
                         break;
-                    TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), CalculateTransform(camera2.Joints[iterator].Item2).ToVector());
+                    TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
                 }
             }
             Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
@@ -238,17 +238,6 @@ namespace CalibrationByBodies
         {
             Emgu.CV.Structure.MCvPoint3D32f retValue = new Emgu.CV.Structure.MCvPoint3D32f((float)point.X, (float)point.Y, (float)point.Z);
             return retValue;
-        }
-
-        private Vector3D CalculateTransform(Vector3D origin)
-        {
-            Vector<double> v4Origin = Vector<double>.Build.Dense(4);
-            v4Origin[0] = origin.X;
-            v4Origin[1] = origin.Y;
-            v4Origin[2] = origin.Z;
-            v4Origin[3] = 1.0f;
-            var result = v4Origin * TransformationMatrix;
-            return new Vector3D(result[0], result[1], result[2]);
         }
 
         private void CleanIteratorsAndCounters()

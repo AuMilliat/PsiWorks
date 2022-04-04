@@ -1,4 +1,5 @@
 ﻿using MathNet.Spatial.Euclidean;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace Helpers
 {
@@ -37,6 +38,15 @@ namespace Helpers
                 return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
             return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.High;
         }
-
+        static public Vector3D CalculateTransform(Vector3D origin, Matrix<double> transformationMatrix)
+        {
+            Vector<double> v4Origin = Vector<double>.Build.Dense(4);
+            v4Origin[0] = origin.X;
+            v4Origin[1] = origin.Y;
+            v4Origin[2] = origin.Z;
+            v4Origin[3] = 1.0f;
+            var result = v4Origin * transformationMatrix;
+            return new Vector3D(result[0], result[1], result[2]);
+        }
     }
 }

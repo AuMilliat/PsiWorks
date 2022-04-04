@@ -29,17 +29,17 @@ namespace AzureKinectBodyTrackerVisualizer
         }
         #endregion
 
-        private Connector<List<AzureKinectBody>> BodiesInConnector;
+        private Connector<List<AzureKinectBody>> InBodiesConnector;
 
-        private Connector<IDepthDeviceCalibrationInfo> CalibrationInConnector;
+        private Connector<IDepthDeviceCalibrationInfo> InCalibrationConnector;
 
-        private Connector<Shared<Image>> ColorImageInConnector;
+        private Connector<Shared<Image>> InColorImageConnector;
 
-        public Receiver<List<AzureKinectBody>> BodiesIn => BodiesInConnector.In;
+        public Receiver<List<AzureKinectBody>> InBodies => InBodiesConnector.In;
 
-        public Receiver<IDepthDeviceCalibrationInfo> CalibrationIn => CalibrationInConnector.In;
+        public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
-        public Receiver<Shared<Image>> ColorImageIn => ColorImageInConnector.In;
+        public Receiver<Shared<Image>> InColorImage => InColorImageConnector.In;
 
         public Emitter<Shared<Image>> Out { get; private set; }
 
@@ -87,13 +87,13 @@ namespace AzureKinectBodyTrackerVisualizer
         private Dictionary<JointConfidenceLevel, SolidBrush> confidenceColor = new Dictionary<JointConfidenceLevel, SolidBrush>();
         public AzureKinectBodyTrackerVisualizer(Pipeline pipeline) : base(pipeline)
         {
-            BodiesInConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(pipeline, nameof(BodiesIn));
-            CalibrationInConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(CalibrationIn));
-            ColorImageInConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(ColorImageIn));
+            InBodiesConnector = CreateInputConnectorFrom<List<AzureKinectBody>>(pipeline, nameof(InBodies));
+            InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
+            InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImage));
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));
 
-            var joined1 = BodiesInConnector.Out.Fuse(CalibrationInConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>());//Note: Calibration only given once, Join is not aplicable here
-            var joined2 = joined1.Join(ColorImageInConnector.Out, Reproducible.Nearest<Shared<Image>>());
+            var joined1 = InBodiesConnector.Out.Fuse(InCalibrationConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>());//Note: Calibration only given once, Join is not aplicable here
+            var joined2 = joined1.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>());
             joined2.Do(Process);
 
             pipeline.PipelineCompleted += OnPipelineCompleted;
@@ -136,14 +136,11 @@ namespace AzureKinectBodyTrackerVisualizer
                             if (calibration.TryGetPixelPosition(body.Joints[joint1].Pose.Origin, out p1) 
                                 && calibration.TryGetPixelPosition(body.Joints[joint2].Pose.Origin, out p2))
                             {
-                                if (IsValidPoint2D(p1) && IsValidPoint2D(p2))
-                                {
-                                    var _p1 = new PointF((float)p1.X, (float)p1.Y);
-                                    var _p2 = new PointF((float)p2.X, (float)p2.Y);
-                                    graphics.DrawLine(linePen, _p1, _p2);
-                                    graphics.FillEllipse(confidenceColor[body.Joints[joint1].Confidence], _p1.X, _p1.Y, circleRadius, circleRadius);
-                                    graphics.FillEllipse(confidenceColor[body.Joints[joint2].Confidence], _p2.X, _p2.Y, circleRadius, circleRadius);
-                                }
+                                var _p1 = new PointF((float)p1.X, (float)p1.Y);
+                                var _p2 = new PointF((float)p2.X, (float)p2.Y);
+                                graphics.DrawLine(linePen, _p1, _p2);
+                                graphics.FillEllipse(confidenceColor[body.Joints[joint1].Confidence], _p1.X, _p1.Y, circleRadius, circleRadius);
+                                graphics.FillEllipse(confidenceColor[body.Joints[joint2].Confidence], _p2.X, _p2.Y, circleRadius, circleRadius);
                             }
                         }
                         foreach (var bone in AzureKinectBody.Bones)
@@ -163,20 +160,5 @@ namespace AzureKinectBodyTrackerVisualizer
         {
             display.Clear();
         }
-
-        private static bool IsValidDouble(double val)
-        {
-            if (Double.IsNaN(val))
-            {
-                return false;
-            }
-            if (Double.IsInfinity(val))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static bool IsValidPoint2D(MathNet.Spatial.Euclidean.Point2D point) => IsValidDouble(point.X) && IsValidDouble(point.Y);
     }
 }
