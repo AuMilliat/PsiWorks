@@ -154,8 +154,10 @@ namespace PsiWork_WPF
 
             //converter1
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
+
             //identificator1
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
+
             //visu1
             sensor1.ColorImage.PipeTo(Visu1.InColorImage);
             sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);

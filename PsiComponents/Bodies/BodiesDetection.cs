@@ -58,6 +58,12 @@ namespace Bodies
 
         private BodiesDetectionConfiguration Configuration { get; }
 
+        private List<Tuple<uint, uint>> CorrespondanceList = new List<Tuple<uint, uint>>();
+
+        private Dictionary<(uint, uint), uint> GeneratedIdsMap = new Dictionary<(uint, uint), uint>();
+
+        private uint idCount = 1;
+
         public BodiesDetection(Pipeline parent, BodiesDetectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
         {
@@ -82,7 +88,57 @@ namespace Bodies
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
         {
             Dictionary<uint, SimplifiedBody> dicsC1 = new Dictionary<uint, SimplifiedBody>(), dicsC2 = new Dictionary<uint, SimplifiedBody>();
-            OutBodiesCalibrated.Post(SelectBestBody(dicsC1, dicsC2, ComputeCorrespondenceMap(bodies.Item1, bodies.Item2, ref dicsC1, ref dicsC2)), envelope.OriginatingTime);
+            UpdateCorrespondanceMap(bodies.Item1, bodies.Item2, ref dicsC1, ref dicsC2);
+            OutBodiesCalibrated.Post(SelectBestBody(dicsC1, dicsC2), envelope.OriginatingTime);
+        }
+
+        private void UpdateCorrespondanceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2)
+        {
+            var newMapping = ComputeCorrespondenceMap(camera1, camera2, ref d1, ref d2);
+
+            //checking consistancy with old mapping
+            foreach (var iterator in newMapping)
+            {
+                Tuple<uint, uint> tuple;
+                int result = KeyOrValueExistInList(iterator, out tuple);
+                if (result == 0)
+                {
+                    CorrespondanceList.Add(iterator);
+                    GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
+                }
+                else if(result > 0)
+                {
+                    // collision check and testing
+                    if (tuple.Item2 == 0)
+                        IntegrateInDicsAndList(iterator);
+                    else if (tuple.Item2 != iterator.Item2)
+                    {
+                        //oups!
+                        int IWantABreakPointHere = 0;
+                        IWantABreakPointHere++;
+                    }       
+                }
+                else //if (result < 0)
+                {
+                    // collision check and testing
+                    if (tuple.Item1 == 0)
+                        IntegrateInDicsAndList(iterator);
+                    else if (tuple.Item1 != iterator.Item1)
+                    {
+                        //oups!
+                        int IWantABreakPointHere = 0;
+                        IWantABreakPointHere++;
+                    }
+                }
+            }
+        }
+
+        private void IntegrateInDicsAndList(Tuple<uint, uint> newItem)
+        {
+            CorrespondanceList.Remove(newItem);
+            CorrespondanceList.Add(new Tuple<uint, uint>(newItem.Item1, newItem.Item2));
+            GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(newItem.Item1, newItem.Item2)];
+            GeneratedIdsMap.Remove((newItem.Item1, newItem.Item2));
         }
 
         private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
@@ -119,26 +175,88 @@ namespace Bodies
             return correspondanceMap;
         }
 
-        private List<SimplifiedBody> SelectBestBody(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, List<Tuple<uint, uint>> pairing)
+        private List<SimplifiedBody> SelectBestBody(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2)
         {
             List<SimplifiedBody> bestBodies = new List<SimplifiedBody>();
-            foreach(var pair in pairing)
+            foreach(var pair in CorrespondanceList)
             {
-                if (pair.Item2 == 0)
-                    bestBodies.Add(camera1[pair.Item1]);
-                else if (pair.Item1 == 0)
-                    bestBodies.Add(TransformBody(camera2[pair.Item2]));
-                else
+                if (pair.Item1 == 0)
+                    if (camera2.ContainsKey(pair.Item2))
+                        bestBodies.Add(camera2[pair.Item2]);
+                else if (pair.Item2 == 0)
+                    if (camera1.ContainsKey(pair.Item1))
+                        bestBodies.Add(camera1[pair.Item1]);
+                else if(camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
                 {
                     if (AccumulatedConfidence(camera1[pair.Item1]) < AccumulatedConfidence(camera2[pair.Item2]))
-                        bestBodies.Add(camera1[pair.Item1]);
+                    {
+                        SimplifiedBody body = camera1[pair.Item1];
+                        body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
+                        bestBodies.Add(body);     
+                    }
                     else
-                        bestBodies.Add(TransformBody(camera2[pair.Item2]));
+                    {
+                        SimplifiedBody body = camera2[pair.Item2];
+                        body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
+                        bestBodies.Add(TransformBody(body));   
+                    }
                 }
             }
             return bestBodies;
         } 
         
+        private int KeyOrValueExistInList(Tuple<uint, uint> tuple, out Tuple<uint, uint> value)
+        {
+            // zero is joker
+            int caseCheck = 0;
+            if(tuple.Item1 == 0)
+                caseCheck = 1;
+            if(tuple.Item2 == 0)
+                caseCheck += 2;
+            switch(caseCheck)
+            {
+                case 0:
+                    foreach (var iterator in CorrespondanceList)
+                    {
+                        if (iterator.Item1 == tuple.Item1)
+                        {
+                            value = iterator;
+                            return 1;
+                        }
+                        else if (iterator.Item2 == tuple.Item2)
+                        {
+                            value = iterator;
+                            return -1;
+                        }
+                    }
+                    break;
+                case 1:
+                    foreach (var iterator in CorrespondanceList)
+                    {
+                        if (iterator.Item2 == tuple.Item2)
+                        {
+                            value = iterator;
+                            return -1;
+                        }
+                    }
+                    break;
+                case 2:
+                    foreach (var iterator in CorrespondanceList)
+                    {
+                        if (iterator.Item1 == tuple.Item1)
+                        {
+                            value = iterator;
+                            return 1;
+                        }
+                    }
+                    break;
+                case 3:
+                    throw new Exception("Critical bug");
+            }
+            value = tuple;
+            return 0;
+        }
+
         private double AccumulatedConfidence(SimplifiedBody body)
         {
             //might use coef for usefull joints.
