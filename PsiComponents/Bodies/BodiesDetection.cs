@@ -148,6 +148,7 @@ namespace Bodies
             foreach (SimplifiedBody bodyC1 in camera1)
             {
                 d1[bodyC1.Id] = bodyC1;
+                distances[bodyC1.Id] = new List<Tuple<double, uint>>();
                 foreach (SimplifiedBody bodyC2 in camera2)
                     distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.SSD(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
             }
@@ -155,7 +156,7 @@ namespace Bodies
             List<Tuple<uint, uint>> correspondanceMap = new List<Tuple<uint, uint>>();
             List<uint> notMissingC2 = new List<uint>();
             foreach(var iterator in distances)
-            {
+            { 
                 iterator.Value.Sort(new TupleDoubleUintComparer());
                 //to check if sort is good
                 if (iterator.Value.First().Item1 < Configuration.MaxDistance)

@@ -119,7 +119,7 @@ namespace Bodies
         private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp)
         {
             if(!LearningBodies.ContainsKey(body.Id))
-                LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp));
+                LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
 
             if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime))
             {
@@ -172,11 +172,13 @@ namespace Bodies
         public uint Id { get; private set; }
         public DateTime CreationTime { get; private set; }
 
-        public LearningBody(uint id, DateTime time)
+        public LearningBody(uint id, DateTime time, List<(JointId ChildJoint, JointId ParentJoint)> bones)
         {
             Id = id;
             CreationTime = time;
             LearningBones = new Dictionary<(JointId ChildJoint, JointId ParentJoint), List<double>>();
+            foreach (var bone in bones)
+                LearningBones.Add(bone, new List<double>());
         }
         public bool StillLearning(DateTime time, TimeSpan duration)
         {

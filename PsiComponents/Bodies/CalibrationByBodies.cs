@@ -29,7 +29,7 @@ namespace CalibrationByBodies
         /// <summary>
         /// .
         /// </summary>
-        public double AllowedMaxStdDeviation { get; set; } = 0.1;
+        public double AllowedMaxStdDeviation { get; set; } = 1.5;
 
         /// <summary>
         /// Connect Synch event receiver
@@ -162,19 +162,21 @@ namespace CalibrationByBodies
                 Emgu.CV.Util.VectorOfPoint3D32F v2 = new Emgu.CV.Util.VectorOfPoint3D32F();
                 v1.Push(CalibrationJoints.Item1);
                 v2.Push(CalibrationJoints.Item2);
-                int retval = Emgu.CV.CvInvoke.EstimateAffine3D(v1, v2, outputArray, inliers);
+                int retval = Emgu.CV.CvInvoke.EstimateAffine3D(v2, v1, outputArray, inliers);
 
-                var enumerator = outputArray.GetOutputArray().GetMat().GetData().GetEnumerator();
+                double[] tempArray = new double[12];
+                var mat = outputArray.GetOutputArray().GetMat();
+                mat.CopyTo(tempArray); mat.Dispose();
                 double[,] dArray = new double[4, 4];
-                int index = 0;
-                while (enumerator.MoveNext())
-                {
-                    dArray[index%4, index/4] = (double)enumerator.Current;
-                    index++;
-                }
+                for(int index = 0; index < 12; index++)
+                    dArray[index%4, index/4] = tempArray[index];
 
-                dArray[3, 0] = dArray[3, 1] = dArray[3, 2] = 0.0;
-                dArray[3, 3] = 1.0;
+                v1.Clear();
+                v2.Clear();
+                inliers.Dispose();
+                outputArray.GetOutputArray().Dispose();
+                outputArray.Dispose();
+                dArray[3, 3] = 1;
                 TransformationMatrix = Matrix<double>.Build.DenseOfArray(dArray);
                 CleanIteratorsAndCounters();
                 if(Configuration.TestMatrixBeforeSending)
