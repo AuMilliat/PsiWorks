@@ -76,12 +76,13 @@ namespace AzureKinectBodyCalibrationVisualizer
             set => SetProperty(ref lineThickness, value);
         }
 
-        private Matrix<double> slaveToMasterMatrix = Matrix<double>.Build.DenseIdentity(4, 4);
+        private Matrix<double> slaveToMasterMatrix;
         private IDepthDeviceCalibrationInfo MasterCalibration = null;
         private delegate MathNet.Spatial.Euclidean.Vector3D DelegateThatShouldBeLambda(MathNet.Spatial.Euclidean.Vector3D vector);
         private DelegateThatShouldBeLambda Lambda;
-        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline) : base(pipeline)
+        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, Matrix<double>? calibration) : base(pipeline)
         {
+            slaveToMasterMatrix = calibration ?? Matrix<double>.Build.DenseIdentity(4, 4);
             InBodiesMasterConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesMasterConnector));
             InBodiesSlaveConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesSlaveConnector));
             InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImageConnector));
@@ -89,7 +90,10 @@ namespace AzureKinectBodyCalibrationVisualizer
             InCalibrationSlaveConnector = CreateInputConnectorFrom<Matrix<double>>(pipeline, nameof(InCalibrationSlaveConnector));
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));
 
-            var fuse = InCalibrationSlaveConnector.Out.Fuse(InCalibrationMasterConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>()).Do(Initialisation);
+            if(calibration == null)
+                InCalibrationSlaveConnector.Out.Fuse(InCalibrationMasterConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>()).Do(Initialisation);
+            else
+                InCalibrationMasterConnector.Out.Do(Initialisation);
             var pair = InBodiesMasterConnector.Out.Pair(InBodiesSlaveConnector.Out);
             pair.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>()).Do(Process);
 
@@ -108,6 +112,12 @@ namespace AzureKinectBodyCalibrationVisualizer
             MasterCalibration = data.Item2;
             mute = false;
         }
+
+        private void Initialisation(IDepthDeviceCalibrationInfo data, Envelope envelope)
+        {
+            MasterCalibration = data;
+            mute = false;
+        }
         private void Process(ValueTuple<List<SimplifiedBody>, List<SimplifiedBody>, Shared<Image>> data, Envelope envelope)
         {
             if (Mute)
@@ -122,7 +132,7 @@ namespace AzureKinectBodyCalibrationVisualizer
                 {
                     var bitmap = frame.Resource.ToBitmap();
                     Graphics graphics = Graphics.FromImage(bitmap);
-                    Font font = new Font(FontFamily.GenericSerif, 12);
+                    Font font = new Font(FontFamily.GenericSerif, 64);
                     Lambda = DoNothing;
                     ProcessBodies(ref graphics, bodiesMaster, new Pen(Color.LightGreen, LineThickness), new SolidBrush(Color.Green), font);
                     Lambda = DoTransformation;
@@ -151,7 +161,7 @@ namespace AzureKinectBodyCalibrationVisualizer
 
                 MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
                 if (MasterCalibration.TryGetPixelPosition(body.Joints[JointId.Head].Item2.ToPoint3D(), out head))
-                    graphics.DrawString(body.Id.ToString(), font, color, new PointF((float)head.X, (float)head.Y));
+                    graphics.DrawString(body.Id.ToString(), font, color, new PointF((float)head.X, (float)head.Y-150.0F));
             }
         }
         private void DrawLine(ref Graphics graphics, Pen linePen, MathNet.Spatial.Euclidean.Vector3D joint1, MathNet.Spatial.Euclidean.Vector3D joint2, SolidBrush color)

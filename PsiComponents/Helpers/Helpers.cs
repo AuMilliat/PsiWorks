@@ -1,5 +1,6 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MathNet.Numerics.LinearAlgebra;
+using System.IO;
 
 namespace Helpers
 {
@@ -47,6 +48,26 @@ namespace Helpers
             v4Origin[3] = 1.0f;
             var result = v4Origin * transformationMatrix;
             return new Vector3D(result[0], result[1], result[2]);
+        }
+
+        static public bool ReadCalibrationFromFile(string filepath, out Matrix<double> matrix)
+        {
+            matrix = Matrix<double>.Build.DenseIdentity(4, 4);
+            var matrixStr = File.ReadLines(filepath);
+            int count = 0;
+            double[,] valuesD = new double[4,4];
+            foreach (string line in matrixStr)
+            {
+                foreach (string value in line.Split(' '))
+                {
+                    if (value.Length == 0)
+                        continue;
+                    valuesD[count/4, count%4] = Double.Parse(value);
+                    count++;
+                }
+            }
+            matrix = Matrix<double>.Build.DenseOfArray(valuesD);
+            return true;
         }
     }
 }

@@ -70,9 +70,7 @@ namespace Bodies
             Dictionary<uint, Vector3D> skeletons = new Dictionary<uint, Vector3D>();
 
             foreach (var skeleton in bodies)
-            {
                 skeletons.Add((uint)skeleton.ID, Helpers.Helpers.NuitrackToMathNet(skeleton.GetJoint(Configuration.NuitrackJointAsPosition).Real));
-            }
             OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
         }
 
@@ -81,9 +79,7 @@ namespace Bodies
             Dictionary<uint, Vector3D> skeletons = new Dictionary<uint,   Vector3D>();
 
             foreach (var skeleton in bodies)
-            {
                 skeletons.Add(skeleton.TrackingId, skeleton.Joints[Configuration.AzureJointAsPosition].Pose.Origin.ToVector3D());
-            }
             OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
         }
 
@@ -92,9 +88,7 @@ namespace Bodies
             Dictionary<uint, Vector3D> skeletons = new Dictionary<uint, Vector3D>();
 
             foreach (var skeleton in bodies)
-            {
                 skeletons.Add(skeleton.Id, skeleton.Joints[Configuration.AzureJointAsPosition].Item2);
-            }
             OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
         }
     }

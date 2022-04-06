@@ -75,6 +75,9 @@ namespace PsiWork_WPF
         public MainWindow()
         {
             DataContext = this;
+            MathNet.Numerics.LinearAlgebra.Matrix<double> calibration;
+            if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
+                throw new Exception("Failed to load calib!");
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create(enableDiagnostics: true);
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
@@ -112,12 +115,13 @@ namespace PsiWork_WPF
             CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
 
             /*** CALIBRATION VISUALIZER ***/
-            Calib = new AzureKinectBodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline);
+            Calib = new AzureKinectBodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, calibration);
        
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
             BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+            bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
             BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
 
             /*** POSITION SELECTER ***/
@@ -141,7 +145,7 @@ namespace PsiWork_WPF
             /*** LINKAGE ***/
             // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
             //                                         -> Calibration -> Detector -> Extractor -> Instant -> Integrated
-            // Sensor1 -> Converter1 -> Identificator1 -> Visu0      |-> VisuCalib                       |-> Entry
+            // Sensor1 -> Converter1 -> Identificator1 -> Visu1      |-> VisuCalib                       |-> Entry
 
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);

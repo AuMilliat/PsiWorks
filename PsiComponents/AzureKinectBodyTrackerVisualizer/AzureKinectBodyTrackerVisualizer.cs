@@ -127,7 +127,7 @@ namespace AzureKinectBodyTrackerVisualizer
                     var bitmap = frame.Resource.ToBitmap();
                     using var linePen = new Pen(Color.LightGreen, LineThickness);
                     using var graphics = Graphics.FromImage(bitmap);
-                    Font font = new Font(FontFamily.GenericSerif, 12);
+                    Font font = new Font(FontFamily.GenericSerif, 64);
                     Brush brush = new SolidBrush(Color.Red);
                     SkeletonCount = SkeletonsCountBase + bodies.Count.ToString();
                     foreach (var body in bodies)
@@ -150,7 +150,7 @@ namespace AzureKinectBodyTrackerVisualizer
                             drawLine(bone.ParentJoint, bone.ChildJoint);
                         MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
                         if (calibration.TryGetPixelPosition(body.Joints[JointId.Head].Item2.ToPoint3D(), out head))
-                            graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y)); 
+                            graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y-150.0f)); 
                     }
                     using var img = ImagePool.GetOrCreate(frame.Resource.Width, frame.Resource.Height, frame.Resource.PixelFormat);
                     img.Resource.CopyFrom(bitmap);

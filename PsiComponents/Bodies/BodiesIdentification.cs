@@ -55,7 +55,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in millimeter
         /// </summary>
-        public double MaximumDeviationAllowed { get; set; } = 5.0;
+        public double MaximumDeviationAllowed { get; set; } = 0.05;
     }
     public class BodiesIdentification : Subpipeline
     {
