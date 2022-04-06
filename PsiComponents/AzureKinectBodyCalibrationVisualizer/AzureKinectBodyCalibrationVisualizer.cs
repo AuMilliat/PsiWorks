@@ -160,7 +160,7 @@ namespace AzureKinectBodyCalibrationVisualizer
                 }
 
                 MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
-                if (MasterCalibration.TryGetPixelPosition(body.Joints[JointId.Head].Item2.ToPoint3D(), out head))
+                if (MasterCalibration.TryGetPixelPosition(Lambda(body.Joints[JointId.Head].Item2).ToPoint3D(), out head))
                     graphics.DrawString(body.Id.ToString(), font, color, new PointF((float)head.X, (float)head.Y-150.0F));
             }
         }

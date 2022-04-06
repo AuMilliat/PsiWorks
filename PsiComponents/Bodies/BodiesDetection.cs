@@ -108,9 +108,11 @@ namespace Bodies
                 }
                 else if(result > 0)
                 {
+                    if (iterator.Item2 == 0)
+                        continue;
                     // collision check and testing
                     if (tuple.Item2 == 0)
-                        IntegrateInDicsAndList(iterator);
+                        IntegrateInDicsAndList(iterator, tuple);
                     else if (tuple.Item2 != iterator.Item2)
                     {
                         //oups!
@@ -120,9 +122,11 @@ namespace Bodies
                 }
                 else //if (result < 0)
                 {
+                    if (iterator.Item1 == 0)
+                        continue;
                     // collision check and testing
                     if (tuple.Item1 == 0)
-                        IntegrateInDicsAndList(iterator);
+                        IntegrateInDicsAndList(iterator, tuple);
                     else if (tuple.Item1 != iterator.Item1)
                     {
                         //oups!
@@ -133,18 +137,22 @@ namespace Bodies
             }
         }
 
-        private void IntegrateInDicsAndList(Tuple<uint, uint> newItem)
+        private void IntegrateInDicsAndList(Tuple<uint, uint> newItem, Tuple<uint, uint> old)
         {
             CorrespondanceList.Remove(newItem);
             CorrespondanceList.Add(new Tuple<uint, uint>(newItem.Item1, newItem.Item2));
-            GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(newItem.Item1, newItem.Item2)];
-            GeneratedIdsMap.Remove((newItem.Item1, newItem.Item2));
+            GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
+            GeneratedIdsMap.Remove((old.Item1, old.Item2));
         }
 
         private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
         {
+            if (camera1.Count == 0 || camera2.Count == 0) 
+                return new List<Tuple<uint, uint>>();
+
             // Bruteforce ftm, might simplify to check directly the max allowed distance.
             Dictionary<uint, List<Tuple<double, uint>>> distances = new Dictionary<uint, List<Tuple<double, uint>>>();
+           
             foreach (SimplifiedBody bodyC1 in camera1)
             {
                 d1[bodyC1.Id] = bodyC1;

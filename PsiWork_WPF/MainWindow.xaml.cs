@@ -150,11 +150,12 @@ namespace PsiWork_WPF
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
             //identificator0
+
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
             //visu0
-            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(Visu0.InBodies);
+            //sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            //sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
+            //bodiesIdentification0.OutBodiesIdentified.PipeTo(Visu0.InBodies);
 
             //converter1
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
@@ -163,9 +164,9 @@ namespace PsiWork_WPF
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
             //visu1
-            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
-            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(Visu1.InBodies);
+            //sensor1.ColorImage.PipeTo(Visu1.InColorImage);
+            //sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
+            //bodiesIdentification1.OutBodiesIdentified.PipeTo(Visu1.InBodies);
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
