@@ -69,5 +69,21 @@ namespace Helpers
             matrix = Matrix<double>.Build.DenseOfArray(valuesD);
             return true;
         }
+
+        public static bool IsValidDouble(double val)
+        {
+            if (Double.IsNaN(val))
+            {
+                return false;
+            }
+            if (Double.IsInfinity(val))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static bool IsValidPoint2D(Point2D point) => IsValidDouble(point.X) && IsValidDouble(point.Y);
+
     }
 }

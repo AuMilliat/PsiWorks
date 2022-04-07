@@ -23,14 +23,14 @@ namespace Bodies
             (JointId.WristLeft, JointId.ElbowLeft),
             (JointId.HandLeft, JointId.WristLeft),
             (JointId.HandTipLeft, JointId.HandLeft),
-            (JointId.ThumbLeft, JointId.WristLeft),
+           // (JointId.ThumbLeft, JointId.WristLeft),
             (JointId.ClavicleRight, JointId.SpineChest),
             (JointId.ShoulderRight, JointId.ClavicleRight),
             (JointId.ElbowRight, JointId.ShoulderRight),
             (JointId.WristRight, JointId.ElbowRight),
             (JointId.HandRight, JointId.WristRight),
             (JointId.HandTipRight, JointId.HandRight),
-            (JointId.ThumbRight, JointId.WristRight),
+            //(JointId.ThumbRight, JointId.WristRight),
             (JointId.HipLeft, JointId.Pelvis),
             (JointId.KneeLeft, JointId.HipLeft),
             (JointId.AnkleLeft, JointId.KneeLeft),
@@ -40,11 +40,11 @@ namespace Bodies
             (JointId.AnkleRight, JointId.KneeRight),
             (JointId.FootRight, JointId.AnkleRight),
             (JointId.Head, JointId.Neck),
-            (JointId.Nose, JointId.Head),
-            (JointId.EyeLeft, JointId.Head),
-            (JointId.EarLeft, JointId.Head),
-            (JointId.EyeRight, JointId.Head),
-            (JointId.EarRight, JointId.Head)
+            //(JointId.Nose, JointId.Head),
+            //(JointId.EyeLeft, JointId.Head),
+            //(JointId.EarLeft, JointId.Head),
+            //(JointId.EyeRight, JointId.Head),
+            //(JointId.EarRight, JointId.Head)
         };
 
         /// <summary>

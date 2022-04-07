@@ -115,6 +115,13 @@ namespace NuitrackComponent
                 Device = null;
             }
         }
+
+        public Vector3 toProj(Vector3 point)
+        {
+            if(DepthSensor != null)
+                return DepthSensor.ConvertRealToProjCoords(point);
+            return point;
+        }
         private void onDepthSensorUpdate(DepthFrame depthFrame)
         {
             if (depthFrame != null && DepthTimestamp != (long)depthFrame.Timestamp)
@@ -122,7 +129,7 @@ namespace NuitrackComponent
                 Shared<DepthImage> image = Microsoft.Psi.Imaging.DepthImagePool.GetOrCreate(depthFrame.Cols, depthFrame.Rows);
                 DepthTimestamp = (long)depthFrame.Timestamp;
                 image.Resource.CopyFrom(depthFrame.Data);
-                DepthImage.Post(image, DateTime.FromFileTime(DepthTimestamp));
+                DepthImage.Post(image, DateTime.UtcNow);
                 depthFrame.Dispose();
             }
         }
@@ -134,7 +141,7 @@ namespace NuitrackComponent
                 Shared<Image> image = Microsoft.Psi.Imaging.ImagePool.GetOrCreate(colorFrame.Cols, colorFrame.Rows, Microsoft.Psi.Imaging.PixelFormat.BGR_24bpp);
                 ColorTimestamp = (long)colorFrame.Timestamp;
                 image.Resource.CopyFrom(colorFrame.Data);
-                ColorImage.Post(image, DateTime.FromFileTime(ColorTimestamp));
+                ColorImage.Post(image, DateTime.UtcNow);
                 colorFrame.Dispose();
             }
         }
@@ -147,7 +154,7 @@ namespace NuitrackComponent
                 foreach(Skeleton body in skeletonData.Skeletons)
                     output.Add(body);
                 SkeletonTimestamp = (long)skeletonData.Timestamp;
-                Bodies.Post(output, DateTime.FromFileTime(SkeletonTimestamp));
+                Bodies.Post(output, DateTime.UtcNow);
                 skeletonData.Dispose();
             }
         }
@@ -160,7 +167,7 @@ namespace NuitrackComponent
                 foreach (UserHands hand in handData.UsersHands)
                     output.Add(hand);
                 HandTimestamp = (long)handData.Timestamp;
-                Hands.Post(output, DateTime.FromFileTime(HandTimestamp));
+                Hands.Post(output, DateTime.UtcNow);
                 handData.Dispose();
             }
         }
@@ -173,7 +180,7 @@ namespace NuitrackComponent
                 foreach (User user in userFrame.Users)
                     output.Add(user);
                 UserTimestamp = (long)userFrame.Timestamp;
-                Users.Post(output, DateTime.FromFileTime(UserTimestamp));
+                Users.Post(output, DateTime.UtcNow);
                 userFrame.Dispose();
             }
         }
@@ -186,7 +193,7 @@ namespace NuitrackComponent
                 foreach (UserGesturesState gesture in gestureData.UserGesturesStates)
                     output.Add(gesture);
                 GestureTimestamp = (long)gestureData.Timestamp;
-                Gestures.Post(output, DateTime.FromFileTime(GestureTimestamp));
+                Gestures.Post(output, DateTime.UtcNow);
                 gestureData.Dispose();
             }
         }

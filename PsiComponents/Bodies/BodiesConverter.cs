@@ -42,7 +42,7 @@ namespace Bodies
             NuiToAzure.Add(JointType.Head, Microsoft.Azure.Kinect.BodyTracking.JointId.Head);
             NuiToAzure.Add(JointType.Neck, Microsoft.Azure.Kinect.BodyTracking.JointId.Neck);
             NuiToAzure.Add(JointType.Torso, Microsoft.Azure.Kinect.BodyTracking.JointId.SpineChest);
-            NuiToAzure.Add(JointType.Waist, Microsoft.Azure.Kinect.BodyTracking.JointId.SpineNavel);
+            NuiToAzure.Add(JointType.Waist, Microsoft.Azure.Kinect.BodyTracking.JointId.Pelvis);
             NuiToAzure.Add(JointType.LeftCollar, Microsoft.Azure.Kinect.BodyTracking.JointId.ClavicleLeft);
             NuiToAzure.Add(JointType.LeftShoulder, Microsoft.Azure.Kinect.BodyTracking.JointId.ShoulderLeft);
             NuiToAzure.Add(JointType.LeftElbow, Microsoft.Azure.Kinect.BodyTracking.JointId.ElbowLeft);
@@ -72,11 +72,27 @@ namespace Bodies
             {
                 Helpers.SimplifiedBody body = new Helpers.SimplifiedBody(Helpers.SimplifiedBody.SensorOrigin.Azure, (uint)skeleton.ID);
                 foreach (var joint in skeleton.Joints)
-                    body.Joints.Add(NuiToAzure[joint.Type], new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel,   Vector3D>
-                        (Helpers.Helpers.FloatToConfidence(joint.Confidence), Helpers.Helpers.NuitrackToMathNet(joint.Real)));
+                    if (NuiToAzure.ContainsKey(joint.Type))
+                        body.Joints.Add(NuiToAzure[joint.Type], new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel, Vector3D>
+                            (Helpers.Helpers.FloatToConfidence(joint.Confidence), Helpers.Helpers.NuitrackToMathNet(joint.Real)));
+                CompleteBody(ref body);
                 returnedBodies.Add(body);
             }
             OutBodies.Post(returnedBodies, envelope.OriginatingTime);
+        }
+
+        private void CompleteBody(ref Helpers.SimplifiedBody body)
+        {
+            Vector3D fakePosition = (body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.SpineChest].Item2 + body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Pelvis].Item2) / 2.0;
+            body.Joints.Add(Microsoft.Azure.Kinect.BodyTracking.JointId.SpineNavel, new Tuple<Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel, Vector3D>
+                              (body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Pelvis].Item1, fakePosition));
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.ThumbLeft] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.WristLeft];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.ThumbRight] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.WristRight];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Nose] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Head];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.EyeLeft] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Head];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.EyeRight] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Head];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.EarRight] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Head];
+            body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.EarLeft] = body.Joints[Microsoft.Azure.Kinect.BodyTracking.JointId.Head];
         }
 
         private void Process(List<AzureKinectBody> bodies, Envelope envelope)

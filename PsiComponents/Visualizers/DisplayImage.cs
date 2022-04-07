@@ -6,7 +6,7 @@ using System.Windows.Media.Imaging;
 using Microsoft.Psi;
 using Microsoft.Psi.Imaging;
 
-namespace AzureKinectBodyTrackerVisualizer
+namespace Visualizer
 {
     /// <summary>
     /// DisplayVideo class.

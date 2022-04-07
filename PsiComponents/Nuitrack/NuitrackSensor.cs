@@ -57,21 +57,29 @@ namespace NuitrackComponent
 
         /* End in/out puts */
         // Constructor
+        private NuitrackCore Core;
         public NuitrackSensor(Pipeline pipeline, NuitrackCoreConfiguration? config = null, DeliveryPolicy? defaultDeliveryPolicy = null, DeliveryPolicy? bodyTrackerDeliveryPolicy = null)
          : base(pipeline, nameof(NuitrackSensor), defaultDeliveryPolicy ?? DeliveryPolicy.LatestMessage)
         {
 
             this.Configuration = config ?? new NuitrackCoreConfiguration();
 
-            var nuitrackCore = new NuitrackCore(this, this.Configuration);
+            Core = new NuitrackCore(this, this.Configuration);
 
-            this.ColorImage = nuitrackCore.ColorImage.BridgeTo(pipeline, nameof(this.ColorImage)).Out;
-            this.DepthImage = nuitrackCore.DepthImage.BridgeTo(pipeline, nameof(this.DepthImage)).Out;
-            this.Bodies = nuitrackCore.Bodies.BridgeTo(pipeline, nameof(this.Bodies)).Out;
-            this.Hands = nuitrackCore.Hands.BridgeTo(pipeline, nameof(this.Hands)).Out;
-            this.Users = nuitrackCore.Users.BridgeTo(pipeline, nameof(this.Users)).Out;
-            this.Gestures = nuitrackCore.Gestures.BridgeTo(pipeline, nameof(this.Gestures)).Out;
-            this.FrameRate = nuitrackCore.FrameRate.BridgeTo(pipeline, nameof(this.FrameRate)).Out;
+            this.ColorImage = Core.ColorImage.BridgeTo(pipeline, nameof(this.ColorImage)).Out;
+            this.DepthImage = Core.DepthImage.BridgeTo(pipeline, nameof(this.DepthImage)).Out;
+            this.Bodies = Core.Bodies.BridgeTo(pipeline, nameof(this.Bodies)).Out;
+            this.Hands = Core.Hands.BridgeTo(pipeline, nameof(this.Hands)).Out;
+            this.Users = Core.Users.BridgeTo(pipeline, nameof(this.Users)).Out;
+            this.Gestures = Core.Gestures.BridgeTo(pipeline, nameof(this.Gestures)).Out;
+            this.FrameRate = Core.FrameRate.BridgeTo(pipeline, nameof(this.FrameRate)).Out;
+        }
+
+        public MathNet.Spatial.Euclidean.Point2D getProjCoordinates(MathNet.Spatial.Euclidean.Vector3D position)
+        {
+            Vector3 point = new Vector3((float)position.X, (float)position.Y, (float)position.Z);
+            Vector3 proj = Core.toProj(point);
+            return new MathNet.Spatial.Euclidean.Point2D(proj.X, proj.Y);
         }
 
         private static List<CameraDeviceInfo.Sensor.ModeInfo> getVideoModes(List<nuitrack.device.VideoMode> videoModes) 
