@@ -82,8 +82,8 @@ namespace PsiWork_WPF
             pipeline = Pipeline.Create(enableDiagnostics: true);
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
-            //KinectPipline(calibration);
-            NuitrackPipline(calibration);
+            KinectPipline(calibration);
+            //NuitrackPipline(calibration);
             // RunAsync the pipeline in non-blocking mode.
             pipeline.RunAsync();
             InitializeComponent();
@@ -249,24 +249,24 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-            bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-            BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
-
-            /*** POSITION SELECTER ***/
-            // Basic configuration for the moment.
-            SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-            SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(pipeline, bodiesSelectionConfiguration);
-
-            /*** INSTANT GROUPS ***/
-            // Basic configuration for the moment.
-            InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
-            InstantGroups instantGroups = new InstantGroups(pipeline, instantGroupsConfiguration);
-
-            /*** INTEGRATED GROUPS ***/
-            // Basic configuration for the moment.
-            IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
-            IntegratedGroups intgratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
+            //BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+            //bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
+            //BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
+            //
+            ///*** POSITION SELECTER ***/
+            //// Basic configuration for the moment.
+            //SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
+            //SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(pipeline, bodiesSelectionConfiguration);
+            //
+            ///*** INSTANT GROUPS ***/
+            //// Basic configuration for the moment.
+            //InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
+            //InstantGroups instantGroups = new InstantGroups(pipeline, instantGroupsConfiguration);
+            //
+            ///*** INTEGRATED GROUPS ***/
+            //// Basic configuration for the moment.
+            //IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
+            //IntegratedGroups intgratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
 
             /*** MORE TO COME ! ***/
 
@@ -301,9 +301,9 @@ namespace PsiWork_WPF
             bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
 
             //detector
-            calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
-            bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
-            bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+            //calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
+            //bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
+            //bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
 
             //visucalib
             sensor0.ColorImage.PipeTo(Calib.InColorImage);

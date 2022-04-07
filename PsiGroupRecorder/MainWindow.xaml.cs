@@ -2,6 +2,8 @@
 using Microsoft.Psi;
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.AzureKinect;
+using BodyTrackerVisualizer;
+using Bodies;
 
 namespace PsiGroupsRecorder
 {
@@ -31,6 +33,10 @@ namespace PsiGroupsRecorder
             configKinect1.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
             AzureKinectSensor sensor1 = new AzureKinectSensor(pipeline, configKinect1);
 
+            /*** BODIES CONVERTERS ***/
+            BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
+            BodiesConverter bodiesConverter1 = new BodiesConverter(pipeline, "kinectecConverter1");
+
             /*** REMOTE APPLICATION ***/
             RemoteImporter importer = new RemoteImporter(pipeline, ReplayDescriptor.ReplayAll.Interval, "localhost");
             if (!importer.Connected.WaitOne(-1))
@@ -47,12 +53,21 @@ namespace PsiGroupsRecorder
             Visu0 = new AzureKinectBodyTrackerVisualizer(pipeline);
             Visu1 = new AzureKinectBodyTrackerVisualizer(pipeline);
             // Linkage
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.CalibrationIn);
-            sensor0.Bodies.PipeTo(Visu0.BodiesIn);
-            sensor0.ColorImage.PipeTo(Visu0.ColorImageIn);
-            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.CalibrationIn);
-            sensor1.Bodies.PipeTo(Visu1.BodiesIn);
-            sensor1.ColorImage.PipeTo(Visu1.ColorImageIn);
+            //converter0
+            sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+
+            //visu0
+            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(Visu0.InCalibration);
+            bodiesConverter0.OutBodies.PipeTo(Visu0.InBodies);
+
+            //converter1
+            sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
+
+            //visu1
+            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
+            sensor1.DepthDeviceCalibrationInfo.PipeTo(Visu1.InCalibration);
+            bodiesConverter1.OutBodies.PipeTo(Visu1.InBodies);
 
             /*** DATA STORING FOR PSI STUDIO ***/
             var store = PsiStore.Create(pipeline, "GroupsStoring", "F:\\Stores");
