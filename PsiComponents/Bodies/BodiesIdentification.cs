@@ -55,7 +55,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in millimeter
         /// </summary>
-        public double MaximumDeviationAllowed { get; set; } = 0.05;
+        public double MaximumDeviationAllowed { get; set; } = 0.03;
     }
     public class BodiesIdentification : Subpipeline
     {
@@ -96,27 +96,34 @@ namespace Bodies
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
         {
             List<SimplifiedBody> identifiedBodies = new List<SimplifiedBody>();
+            List<uint> foundBodies = new List<uint>();
+            List<uint> idsBodies = new List<uint>();
             foreach (var body in bodies)
             {
-                if (!CorrespondanceMap.ContainsKey(body.Id) && !LearnedBodies.ContainsKey(body.Id) && ProcessLearningBody(body, envelope.OriginatingTime))
-                    continue;
                 if (CorrespondanceMap.ContainsKey(body.Id))
                 {
                     body.Id = CorrespondanceMap[body.Id];
                     LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                     identifiedBodies.Add(body);
+                    foundBodies.Add(body.Id);
+                    idsBodies.Add(CorrespondanceMap[body.Id]);
                     continue;
                 }
-                else //if (LearnedBodies.ContainsKey(body.Id))
+                else if (LearnedBodies.ContainsKey(body.Id))
                 {
                     LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                     identifiedBodies.Add(body);
+                    foundBodies.Add(body.Id);
+                    idsBodies.Add(body.Id);
                 }
             }
+            foreach (var body in bodies)
+                if (!foundBodies.Contains(body.Id))
+                    ProcessLearningBody(body, envelope.OriginatingTime, idsBodies);
             OutBodiesIdentified.Post(identifiedBodies, envelope.OriginatingTime);
         }
 
-        private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp)
+        private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp, List<uint> idsBodies)
         {
             if(!LearningBodies.ContainsKey(body.Id))
                 LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
@@ -131,6 +138,8 @@ namespace Bodies
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody();
                 foreach(var learnedBody in LearnedBodies)
                 {
+                    if (idsBodies.Contains(learnedBody.Key))
+                        continue;
                     if(newLearnedBody.IsSameAs(learnedBody.Value, Configuration.MaximumDeviationAllowed))
                     {
                         learnedBody.Value.LastSeen = timestamp;
@@ -141,6 +150,7 @@ namespace Bodies
                 }
                 newLearnedBody.LastSeen = timestamp;
                 LearnedBodies.Add(body.Id, newLearnedBody);
+                LearningBodies.Remove(body.Id);
                 return false;
             }
             return true;
@@ -163,7 +173,7 @@ namespace Bodies
             foreach (var iterator in LearnedBones)
                 diff.Add(Math.Abs(iterator.Value - b.LearnedBones[iterator.Key]));
             var statistics = Statistics.MeanStandardDeviation(diff);
-            return statistics.Item2 > maxDeviation;
+            return statistics.Item2 < maxDeviation;
         }
     }
     internal class LearningBody

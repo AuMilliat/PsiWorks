@@ -40,7 +40,7 @@ namespace GroupsVisualizer
                 bodiesDics[body.Id] = body;
             lock (this)
             {
-                Bitmap bitmap = new Bitmap(Configuration.Width, Configuration.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                Bitmap bitmap = new Bitmap(Configuration.Width, Configuration.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                 using var graphics = Graphics.FromImage(bitmap);
                 foreach (var group in groups)
                 {
@@ -76,7 +76,7 @@ namespace GroupsVisualizer
                         }
                     }
                 }
-                using var img = ImagePool.GetOrCreate(Configuration.Width, Configuration.Height, PixelFormat.RGB_24bpp);
+                using var img = ImagePool.GetOrCreate(Configuration.Width, Configuration.Height, PixelFormat.BGRA_32bpp);
                 img.Resource.CopyFrom(bitmap);
                 Out.Post(img, envelope.OriginatingTime);
                 display.Update(img);

@@ -26,11 +26,18 @@
             <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Source="{Binding Path=Calib.Image}"/>
             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Path=Status}" FontSize="48" FontWeight="Bold"/>-->
             <!--Configuration for groups-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <Image Grid.Row="1" Source="{Binding Path=Groups.Image}"/>
+            <Image Grid.Row="0"  Grid.Column="0" Source="{Binding Path=Calib.Image}"/>
+            <Image Grid.Row="0"  Grid.Column="1" Source="{Binding Path=InstantVisu.Image}"/>
+            <Image Grid.Row="1"  Grid.Column="0" Source="{Binding Path=EntryVisu.Image}"/>
+            <Image Grid.Row="1"  Grid.Column="1" Source="{Binding Path=IntegratedVisu.Image}"/>
         </Grid>
     </UserControl>
 </Window>

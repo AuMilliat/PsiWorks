@@ -3,6 +3,7 @@ using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
 using Groups.Instant;
 using Groups.Integrated;
+using Groups.Entry;
 using Bodies;
 using CalibrationByBodies;
 using NuitrackComponent;
@@ -60,7 +61,10 @@ namespace PsiWork_WPF
         public BodyTrackerVisualizer.BodyTrackerVisualizer Visu0 { get; private set; }
         public BodyTrackerVisualizer.BodyTrackerVisualizer Visu1 { get; private set; }
         public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
-        public GroupsVisualizer.GroupsVisualizer Groups { get; private set; }
+        public GroupsVisualizer.GroupsVisualizer InstantVisu { get; private set; }
+        public GroupsVisualizer.GroupsVisualizer EntryVisu { get; private set; }
+        public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
+
 
         private string status = "";
         public string Status
@@ -152,10 +156,21 @@ namespace PsiWork_WPF
             IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
             IntegratedGroups intgratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
 
+            /*** ENTRY GROUPS ***/
+            // Basic configuration for the moment.
+            EntryGroupsConfiguration entryGroupsConfiguration = new EntryGroupsConfiguration();
+            EntryGroups entryGroups = new EntryGroups(pipeline, entryGroupsConfiguration);
+
+
             /*** MORE TO COME ! ***/
             GroupsVisualizerConfguration confifGroupsVisu = new GroupsVisualizerConfguration();
-            AzureKinectGroupsVisualizer visu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
-            Groups = visu;
+            AzureKinectGroupsVisualizer instantVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
+            AzureKinectGroupsVisualizer entryVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
+            AzureKinectGroupsVisualizer integratedVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
+
+            InstantVisu = instantVisu;
+            EntryVisu = entryVisu;
+            IntegratedVisu = integratedVisu;
 
             /*** LINKAGE ***/
             // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
@@ -209,10 +224,23 @@ namespace PsiWork_WPF
             //integrated
             instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
-            //VisuGroup
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(visu.InCalibration);
-            instantGroups.OutInstantGroups.PipeTo(visu.InGroups);
-            bodiesDetection.OutBodiesCalibrated.PipeTo(visu.InBodies);
+            //entry
+            instantGroups.OutInstantGroups.PipeTo(entryGroups.InInstantGroups);
+
+            //instantVisu
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(instantVisu.InCalibration);
+            instantGroups.OutInstantGroups.PipeTo(instantVisu.InGroups);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(instantVisu.InBodies);
+
+            //entryVisu
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(entryVisu.InCalibration);
+            entryGroups.OutFormedEntryGroups.PipeTo(entryVisu.InGroups);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(entryVisu.InBodies);
+
+            //integratedVisu
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(integratedVisu.InCalibration);
+            intgratedGroups.OutIntegratedGroups.PipeTo(integratedVisu.InGroups);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(integratedVisu.InBodies);
 
         }
 
