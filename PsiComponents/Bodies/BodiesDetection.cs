@@ -141,8 +141,11 @@ namespace Bodies
         {
             CorrespondanceList.Remove(newItem);
             CorrespondanceList.Add(new Tuple<uint, uint>(newItem.Item1, newItem.Item2));
-            GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
-            GeneratedIdsMap.Remove((old.Item1, old.Item2));
+            if (GeneratedIdsMap.ContainsKey((old.Item1, old.Item2)))
+            {
+                GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
+                GeneratedIdsMap.Remove((old.Item1, old.Item2));
+            }
         }
 
         private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
