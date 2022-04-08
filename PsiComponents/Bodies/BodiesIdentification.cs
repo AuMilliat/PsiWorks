@@ -102,11 +102,11 @@ namespace Bodies
             {
                 if (CorrespondanceMap.ContainsKey(body.Id))
                 {
+                    idsBodies.Add(CorrespondanceMap[body.Id]);
                     body.Id = CorrespondanceMap[body.Id];
                     LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                     identifiedBodies.Add(body);
                     foundBodies.Add(body.Id);
-                    idsBodies.Add(CorrespondanceMap[body.Id]);
                     continue;
                 }
                 else if (LearnedBodies.ContainsKey(body.Id))
