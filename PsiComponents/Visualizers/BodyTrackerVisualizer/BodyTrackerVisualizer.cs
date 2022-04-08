@@ -1,8 +1,5 @@
-﻿using System.ComponentModel;
-using System.Drawing;
+﻿using System.Drawing;
 using Visualizer;
-using System.Runtime.CompilerServices;
-using System.Windows.Media.Imaging;
 using Microsoft.Azure.Kinect.BodyTracking;
 using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
@@ -13,7 +10,7 @@ using Helpers;
 
 namespace BodyTrackerVisualizer
 {
-    public abstract class BodyTrackerVisualizer : Visualizer.Visualizer
+    public abstract class BodyTrackerVisualizer : StreamVisualizer
     {
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
         public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;

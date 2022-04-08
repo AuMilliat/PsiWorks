@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
-using Microsoft.Psi;
-using Microsoft.Psi.Components;
 using Image = Microsoft.Psi.Imaging.Image;
-using Helpers;
+using Microsoft.Psi;
 
 namespace Visualizer
 {
-    public abstract class Visualizer : Subpipeline, IProducer<Shared<Image>>, INotifyPropertyChanged
+    public abstract class BasicVisualizer : Subpipeline, IProducer<Shared<Image>>, INotifyPropertyChanged
     {
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
@@ -23,9 +21,7 @@ namespace Visualizer
         }
         #endregion
 
-        protected Connector<Shared<Image>> InColorImageConnector;
 
-        public Receiver<Shared<Image>> InColorImage => InColorImageConnector.In;
 
         public Emitter<Shared<Image>> Out { get; protected set; }
 
@@ -60,9 +56,8 @@ namespace Visualizer
             set => SetProperty(ref lineThickness, value);
         }
 
-        public Visualizer(Pipeline pipeline) : base(pipeline)
+        public BasicVisualizer(Pipeline pipeline) : base(pipeline)
         {
-            InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImage));
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));
 
             pipeline.PipelineCompleted += OnPipelineCompleted;

@@ -12,7 +12,7 @@ using Visualizer;
 
 namespace BodyCalibrationVisualizer
 {
-    public abstract class BodyCalibrationVisualizer : Visualizer.Visualizer
+    public abstract class BodyCalibrationVisualizer : StreamVisualizer
     {
         protected Connector<List<SimplifiedBody>> InBodiesMasterConnector;
         protected Connector<List<SimplifiedBody>> InBodiesSlaveConnector;
@@ -35,6 +35,7 @@ namespace BodyCalibrationVisualizer
           
             var pair = InBodiesMasterConnector.Out.Pair(InBodiesSlaveConnector.Out);
             pair.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>()).Do(Process);
+            Mute = true;
         }
         protected void Process(ValueTuple<List<SimplifiedBody>, List<SimplifiedBody>, Shared<Image>> data, Envelope envelope)
         {

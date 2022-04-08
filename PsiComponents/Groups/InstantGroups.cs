@@ -1,7 +1,6 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using MathNet.Spatial.Euclidean;
-using MathNet.Numerics.LinearAlgebra;
 
 namespace Groups.Instant
 {
@@ -39,7 +38,7 @@ namespace Groups.Instant
             InBodiesPositionConnector.Out.Do(Process);
         }
 
-        private void Process(Dictionary<uint,  Vector3D> skeletons, Envelope envelope)
+        private void Process(Dictionary<uint, Vector3D> skeletons, Envelope envelope)
         {
             Dictionary<uint, List<uint>> rawGroups = new Dictionary<uint, List<uint>>();
             for (int iterator1 = 0; iterator1 < skeletons.Count; iterator1++)

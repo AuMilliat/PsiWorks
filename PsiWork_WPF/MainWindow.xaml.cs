@@ -9,6 +9,7 @@ using NuitrackComponent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using GroupsVisualizer;
 
 namespace PsiWork_WPF
 {
@@ -59,6 +60,7 @@ namespace PsiWork_WPF
         public BodyTrackerVisualizer.BodyTrackerVisualizer Visu0 { get; private set; }
         public BodyTrackerVisualizer.BodyTrackerVisualizer Visu1 { get; private set; }
         public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
+        public GroupsVisualizer.GroupsVisualizer Groups { get; private set; }
 
         private string status = "";
         public string Status
@@ -151,7 +153,9 @@ namespace PsiWork_WPF
             IntegratedGroups intgratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
 
             /*** MORE TO COME ! ***/
-
+            GroupsVisualizerConfguration confifGroupsVisu = new GroupsVisualizerConfguration();
+            AzureKinectGroupsVisualizer visu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
+            Groups = visu;
 
             /*** LINKAGE ***/
             // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
@@ -204,6 +208,12 @@ namespace PsiWork_WPF
 
             //integrated
             instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
+
+            //VisuGroup
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(visu.InCalibration);
+            instantGroups.OutInstantGroups.PipeTo(visu.InGroups);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(visu.InBodies);
+
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -249,10 +259,10 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            //BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-            //bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-            //BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
-            //
+            BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+            bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
+            BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
+            
             ///*** POSITION SELECTER ***/
             //// Basic configuration for the moment.
             //SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
