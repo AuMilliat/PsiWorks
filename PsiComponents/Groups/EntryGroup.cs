@@ -46,14 +46,9 @@ namespace Groups.Entry
             bool newGroups = false;
             List<uint> unstableGroups = new List<uint>();
             foreach (var group in groupDateTime)
-            {
                 if (!instantGroups.ContainsKey(group.Key)&&!formedEntryGroups.ContainsKey(group.Key))
                     unstableGroups.Add(group.Key);
-            }
             foreach (uint groupToRemove in unstableGroups)
-            {
-                groupDateTime.Remove(groupToRemove);
-            }
 
             // Check if groups exists and if it's stable enough set it as formed
             foreach (var group in instantGroups)
@@ -87,7 +82,7 @@ namespace Groups.Entry
             }
             // If new groups added, sending new definition
             if(newGroups)
-             OutFormedEntryGroups.Post(formedEntryGroups, envelope.OriginatingTime);
+                OutFormedEntryGroups.Post(formedEntryGroups, envelope.OriginatingTime);
         }
     }
 }

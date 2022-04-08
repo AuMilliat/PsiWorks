@@ -281,9 +281,7 @@ namespace NuitrackComponent
             Nuitrack.Release();
             TimeSpan waitTime = TimeSpan.FromSeconds(1);
             if (CaptureThread != null && CaptureThread.Join(waitTime) != true)
-            {
                 CaptureThread.Abort();
-            }
             notifyCompleted();
         }
 
@@ -305,9 +303,7 @@ namespace NuitrackComponent
             if(WaitingObject == null)
                 throw new ArgumentException("No tracker available");
             while (Device != null && !Shutdown)
-            { 
                 Nuitrack.WaitUpdate(WaitingObject);
-            }
         }
 
     }

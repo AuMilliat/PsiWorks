@@ -60,13 +60,9 @@ namespace Groups.Integrated
                     {
                         TimeSpan span = envelope.OriginatingTime - bodyDateTime[body];
                         if (bodyToWeightedGroups[body].ContainsKey(group.Key))
-                        {
                             bodyToWeightedGroups[body][group.Key] += span.TotalMilliseconds * Configuration.IncreaseWeightFactor;
-                        }
                         else 
-                        {
                             bodyToWeightedGroups[body].Add(group.Key, Configuration.IncreaseWeightFactor);
-                        }
                         foreach(var iterator in bodyToWeightedGroups[body])
                         {
                             if (iterator.Key == group.Key)
@@ -107,9 +103,7 @@ namespace Groups.Integrated
                 list.Sort((x, y) => x.Value.CompareTo(y.Value));
                 uint groupId = list.ElementAt(0).Key;
                 if (integratedGroups.ContainsKey(groupId))
-                {
                     integratedGroups[iterator.Key].Add(groupId);
-                }
                 else
                 {
                     List<uint> groupList = new List<uint>();

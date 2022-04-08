@@ -73,13 +73,9 @@ namespace Helpers
         public static bool IsValidDouble(double val)
         {
             if (Double.IsNaN(val))
-            {
                 return false;
-            }
             if (Double.IsInfinity(val))
-            {
                 return false;
-            }
             return true;
         }
 

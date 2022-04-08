@@ -64,9 +64,7 @@ namespace Visualizer
 
             display.PropertyChanged += (sender, e) => {
                 if (e.PropertyName == nameof(display.VideoImage))
-                {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
-                }
             };
         }
         protected abstract bool toProjection(MathNet.Spatial.Euclidean.Vector3D point, out MathNet.Spatial.Euclidean.Point2D proj);

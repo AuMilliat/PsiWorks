@@ -88,9 +88,7 @@ namespace LabJackComponent
             Shutdown = true;
             TimeSpan waitTime = TimeSpan.FromSeconds(1);
             if (CaptureThread != null && CaptureThread.Join(waitTime) != true)
-            {
                 CaptureThread.Abort();
-            }
             notifyCompleted();
         }
         public void Dispose()

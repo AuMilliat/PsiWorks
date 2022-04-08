@@ -129,10 +129,8 @@ namespace Bodies
                 LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
 
             if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime))
-            {
                 foreach (var bone in Configuration.BonesUsedForCorrespondence)
                     LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.SSD(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
-            }
             else
             {
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody();

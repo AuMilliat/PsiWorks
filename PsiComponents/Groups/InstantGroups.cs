@@ -55,13 +55,9 @@ namespace Groups.Instant
                         rawGroups.Remove(skeletons.ElementAt(iterator2).Key);
                     }
                     else if (rawGroups.ContainsKey(skeletons.ElementAt(iterator1).Key))
-                    {
                         rawGroups[skeletons.ElementAt(iterator1).Key].Add(skeletons.ElementAt(iterator2).Key);
-                    }
                     else if (rawGroups.ContainsKey(skeletons.ElementAt(iterator2).Key))
-                    {
                         rawGroups[skeletons.ElementAt(iterator2).Key].Add(skeletons.ElementAt(iterator1).Key);
-                    }
                     else 
                     {
                         List<uint> group = new List<uint>();
