@@ -11,6 +11,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using GroupsVisualizer;
+using Postures;
+using PosturesVisualizer;
 
 namespace PsiWork_WPF
 {
@@ -64,6 +66,7 @@ namespace PsiWork_WPF
         public GroupsVisualizer.GroupsVisualizer InstantVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer EntryVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
+        public PosturesVisualizer.PosturesVisualizer PosturesVisu { get; private set; }
 
 
         private string status = "";
@@ -161,16 +164,21 @@ namespace PsiWork_WPF
             EntryGroupsConfiguration entryGroupsConfiguration = new EntryGroupsConfiguration();
             EntryGroups entryGroups = new EntryGroups(pipeline, entryGroupsConfiguration);
 
+            /*** POSTURES ***/
+            // Basic configuration for the moment.
+            SimplePostures postures = new SimplePostures(pipeline);
 
-            /*** MORE TO COME ! ***/
+            /*** Visualizers ! ***/
             GroupsVisualizerConfguration confifGroupsVisu = new GroupsVisualizerConfguration();
             AzureKinectGroupsVisualizer instantVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
             AzureKinectGroupsVisualizer entryVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
             AzureKinectGroupsVisualizer integratedVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
+            AzureKinectPosturesVisualizer posturesVisualizer = new AzureKinectPosturesVisualizer(pipeline);
 
             InstantVisu = instantVisu;
             EntryVisu = entryVisu;
             IntegratedVisu = integratedVisu;
+            PosturesVisu = posturesVisualizer;
 
             /*** LINKAGE ***/
             // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
@@ -241,6 +249,14 @@ namespace PsiWork_WPF
             sensor0.DepthDeviceCalibrationInfo.PipeTo(integratedVisu.InCalibration);
             intgratedGroups.OutIntegratedGroups.PipeTo(integratedVisu.InGroups);
             bodiesDetection.OutBodiesCalibrated.PipeTo(integratedVisu.InBodies);
+
+            //postures
+            bodiesDetection.OutBodiesCalibrated.PipeTo(postures.InBodies);
+
+            //posturesVisu
+            bodiesDetection.OutBodiesCalibrated.PipeTo(posturesVisualizer.InBodies);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
+            postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
 
         }
 

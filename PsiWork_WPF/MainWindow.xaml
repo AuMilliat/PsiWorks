@@ -35,8 +35,8 @@
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Image Grid.Row="0"  Grid.Column="0" Source="{Binding Path=Calib.Image}"/>
-            <Image Grid.Row="0"  Grid.Column="1" Source="{Binding Path=InstantVisu.Image}"/>
-            <Image Grid.Row="1"  Grid.Column="0" Source="{Binding Path=EntryVisu.Image}"/>
+            <Image Grid.Row="0"  Grid.Column="1" Source="{Binding Path=PosturesVisu.Image}"/>
+            <Image Grid.Row="1"  Grid.Column="0" Source="{Binding Path=InstantVisu.Image}"/>
             <Image Grid.Row="1"  Grid.Column="1" Source="{Binding Path=IntegratedVisu.Image}"/>
         </Grid>
     </UserControl>

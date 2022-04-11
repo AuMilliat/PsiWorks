@@ -40,7 +40,7 @@ namespace Groups.Entry
         private List<uint> fixedBodies = new List<uint>();
         private void Process(Dictionary<uint, List<uint>> instantGroups, Envelope envelope)
         {
-            // Entry alog:
+            // Entry algo:
             // Once a group is stable for 10 second we consder it as stable for entry group (basic)
             // First clean storage from groups that does not exist in this frame and are not already considered as formed.
             bool newGroups = false;
