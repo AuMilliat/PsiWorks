@@ -281,13 +281,37 @@ class Program
         store.Write(labJack.OutDoubleValue, "Sensor");
      //   store.Write(natNetSensor.OutRigidBodies, "OptiTrack");
     }
+
+
+    static void KinectVideoSoundTesting(Pipeline p)
+    {
+        AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+        configKinect.DeviceIndex = 0;
+        configKinect.ColorResolution = Microsoft.Azure.Kinect.Sensor.ColorResolution.R720p;
+        configKinect.CameraFPS = Microsoft.Azure.Kinect.Sensor.FPS.FPS30;
+        // 
+        // configKinect.ColorFormat = Microsoft.Azure.Kinect.Sensor.ImageFormat.ColorMJPG;  
+
+        configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+        AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
+
+        Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
+        Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
+
+        var store = PsiStore.Create(p, "KinectAudioStoring", "F:\\Stores");
+        store.Write(sensor.ColorImage, "Image");
+        store.Write(sensor.DepthDeviceCalibrationInfo, "DepthCalibration");
+        store.Write(sensor.Bodies, "Bodies");
+        store.Write(audioCapture.Out, "Audio");
+    }
+
     static void Main(string[] args)
     {
         // Enabling diagnotstics !!!
         Pipeline p = Pipeline.Create(enableDiagnostics: true);
 
-        LabJackNatNetTesting(p);
-
+        //LabJackNatNetTesting(p);
+        KinectVideoSoundTesting(p);
 
         /*** GROUPS TESTING ***/
         //GroupsTesting(p);
