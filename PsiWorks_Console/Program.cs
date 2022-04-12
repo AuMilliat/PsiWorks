@@ -296,6 +296,7 @@ class Program
         AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
 
         Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
+        configuration.OptimizeForSpeech = true;
         Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
 
         var store = PsiStore.Create(p, "KinectAudioStoring", "F:\\Stores");

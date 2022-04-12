@@ -5,7 +5,7 @@
 	  <TargetFramework>net472</TargetFramework>
 	  <Nullable>enable</Nullable>
 	  <ImplicitUsings>enable</ImplicitUsings>
-	  <LangVersion>latest</LangVersion>
+	  <LangVersion>Preview</LangVersion>
     <UseWPF>true</UseWPF>
     <Platforms>x64</Platforms>
   </PropertyGroup>
