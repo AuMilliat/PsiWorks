@@ -5,6 +5,7 @@ using NuitrackComponent;
 using Groups.Instant;
 using Groups.Integrated;
 using Bodies;
+using Postures;
 using NatNetComponent;
 using LabJackComponent;
 using LabJack.LabJackUD;
@@ -306,13 +307,31 @@ class Program
         store.Write(audioCapture.Out, "Audio");
     }
 
+    static void KinectPostures(Pipeline p)
+    {
+        AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+        configKinect.DeviceIndex = 0;
+        configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+        AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
+
+        BodiesConverter bodiesConverter = new BodiesConverter(p);
+
+        SimplePostuesConfiguration configuration = new SimplePostuesConfiguration();
+        SimplePostures postures = new SimplePostures(p, configuration);
+
+        sensor.Bodies.PipeTo(bodiesConverter.InBodiesAzure);
+        bodiesConverter.OutBodies.PipeTo(postures.InBodies);
+    }
+
+
     static void Main(string[] args)
     {
         // Enabling diagnotstics !!!
         Pipeline p = Pipeline.Create(enableDiagnostics: true);
 
         //LabJackNatNetTesting(p);
-        KinectVideoSoundTesting(p);
+        //KinectVideoSoundTesting(p);
+        KinectPostures(p);
 
         /*** GROUPS TESTING ***/
         //GroupsTesting(p);

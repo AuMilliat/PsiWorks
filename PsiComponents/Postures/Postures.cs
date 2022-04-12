@@ -101,7 +101,7 @@ namespace Postures
        
             double distance = MathNet.Numerics.Distance.SSD(newPelvis.ToVector(), oldPelvis.ToVector());
             TimeSpan duration = time - BodiesData[body.Id].LastSeen;
-            if (duration.TotalSeconds > 0.0 && (distance / duration.TotalMilliseconds) > 10.0)
+            if (duration.TotalSeconds > 0.0 && (distance / duration.TotalSeconds) > 0.025)
                 return true;
             return false;
         }
@@ -122,7 +122,7 @@ namespace Postures
             MathNet.Spatial.Units.Angle rightAngle = fkRight.AngleTo(khRight);
 
             double height = body.Joints[JointId.Pelvis].Item2.Z - body.Joints[JointId.FootLeft].Item2.Z;
-            double distance = MathNet.Numerics.Distance.SSD(body.Joints[JointId.FootLeft].Item2.ToVector(), body.Joints[JointId.FootRight].Item2.ToVector());
+            double distance = MathNet.Numerics.Distance.SSD(body.Joints[JointId.FootLeft].Item2.ToVector(), body.Joints[JointId.FootRight].Item2.ToVector()) * 2.0;
 
             if (leftAngle.Degrees < 90.0 && rightAngle.Degrees < 90.0 && height < distance)
                 return true;
@@ -135,7 +135,7 @@ namespace Postures
                 return false;
             double height = body.Joints[JointId.Pelvis].Item2.Z - BodiesData[body.Id].LastPosition.Z;
             TimeSpan duration = time - BodiesData[body.Id].LastSeen;
-            if (duration.TotalSeconds > 0.0 && (height/duration.TotalMilliseconds) > 10.0)
+            if (duration.TotalSeconds > 0.0 && (height/duration.TotalSeconds) > 0.5)
                 return true;
             return false;
         }
@@ -166,7 +166,7 @@ namespace Postures
             UnitVector3D elbowShoulder = (body.Joints[joints[1]].Item2 - body.Joints[joints[2]].Item2).Normalize();
 
             MathNet.Spatial.Units.Angle angle = handElbow.AngleTo(elbowShoulder);
-            if (angle.Degrees > 175.0)
+            if (angle.Degrees < 25.0)
                 return true;
             return false;
         }
