@@ -60,7 +60,7 @@ namespace Postures
         {
             Postures retValue = Postures.Unkow;
             if (!BodiesData.ContainsKey(body.Id))
-                BodiesData.Add(body.Id, new BodyData());
+                BodiesData.Add(body.Id, new BodyData(body.Joints[JointId.Pelvis].Item2, time));
             if(IsInstantWalking(body, time))
                 retValue = Postures.Walking;
             if (IsInstantSitting(body, time))
@@ -182,5 +182,11 @@ namespace Postures
         public Vector3D LastPosition = new Vector3D();
         public List<double> WalkingData = new List<double>();
         public List<double> WalkingTime = new List<double>();
+
+        public BodyData(Vector3D position, DateTime time)
+        {
+            LastPosition = position;
+            LastSeen = time;
+        }
     }
 }

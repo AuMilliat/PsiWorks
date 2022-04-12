@@ -71,8 +71,7 @@ namespace PosturesVisualizer
                             string headName = body.Id.ToString();
                             if(postures.ContainsKey(body.Id))
                                 headName += " - " + postures[body.Id].ToString();
-                            graphics.DrawString(headName, font, brush, new PointF((float)head.X, (float)head.Y-150.0f));
-
+                            graphics.DrawString(headName, font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
                         }
                     }
                     using var img = ImagePool.GetOrCreate(frame.Resource.Width, frame.Resource.Height, frame.Resource.PixelFormat);
