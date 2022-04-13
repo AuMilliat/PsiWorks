@@ -13,6 +13,7 @@ namespace Postures
         Jumping,
         Arm_Left_Pointing,
         Arm_Right_Pointing,
+        End,
     };
 
     /// <summary>
@@ -31,10 +32,12 @@ namespace Postures
 
         public double PointingAngleThreshold { get; set; } = 15.0;
         public double SittingFactor { get; set; } = 2.0; 
-        public double SittingAngleThreshold { get; set; } = 90.0;
+        public double SittingAngleThreshold { get; set; } = 115.0;
 
         public int IncreaseFactor { get; set; } = 8;
         public int DecreaseFactor { get; set; } = 1;
+
+        public int ThresholdAction { get; set; } = 1;
 
     }
     public class SimplePostures : Subpipeline
@@ -44,7 +47,7 @@ namespace Postures
 
 
         /// <summary>
-        /// Gets the emitter of groups detected.
+        /// Gets the emitter of postures detected.
         /// </summary>
         public Emitter<Dictionary<uint, List<Postures>>> OutPostures { get; private set; }
 
@@ -95,7 +98,7 @@ namespace Postures
                    BodiesData[body.Id].Detected[(Postures)iterator]= 0;
                     continue;
                 }
-                else if (BodiesData[body.Id].Detected[(Postures)iterator] > 10)
+                else if (BodiesData[body.Id].Detected[(Postures)iterator] > Configuration.ThresholdAction)
                     retValue.Add((Postures)iterator);
             }
   
@@ -110,8 +113,8 @@ namespace Postures
             Vector2D newPelvis = new Vector2D(body.Joints[JointId.Pelvis].Item2.X, body.Joints[JointId.Pelvis].Item2.Y);
             Vector2D oldPelvis = new Vector2D(BodiesData[body.Id].LastPosition.X, BodiesData[body.Id].LastPosition.Y);
        
-            double distance = MathNet.Numerics.Distance.SSD(newPelvis.ToVector(), oldPelvis.ToVector());
             TimeSpan duration = time - BodiesData[body.Id].LastSeen;
+            double distance = MathNet.Numerics.Distance.SSD(newPelvis.ToVector(), oldPelvis.ToVector() / duration.TotalMilliseconds);
             if (duration.TotalSeconds > 0.0 && (distance / duration.TotalSeconds) > Configuration.SpeedWalkingThreshold)
                 BodiesData[body.Id].Detected[Postures.Moving] += Configuration.IncreaseFactor;
             BodiesData[body.Id].Detected[Postures.Moving] -= Configuration.DecreaseFactor;

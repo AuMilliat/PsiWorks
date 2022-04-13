@@ -26,7 +26,7 @@
             <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Source="{Binding Path=Calib.Image}"/>
             <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Path=Status}" FontSize="48" FontWeight="Bold"/>-->
             <!--Configuration for groups-->
-            <Grid.ColumnDefinitions>
+               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
@@ -38,6 +38,15 @@
             <Image Grid.Row="0"  Grid.Column="1" Source="{Binding Path=PosturesVisu.Image}"/>
             <Image Grid.Row="1"  Grid.Column="0" Source="{Binding Path=InstantVisu.Image}"/>
             <Image Grid.Row="1"  Grid.Column="1" Source="{Binding Path=IntegratedVisu.Image}"/>
+            <!--Configuration for postures-->
+         <!--<Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Image Grid.Row="1" Grid.Column="0" Source="{Binding Path=PosturesVisu.Image}"/>-->
         </Grid>
     </UserControl>
 </Window>

@@ -91,6 +91,7 @@ namespace PsiWork_WPF
             pipeline = Pipeline.Create(enableDiagnostics: true);
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
+            //PosturesPipeline();
             KinectPipline(calibration);
             //NuitrackPipline(calibration);
             // RunAsync the pipeline in non-blocking mode.
@@ -374,6 +375,43 @@ namespace PsiWork_WPF
             ////integrated
             //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
         }
+
+        private void PosturesPipeline()
+        {
+            /*** KINECT SENSOR ***/
+            AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
+            configKinect0.DeviceIndex = 0;
+            configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+            AzureKinectSensor sensor0 = new AzureKinectSensor(pipeline, configKinect0);
+
+              /*** BODIES CONVERTERS ***/
+            BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline);
+
+            /*** POSTURES ***/
+            // Basic configuration for the moment.
+            SimplePostures postures = new SimplePostures(pipeline);
+
+            /*** Visualizer ! ***/
+            AzureKinectPosturesVisualizer posturesVisualizer = new AzureKinectPosturesVisualizer(pipeline);
+
+            PosturesVisu = posturesVisualizer;
+
+            /*** LINKAGE ***/
+            // Sensor0 -> Converter0 -> Visu0     |  
+            //                       -> Postures -> VisuPostures
+
+            //converter0
+            sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+
+            //postures
+            bodiesConverter0.OutBodies.PipeTo(postures.InBodies);
+
+            //posturesVisu
+            bodiesConverter0.OutBodies.PipeTo(posturesVisualizer.InBodies);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
+            sensor0.ColorImage.PipeTo(posturesVisualizer.InColorImage);
+            postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
+    }
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             // Stop correctly the pipeline.

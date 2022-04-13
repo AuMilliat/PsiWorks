@@ -16,14 +16,14 @@ namespace PosturesVisualizer
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
         public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;
 
-        protected Connector<Dictionary<uint, Postures.Postures>> InPosturesConnector;
-        public Receiver<Dictionary<uint, Postures.Postures>> InPostures => InPosturesConnector.In;
+        protected Connector<Dictionary<uint, List<Postures.Postures>>> InPosturesConnector;
+        public Receiver<Dictionary<uint, List<Postures.Postures>>> InPostures => InPosturesConnector.In;
 
         protected Dictionary<JointConfidenceLevel, SolidBrush> confidenceColor = new Dictionary<JointConfidenceLevel, SolidBrush>();
         public PosturesVisualizer(Pipeline pipeline) : base(pipeline)
         {
             InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
-            InPosturesConnector = CreateInputConnectorFrom<Dictionary<uint, Postures.Postures>>(pipeline, nameof(InPostures));
+            InPosturesConnector = CreateInputConnectorFrom<Dictionary<uint, List<Postures.Postures>>>(pipeline, nameof(InPostures));
 
             InBodiesConnector.Join(InPosturesConnector).Join(InColorImageConnector).Do(Process);
 
@@ -34,7 +34,7 @@ namespace PosturesVisualizer
 
 
         }
-        protected void Process((List<SimplifiedBody>,Dictionary<uint, Postures.Postures>, Shared<Image>) data, Envelope envelope)
+        protected void Process((List<SimplifiedBody>,Dictionary<uint, List<Postures.Postures>>, Shared<Image>) data, Envelope envelope)
         {
             var (bodies, postures, frame) = data;
             lock (this)
@@ -69,8 +69,9 @@ namespace PosturesVisualizer
                         if (toProjection(body.Joints[JointId.Head].Item2, out head))
                         {
                             string headName = body.Id.ToString();
-                            if(postures.ContainsKey(body.Id))
-                                headName += " - " + postures[body.Id].ToString();
+                            if (postures.ContainsKey(body.Id))
+                                foreach(Postures.Postures posture in postures[body.Id])
+                                    headName += " - " +posture.ToString();
                             graphics.DrawString(headName, font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
                         }
                     }
