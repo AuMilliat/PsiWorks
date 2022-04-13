@@ -86,7 +86,7 @@ namespace PsiWork_WPF
             DataContext = this;
             MathNet.Numerics.LinearAlgebra.Matrix<double> calibration;
             if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
-                throw new Exception("Failed to load calib!");
+                calibration = null;
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create(enableDiagnostics: true);
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
@@ -280,8 +280,6 @@ namespace PsiWork_WPF
             /*** BODIES VISUALIZERS ***/
             Visu0 = new BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer(pipeline, sensor0);
             Visu1 = new BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer(pipeline, sensor1);
-            // Linkage
-
 
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "nuitrackConverter0");

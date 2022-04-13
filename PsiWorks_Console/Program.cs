@@ -316,11 +316,13 @@ class Program
 
         BodiesConverter bodiesConverter = new BodiesConverter(p);
 
-        SimplePostuesConfiguration configuration = new SimplePostuesConfiguration();
-        SimplePostures postures = new SimplePostures(p, configuration);
+        //SimplePostuesConfiguration configuration = new SimplePostuesConfiguration();
+        //SimplePostures postures = new SimplePostures(p, configuration);
+
+        BodiesStatistics statistics= new BodiesStatistics(p);
 
         sensor.Bodies.PipeTo(bodiesConverter.InBodiesAzure);
-        bodiesConverter.OutBodies.PipeTo(postures.InBodies);
+        bodiesConverter.OutBodies.PipeTo(statistics.InBodies);
     }
 
 

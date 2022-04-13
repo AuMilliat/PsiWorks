@@ -53,20 +53,27 @@ namespace Helpers
         static public bool ReadCalibrationFromFile(string filepath, out Matrix<double> matrix)
         {
             matrix = Matrix<double>.Build.DenseIdentity(4, 4);
-            var matrixStr = File.ReadLines(filepath);
-            int count = 0;
-            double[,] valuesD = new double[4,4];
-            foreach (string line in matrixStr)
+            try 
             {
-                foreach (string value in line.Split(' '))
+                var matrixStr = File.ReadLines(filepath);
+                int count = 0;
+                double[,] valuesD = new double[4,4];
+                foreach (string line in matrixStr)
                 {
-                    if (value.Length == 0)
-                        continue;
-                    valuesD[count/4, count%4] = Double.Parse(value);
-                    count++;
+                    foreach (string value in line.Split(' '))
+                    {
+                        if (value.Length == 0)
+                            continue;
+                        valuesD[count/4, count%4] = Double.Parse(value);
+                        count++;
+                    }
                 }
+                matrix = Matrix<double>.Build.DenseOfArray(valuesD);
             }
-            matrix = Matrix<double>.Build.DenseOfArray(valuesD);
+            catch (Exception ex)
+            {
+                return false;
+            }
             return true;
         }
 
