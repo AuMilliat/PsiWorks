@@ -10,6 +10,18 @@ using Helpers;
 
 namespace Bodies
 {
+    public class BodiesStatisticsConfiguration
+    {
+        /// <summary>
+        /// Gets or sets the confidence level used for statisticq.
+        /// </summary>
+        public JointConfidenceLevel ConfidenceLevel { get; set; } = JointConfidenceLevel.High;
+  
+        /// <summary>
+        ///  File in csv format to write stats.
+        /// </summary>
+        public string StoringPath { get; set; } = "./Stats.csv";
+    }
     public class BodiesStatistics : Subpipeline, INotifyPropertyChanged
     {
         #region INotifyPropertyChanged
@@ -37,8 +49,10 @@ namespace Bodies
 
         protected Dictionary<uint, StatisticBody> Data = new Dictionary<uint, StatisticBody>();
 
-        public BodiesStatistics(Pipeline pipeline) : base(pipeline)
+        protected BodiesStatisticsConfiguration Configuration;
+        public BodiesStatistics(Pipeline pipeline, BodiesStatisticsConfiguration? configuration) : base(pipeline)
         {
+            Configuration = configuration ?? new BodiesStatisticsConfiguration(); 
             InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
             InBodiesConnector.Out.Do(Process);
         }
@@ -59,7 +73,7 @@ namespace Bodies
                 StatsCount += "\n";
             }
 
-            File.WriteAllText("stats.csv", StatsCount);
+            File.WriteAllText(Configuration.StoringPath, StatsCount);
             base.Dispose();
         }
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
@@ -69,7 +83,7 @@ namespace Bodies
                 if (!Data.ContainsKey(body.Id))
                     Data.Add(body.Id, new StatisticBody());
                 foreach (var bone in AzureKinectBody.Bones)
-                    if (body.Joints[bone.ParentJoint].Item1 >= JointConfidenceLevel.Medium && body.Joints[bone.ChildJoint].Item1 >= JointConfidenceLevel.Medium)
+                    if (body.Joints[bone.ParentJoint].Item1 >= Configuration.ConfidenceLevel && body.Joints[bone.ChildJoint].Item1 >= Configuration.ConfidenceLevel)
                         Data[body.Id].BonesValues[bone].Add(MathNet.Numerics.Distance.Euclidean(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
             }
         }
