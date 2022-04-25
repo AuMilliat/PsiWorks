@@ -2,6 +2,7 @@
 using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Components;
+using System.IO;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Statistics;
@@ -42,23 +43,34 @@ namespace Bodies
             InBodiesConnector.Out.Do(Process);
         }
 
+        public override void Dispose()
+        {
+            StatsCount = "body_id;bone_id;count;std_dev;var";
+            foreach (var body in Data)
+            {
+                foreach (var bone in body.Value.BonesValues)
+                {
+                    var std = Statistics.MeanStandardDeviation(bone.Value);
+                    //var five = Statistics.FiveNumberSummary(Data[body.Id].BonesValues[(bone.ParentJoint, bone.ChildJoint)]);
+                    var variance = Statistics.MeanVariance(bone.Value);
+                    string statis = body.Key.ToString() +";" + bone.Key.Item1.ToString() +"-"+ bone.Key.Item2.ToString() + ";" + bone.Value.Count.ToString() + ";" + std.Item1.ToString() + ";" + variance.Item2.ToString();
+                    StatsCount += statis + "\n";
+                }
+                StatsCount += "\n";
+            }
+
+            File.WriteAllText("stats.csv", StatsCount);
+            base.Dispose();
+        }
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
         {
-            StatsCount="";
             foreach (SimplifiedBody body in bodies)
             {
                 if (!Data.ContainsKey(body.Id))
                     Data.Add(body.Id, new StatisticBody());
                 foreach (var bone in AzureKinectBody.Bones)
-                {
                     if (body.Joints[bone.ParentJoint].Item1 >= JointConfidenceLevel.Medium && body.Joints[bone.ChildJoint].Item1 >= JointConfidenceLevel.Medium)
                         Data[body.Id].BonesValues[bone].Add(MathNet.Numerics.Distance.Euclidean(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
-                    var std = Statistics.MeanStandardDeviation(Data[body.Id].BonesValues[bone]);
-                    //var five = Statistics.FiveNumberSummary(Data[body.Id].BonesValues[(bone.ParentJoint, bone.ChildJoint)]);
-                    var variance = Statistics.MeanVariance(Data[body.Id].BonesValues[bone]);
-                    string statis = bone.ParentJoint.ToString() +"-"+ bone.ChildJoint.ToString() + ";" + Data[body.Id].BonesValues[bone].Count.ToString() + ";" + std.Item1.ToString() + ";" + variance.Item2.ToString();
-                    StatsCount += statis + "\n";
-                }
             }
         }
     }
