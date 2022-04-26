@@ -14,6 +14,7 @@ using GroupsVisualizer;
 using Postures;
 using PosturesVisualizer;
 
+
 namespace PsiWork_WPF
 {
     internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
@@ -169,6 +170,17 @@ namespace PsiWork_WPF
             // Basic configuration for the moment.
             SimplePostures postures = new SimplePostures(pipeline);
 
+            /*** STATS ***/
+            BodiesStatisticsConfiguration bodiesStatisticsConfiguration0 = new BodiesStatisticsConfiguration();
+            bodiesStatisticsConfiguration0.StoringPath = "./Kinect0Stats.csv";
+            BodiesStatistics stat0 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration0);
+            BodiesStatisticsConfiguration bodiesStatisticsConfiguration1 = new BodiesStatisticsConfiguration();
+            bodiesStatisticsConfiguration1.StoringPath = "./Kinect1Stats.csv";
+            BodiesStatistics stat1 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration1);
+            BodiesStatisticsConfiguration bodiesStatisticsConfiguration = new BodiesStatisticsConfiguration();
+            bodiesStatisticsConfiguration.StoringPath = "./KinectStats.csv";
+            BodiesStatistics stat = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration);
+
             /*** Visualizers ! ***/
             GroupsVisualizerConfguration confifGroupsVisu = new GroupsVisualizerConfguration();
             AzureKinectGroupsVisualizer instantVisu = new AzureKinectGroupsVisualizer(pipeline, confifGroupsVisu);
@@ -259,6 +271,10 @@ namespace PsiWork_WPF
             sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
             postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
 
+            //Stats
+            bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
+            bodiesConverter1.OutBodies.PipeTo(stat1.InBodies);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(stat.InBodies);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)

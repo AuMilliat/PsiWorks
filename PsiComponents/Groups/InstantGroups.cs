@@ -33,7 +33,7 @@ namespace Groups.Instant
             : base(parent, name, defaultDeliveryPolicy)
         {
             Configuration = configuration ?? new InstantGroupsConfiguration();
-            InBodiesPositionConnector = CreateInputConnectorFrom<Dictionary<uint,   Vector3D>>(parent, nameof(InBodiesPositionConnector));
+            InBodiesPositionConnector = CreateInputConnectorFrom<Dictionary<uint, Vector3D>>(parent, nameof(InBodiesPositionConnector));
             OutInstantGroups = parent.CreateEmitter<Dictionary<uint, List<uint>>>(this, nameof(OutInstantGroups));
             InBodiesPositionConnector.Out.Do(Process);
         }
