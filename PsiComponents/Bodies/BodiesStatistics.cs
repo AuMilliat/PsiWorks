@@ -15,7 +15,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets the confidence level used for statisticq.
         /// </summary>
-        public JointConfidenceLevel ConfidenceLevel { get; set; } = JointConfidenceLevel.High;
+        public JointConfidenceLevel ConfidenceLevel { get; set; } = JointConfidenceLevel.Medium;
   
         /// <summary>
         ///  File in csv format to write stats.
@@ -59,7 +59,7 @@ namespace Bodies
 
         public override void Dispose()
         {
-            StatsCount = "body_id;bone_id;count;std_dev;var";
+            StatsCount = "body_id;bone_id;count;std_dev;var\n";
             foreach (var body in Data)
             {
                 foreach (var bone in body.Value.BonesValues)

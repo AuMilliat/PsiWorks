@@ -192,26 +192,30 @@ namespace Bodies
             List<SimplifiedBody> bestBodies = new List<SimplifiedBody>();
             foreach(var pair in CorrespondanceList)
             {
-                if (pair.Item1 == 0)
-                    if (camera2.ContainsKey(pair.Item2))
-                        bestBodies.Add(camera2[pair.Item2]);
-                else if (pair.Item2 == 0)
-                    if (camera1.ContainsKey(pair.Item1))
-                        bestBodies.Add(camera1[pair.Item1]);
-                else if(camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
+               if (camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
                 {
                     if (AccumulatedConfidence(camera1[pair.Item1]) < AccumulatedConfidence(camera2[pair.Item2]))
                     {
                         SimplifiedBody body = camera1[pair.Item1];
                         body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
-                        bestBodies.Add(body);     
+                        bestBodies.Add(body);
                     }
                     else
                     {
                         SimplifiedBody body = camera2[pair.Item2];
                         body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
-                        bestBodies.Add(TransformBody(body));   
+                        bestBodies.Add(TransformBody(body));
                     }
+                }
+                else if (pair.Item1 == 0 || !camera1.ContainsKey(pair.Item1))
+                {
+                    if (camera2.ContainsKey(pair.Item2))
+                        bestBodies.Add(camera2[pair.Item2]);
+                }
+                else if (pair.Item2 == 0 || !camera2.ContainsKey(pair.Item2))
+                {
+                    if (camera1.ContainsKey(pair.Item1))
+                        bestBodies.Add(camera1[pair.Item1]);
                 }
             }
             return bestBodies;

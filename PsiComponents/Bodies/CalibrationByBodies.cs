@@ -29,7 +29,7 @@ namespace CalibrationByBodies
         /// <summary>
         /// .
         /// </summary>
-        public double AllowedMaxStdDeviation { get; set; } = 1.5;
+        public double AllowedMaxStdDeviation { get; set; } = 0.1;
 
         /// <summary>
         /// Connect Synch event receiver
