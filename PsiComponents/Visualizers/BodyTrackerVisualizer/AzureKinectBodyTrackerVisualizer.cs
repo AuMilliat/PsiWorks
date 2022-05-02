@@ -12,7 +12,7 @@ namespace BodyTrackerVisualizer
         private Connector<IDepthDeviceCalibrationInfo> InCalibrationConnector;
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
-        private IDepthDeviceCalibrationInfo CalibrationInfo;
+        private IDepthDeviceCalibrationInfo? CalibrationInfo = null;
         public AzureKinectBodyTrackerVisualizer(Pipeline pipeline) : base(pipeline)
         {
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
@@ -35,6 +35,11 @@ namespace BodyTrackerVisualizer
 
         protected override bool toProjection(Vector3D point, out Point2D proj)
         {
+            if (CalibrationInfo == null)
+            {
+                proj = new Point2D(0, 0);
+                return false;
+            }
             return CalibrationInfo.TryGetPixelPosition(point.ToPoint3D(),out proj);
         }
     }

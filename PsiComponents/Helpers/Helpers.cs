@@ -8,9 +8,9 @@ namespace Helpers
     {
         static public T CantorPairing<T>(ref T k1, ref T k2)
         {
-#pragma warning disable CS8600 // Conversion de littéral ayant une valeur null ou d'une éventuelle valeur null en type non-nullable.
-            return 0.5 * ((dynamic)k1 + (dynamic)k2) * ((dynamic)k1 + (dynamic)k2 + 1) + (dynamic)k2;
-#pragma warning restore CS8600 // Conversion de littéral ayant une valeur null ou d'une éventuelle valeur null en type non-nullable.
+            if(k1 != null && k2 != null)
+                return 0.5 * ((dynamic)k1 + (dynamic)k2) * ((dynamic)k1 + (dynamic)k2 + 1) + (dynamic)k2;
+            return default(T);
         }
 
         static public T CantorParingSequence<T>(ref List<T> set)
@@ -98,7 +98,7 @@ namespace Helpers
             int p = Convert.ToInt32(value * (1 - saturation));
             int q = Convert.ToInt32(value * (1 - f * saturation));
             int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
-
+            //exception?
             if (hi == 0)
                 return System.Drawing.Color.FromArgb(255, v, t, p);
             else if (hi == 1)

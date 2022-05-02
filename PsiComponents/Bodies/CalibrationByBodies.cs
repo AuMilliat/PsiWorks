@@ -153,7 +153,8 @@ namespace CalibrationByBodies
                     JointAddedCount++;
                 }
             }
-            Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
+            if (Configuration.SetStatus != null)
+                Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
             if (JointAddedCount >= Configuration.NumberOfJoint)
             {
                 Emgu.CV.UMat outputArray = new Emgu.CV.UMat();
@@ -181,13 +182,15 @@ namespace CalibrationByBodies
                 CleanIteratorsAndCounters();
                 if(Configuration.TestMatrixBeforeSending)
                 {
-                    Configuration.SetStatus("Calibration done! Checking...");
+                    if (Configuration.SetStatus != null)
+                        Configuration.SetStatus("Calibration done! Checking...");
                     return ECalibrationState.Testing;
                 }
                 else
                 {
                     OutCalibration.Post(TransformationMatrix, time);
-                    Configuration.SetStatus("Calibration Done");
+                    if (Configuration.SetStatus != null)
+                        Configuration.SetStatus("Calibration Done");
                     StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
@@ -214,7 +217,8 @@ namespace CalibrationByBodies
                     TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
                 }
             }
-            Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
+            if (Configuration.SetStatus != null)
+                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
 
             if (JointAddedCount >= Configuration.NumberOfJoint)
             {
@@ -222,14 +226,16 @@ namespace CalibrationByBodies
                 CleanIteratorsAndCounters();
                 if (statistics.Item2 < Configuration.AllowedMaxStdDeviation)
                 {
-                    Configuration.SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
+                    if (Configuration.SetStatus != null)
+                        Configuration.SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
                     OutCalibration.Post(TransformationMatrix, time);
                     StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
                 else
                 {
-                    Configuration.SetStatus("Calibration running, StdDev: " + statistics.Item2.ToString());
+                    if (Configuration.SetStatus != null)
+                        Configuration.SetStatus("Calibration running, StdDev: " + statistics.Item2.ToString());
                     return ECalibrationState.Running;
                 }
             }

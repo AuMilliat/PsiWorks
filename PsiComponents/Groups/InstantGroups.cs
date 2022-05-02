@@ -73,7 +73,7 @@ namespace Groups.Instant
             {
                 rawGroup.Value.Sort();
                 List<uint> group = rawGroup.Value;
-                uint uid = Helpers.Helpers.CantorParingSequence(ref group);
+                uint uid = 1;// Helpers.Helpers.CantorParingSequence(ref group);
                 outData.Add(uid, group);
             }
             OutInstantGroups.Post(outData, envelope.OriginatingTime);

@@ -59,7 +59,7 @@ namespace Bodies
 
         public override void Dispose()
         {
-            StatsCount = "body_id;bone_id;count;std_dev;var\n";
+            StatsCount = "body_id;bone_id;count;mean;std_dev;var\n";
             foreach (var body in Data)
             {
                 foreach (var bone in body.Value.BonesValues)
@@ -67,7 +67,7 @@ namespace Bodies
                     var std = Statistics.MeanStandardDeviation(bone.Value);
                     //var five = Statistics.FiveNumberSummary(Data[body.Id].BonesValues[(bone.ParentJoint, bone.ChildJoint)]);
                     var variance = Statistics.MeanVariance(bone.Value);
-                    string statis = body.Key.ToString() +";" + bone.Key.Item1.ToString() +"-"+ bone.Key.Item2.ToString() + ";" + bone.Value.Count.ToString() + ";" + std.Item1.ToString() + ";" + variance.Item2.ToString();
+                    string statis = body.Key.ToString() +";" + bone.Key.Item1.ToString() +"-"+ bone.Key.Item2.ToString() + ";" + bone.Value.Count.ToString() + ";" + std.Item1.ToString() + ";" + std.Item2.ToString() + ";" + variance.Item2.ToString();
                     StatsCount += statis + "\n";
                 }
                 StatsCount += "\n";

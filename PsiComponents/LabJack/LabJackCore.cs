@@ -12,7 +12,7 @@ namespace LabJackComponent
 {
     internal class LabJackCore : ISourceComponent, IDisposable
     {
-        private LJUD Device;
+        //private LJUD Device;
         private int DeviceHandle;
         private LabJackCoreConfiguration Configuration;
         private Thread? CaptureThread = null;
@@ -58,21 +58,21 @@ namespace LabJackComponent
                 case LabJackCoreConfiguration.LabJackType.U3:
                     {
                         U3 device = new U3(Configuration.ConnnectionType, Configuration.DeviceAdress, Configuration.FirstDeviceFound);
-                        Device = device;
+                        //Device = device;
                         DeviceHandle = device.ljhandle;
                     }
                     break;
                 case LabJackCoreConfiguration.LabJackType.U6:
                     { 
                         U6 device = new U6(Configuration.ConnnectionType, Configuration.DeviceAdress, Configuration.FirstDeviceFound);
-                        Device = device;
+                        //Device = device;
                         DeviceHandle = device.ljhandle;
                     }
                     break;
                 case LabJackCoreConfiguration.LabJackType.UE9:
                     {
                         UE9 device = new UE9(Configuration.ConnnectionType, Configuration.DeviceAdress, Configuration.FirstDeviceFound);
-                        Device = device;
+                        //Device = device;
                         DeviceHandle = device.ljhandle;
                     }
                     break;
@@ -93,7 +93,7 @@ namespace LabJackComponent
         }
         public void Dispose()
         {
-            Device = null;
+            //Device = null;
         }
         private void ProcessCommands(Commands commands, Envelope envelope, Emitter<bool> response)
         {
@@ -145,7 +145,7 @@ namespace LabJackComponent
                     {
                         switch(Configuration.Commands.ResponseCommand.GetterType)
                         {
-                            case ResponseCommand.GetType.First_Next:
+                            case ResponseCommand.EGetterType.First_Next:
                                 if (FirstNexptOptionGetter)
                                 {
                                     LJUD.GetFirstResult(DeviceHandle, ref ioType, ref channel, ref dblValue, ref dummyInt, ref dummyDouble);
@@ -155,7 +155,7 @@ namespace LabJackComponent
                                     LJUD.GetNextResult(DeviceHandle, ref ioType, ref channel, ref dblValue, ref dummyInt, ref dummyDouble);
                                 OutDoubleValue.Post(dblValue, DateTime.UtcNow);
                                 break;
-                            case ResponseCommand.GetType.E_Get:
+                            case ResponseCommand.EGetterType.E_Get:
                                 //LJUD.eGet(DeviceHandle, LJUD.IO.GET_TIMER, 0, ref dblValue, 0);
                                 break;
                         }

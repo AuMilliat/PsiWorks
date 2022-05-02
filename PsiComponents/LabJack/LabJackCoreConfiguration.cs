@@ -25,8 +25,8 @@ namespace LabJackComponent
 
     public struct ResponseCommand 
     { 
-        public enum GetType { First_Next, E_Get };
-        public GetType GetterType;
+        public enum EGetterType { First_Next, E_Get };
+        public EGetterType GetterType;
     }
 
     public struct Commands

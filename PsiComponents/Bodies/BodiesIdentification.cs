@@ -21,15 +21,15 @@ namespace Bodies
             (JointId.ShoulderLeft, JointId.ClavicleLeft),
             (JointId.ElbowLeft, JointId.ShoulderLeft),
             (JointId.WristLeft, JointId.ElbowLeft),
-            (JointId.HandLeft, JointId.WristLeft),
-            (JointId.HandTipLeft, JointId.HandLeft),
-           // (JointId.ThumbLeft, JointId.WristLeft),
+            //(JointId.HandLeft, JointId.WristLeft),
+            //(JointId.HandTipLeft, JointId.HandLeft),
+            //(JointId.ThumbLeft, JointId.WristLeft),
             (JointId.ClavicleRight, JointId.SpineChest),
             (JointId.ShoulderRight, JointId.ClavicleRight),
             (JointId.ElbowRight, JointId.ShoulderRight),
             (JointId.WristRight, JointId.ElbowRight),
-            (JointId.HandRight, JointId.WristRight),
-            (JointId.HandTipRight, JointId.HandRight),
+            //(JointId.HandRight, JointId.WristRight),
+            //(JointId.HandTipRight, JointId.HandRight),
             //(JointId.ThumbRight, JointId.WristRight),
             (JointId.HipLeft, JointId.Pelvis),
             (JointId.KneeLeft, JointId.HipLeft),
@@ -53,9 +53,9 @@ namespace Bodies
         public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0,0,1);
 
         /// <summary>
-        /// Gets or sets maximum acceptable deviation for correpondance in millimeter
+        /// Gets or sets maximum acceptable deviation for correpondance in meter
         /// </summary>
-        public double MaximumDeviationAllowed { get; set; } = 0.03;
+        public double MaximumDeviationAllowed { get; set; } = 0.05;
     }
     public class BodiesIdentification : Subpipeline
     {
@@ -134,7 +134,7 @@ namespace Bodies
                     LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.SSD(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
             else
             {
-                LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody();
+                LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
                 foreach(var learnedBody in LearnedBodies)
                 {
                     if (idsBodies.Contains(learnedBody.Key))
@@ -170,7 +170,8 @@ namespace Bodies
         {
             List<double> diff = new List<double>();
             foreach (var iterator in LearnedBones)
-                diff.Add(Math.Abs(iterator.Value - b.LearnedBones[iterator.Key]));
+                if(iterator.Value > 0.0 && b.LearnedBones[iterator.Key] > 0.0)
+                    diff.Add(Math.Abs(iterator.Value - b.LearnedBones[iterator.Key]));
             var statistics = Statistics.MeanStandardDeviation(diff);
             return statistics.Item2 < maxDeviation;
         }
@@ -193,13 +194,16 @@ namespace Bodies
         {
             return (time - CreationTime) < duration;
         }
-        public LearnedBody GeneratorLearnedBody()
+        public LearnedBody GeneratorLearnedBody(double maxStdDev)
         {
             Dictionary<(JointId ChildJoint, JointId ParentJoint), double> learnedBones = new Dictionary<(JointId ChildJoint, JointId ParentJoint), double>();
             foreach(var iterator in LearningBones)
             {
                 var statistics = Statistics.MeanStandardDeviation(iterator.Value);
-                learnedBones[iterator.Key] = statistics.Item1;
+                if (statistics.Item2 < maxStdDev)
+                    learnedBones[iterator.Key] = statistics.Item1;
+                else
+                    learnedBones[iterator.Key] = -1;
             }
             return new LearnedBody(Id, learnedBones);
         }

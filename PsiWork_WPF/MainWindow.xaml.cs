@@ -172,13 +172,13 @@ namespace PsiWork_WPF
 
             /*** STATS ***/
             BodiesStatisticsConfiguration bodiesStatisticsConfiguration0 = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration0.StoringPath = "./Kinect0Stats.csv";
+            bodiesStatisticsConfiguration0.StoringPath = "F:/Stats/Kinect0Stats.csv";
             BodiesStatistics stat0 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration0);
             BodiesStatisticsConfiguration bodiesStatisticsConfiguration1 = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration1.StoringPath = "./Kinect1Stats.csv";
+            bodiesStatisticsConfiguration1.StoringPath = "F:/Stats/Kinect1Stats.csv";
             BodiesStatistics stat1 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration1);
             BodiesStatisticsConfiguration bodiesStatisticsConfiguration = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration.StoringPath = "./KinectStats.csv";
+            bodiesStatisticsConfiguration.StoringPath = "F:/Stats/KinectStats.csv";
             BodiesStatistics stat = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration);
 
             /*** Visualizers ! ***/
@@ -249,14 +249,14 @@ namespace PsiWork_WPF
             instantGroups.OutInstantGroups.PipeTo(entryGroups.InInstantGroups);
 
             //instantVisu
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(instantVisu.InCalibration);
-            instantGroups.OutInstantGroups.PipeTo(instantVisu.InGroups);
-            bodiesDetection.OutBodiesCalibrated.PipeTo(instantVisu.InBodies);
+            //sensor0.DepthDeviceCalibrationInfo.PipeTo(instantVisu.InCalibration);
+            //instantGroups.OutInstantGroups.PipeTo(instantVisu.InGroups);
+            //bodiesDetection.OutBodiesCalibrated.PipeTo(instantVisu.InBodies);
 
             //entryVisu
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(entryVisu.InCalibration);
-            entryGroups.OutFormedEntryGroups.PipeTo(entryVisu.InGroups);
-            bodiesDetection.OutBodiesCalibrated.PipeTo(entryVisu.InBodies);
+            //sensor0.DepthDeviceCalibrationInfo.PipeTo(entryVisu.InCalibration);
+            //entryGroups.OutFormedEntryGroups.PipeTo(entryVisu.InGroups);
+            //bodiesDetection.OutBodiesCalibrated.PipeTo(entryVisu.InBodies);
 
             //integratedVisu
             sensor0.DepthDeviceCalibrationInfo.PipeTo(integratedVisu.InCalibration);
@@ -267,9 +267,9 @@ namespace PsiWork_WPF
             bodiesDetection.OutBodiesCalibrated.PipeTo(postures.InBodies);
 
             //posturesVisu
-            bodiesDetection.OutBodiesCalibrated.PipeTo(posturesVisualizer.InBodies);
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
-            postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
+            //bodiesDetection.OutBodiesCalibrated.PipeTo(posturesVisualizer.InBodies);
+            //sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
+            //postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
 
             //Stats
             bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
