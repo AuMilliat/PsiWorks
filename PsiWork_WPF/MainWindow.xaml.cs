@@ -93,7 +93,8 @@ namespace PsiWork_WPF
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             //PosturesPipeline();
-            KinectPipline(calibration);
+            //KinectPipline(calibration);
+            KinectMonoPipline(calibration);
             //NuitrackPipline(calibration);
             // RunAsync the pipeline in non-blocking mode.
             pipeline.RunAsync();
@@ -275,6 +276,39 @@ namespace PsiWork_WPF
             bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
             bodiesConverter1.OutBodies.PipeTo(stat1.InBodies);
             bodiesDetection.OutBodiesCalibrated.PipeTo(stat.InBodies);
+        }
+
+        private void KinectMonoPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
+        {
+            /*** KINECT SENSOR ***/
+            AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
+            configKinect0.DeviceIndex = 0;
+            configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+            AzureKinectSensor sensor0 = new AzureKinectSensor(pipeline, configKinect0);
+
+            /*** BODIES VISUALIZERS ***/
+            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            Visu0 = visu0;
+         
+
+            /*** BODIES CONVERTERS ***/
+            BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
+
+            /*** BODIES IDENTIFICATION ***/
+            BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
+            BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
+            
+            /*** LINKAGE ***/
+            // Sensor0 -> Converter0 -> Identificator0 -> Visu0
+
+            //converter0
+            sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+            //identificator0
+            bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+            //visu0
+            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(visu0.InCalibration);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(Visu0.InBodies);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)

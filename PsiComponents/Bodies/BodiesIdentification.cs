@@ -53,6 +53,11 @@ namespace Bodies
         public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0,0,1);
 
         /// <summary>
+        /// Gets or sets maximum acceptable duration for between old id pop again without identification in millisecond
+        /// </summary>
+        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 2, 0);
+
+        /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
         /// </summary>
         public double MaximumDeviationAllowed { get; set; } = 0.05;
@@ -98,6 +103,7 @@ namespace Bodies
             List<SimplifiedBody> identifiedBodies = new List<SimplifiedBody>();
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
+            RemoveOldIds(envelope.OriginatingTime);
             foreach (var body in bodies)
             {
                 if (CorrespondanceMap.ContainsKey(body.Id))
@@ -126,7 +132,7 @@ namespace Bodies
 
         private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp, List<uint> idsBodies)
         {
-            if(!LearningBodies.ContainsKey(body.Id))
+            if (!LearningBodies.ContainsKey(body.Id))
                 LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
 
             if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime))
@@ -135,11 +141,11 @@ namespace Bodies
             else
             {
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
-                foreach(var learnedBody in LearnedBodies)
+                foreach (var learnedBody in LearnedBodies)
                 {
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
-                    if(newLearnedBody.IsSameAs(learnedBody.Value, Configuration.MaximumDeviationAllowed))
+                    if (newLearnedBody.IsSameAs(learnedBody.Value, Configuration.MaximumDeviationAllowed))
                     {
                         learnedBody.Value.LastSeen = timestamp;
                         CorrespondanceMap[body.Id] = learnedBody.Key;
@@ -153,6 +159,28 @@ namespace Bodies
                 return false;
             }
             return true;
+        }
+
+        private void RemoveOldIds(DateTime current)
+        {
+            List<uint> idsToRemove = new List<uint>();
+            foreach (var body in LearnedBodies)
+                if((current - body.Value.LastSeen) > Configuration.MaximumLostTime)
+                    idsToRemove.Add(body.Key);
+
+            foreach (uint id in idsToRemove)
+            {
+                LearnedBodies.Remove(id);
+                CorrespondanceMap.Remove(id);
+                foreach (var iterator in CorrespondanceMap)
+                {
+                    if(iterator.Value == id)
+                    {
+                        CorrespondanceMap.Remove(iterator.Key);
+                        break;
+                    }
+                }
+            }
         }
     }
 
