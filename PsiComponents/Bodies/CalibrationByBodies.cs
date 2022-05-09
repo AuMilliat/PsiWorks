@@ -14,7 +14,12 @@ namespace CalibrationByBodies
         /// <summary>
         /// Gets or sets the number of joints used in ransac for calibration.
         /// </summary>
-        public uint NumberOfJoint { get; set; } = 200;
+        public uint NumberOfJointForCalibration { get; set; } = 200;
+
+        /// <summary>
+        /// Gets or sets the number of joints used for validating the calibration.
+        /// </summary>
+        public uint NumberOfJointForTesting { get; set; } = 100;
 
         /// <summary>
         /// Gets or sets the confidence level used for calibration.
@@ -105,10 +110,10 @@ namespace CalibrationByBodies
             else
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
 
-            Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJoint];
-            Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJoint];
+            Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
+            Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
             CalibrationJoints = new Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]>(camera1, camera2);
-            TestingArray = new double[Configuration.NumberOfJoint];
+            TestingArray = new double[Configuration.NumberOfJointForTesting];
             Configuration.SetStatus("Collecting data...");
         }
 
@@ -146,7 +151,7 @@ namespace CalibrationByBodies
                 if (camera1.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration &&
                     camera2.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration)
                 {
-                    if (JointAddedCount >= Configuration.NumberOfJoint)
+                    if (JointAddedCount >= Configuration.NumberOfJointForCalibration)
                         break;
                     CalibrationJoints.Item1[JointAddedCount] = VectorToCVPoint(camera1.Joints[iterator].Item2);
                     CalibrationJoints.Item2[JointAddedCount] = VectorToCVPoint(camera2.Joints[iterator].Item2);
@@ -154,8 +159,8 @@ namespace CalibrationByBodies
                 }
             }
             if (Configuration.SetStatus != null)
-                Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
-            if (JointAddedCount >= Configuration.NumberOfJoint)
+                Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForCalibration.ToString());
+            if (JointAddedCount >= Configuration.NumberOfJointForCalibration)
             {
                 Emgu.CV.UMat outputArray = new Emgu.CV.UMat();
                 Emgu.CV.UMat inliers = new Emgu.CV.UMat();
@@ -212,15 +217,15 @@ namespace CalibrationByBodies
                 if (camera1.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration &&
                     camera2.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration)
                 {
-                    if (JointAddedCount >= Configuration.NumberOfJoint)
+                    if (JointAddedCount >= Configuration.NumberOfJointForCalibration/2)
                         break;
                     TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
                 }
             }
             if (Configuration.SetStatus != null)
-                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJoint.ToString());
+                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + (Configuration.NumberOfJointForCalibration/2).ToString());
 
-            if (JointAddedCount >= Configuration.NumberOfJoint)
+            if (JointAddedCount >= Configuration.NumberOfJointForCalibration/2)
             {
                 var statistics = Statistics.MeanStandardDeviation(TestingArray);
                 CleanIteratorsAndCounters();

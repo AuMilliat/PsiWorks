@@ -93,8 +93,8 @@ namespace PsiWork_WPF
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             //PosturesPipeline();
-            //KinectPipline(calibration);
-            KinectMonoPipline(calibration);
+            KinectPipline(calibration);
+            //KinectMonoPipline(calibration);
             //NuitrackPipline(calibration);
             // RunAsync the pipeline in non-blocking mode.
             pipeline.RunAsync();
@@ -238,16 +238,16 @@ namespace PsiWork_WPF
             bodiesIdentification1.OutBodiesIdentified.PipeTo(Calib.InBodiesSlave);
 
             //extractor
-            bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+           // bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
 
             //Instant
-            positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
+            //positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
 
             //integrated
-            instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
+            //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
             //entry
-            instantGroups.OutInstantGroups.PipeTo(entryGroups.InInstantGroups);
+            //instantGroups.OutInstantGroups.PipeTo(entryGroups.InInstantGroups);
 
             //instantVisu
             //sensor0.DepthDeviceCalibrationInfo.PipeTo(instantVisu.InCalibration);
