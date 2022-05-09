@@ -143,9 +143,9 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+            BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
             bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-            BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
+            BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
 
             /*** POSITION SELECTER ***/
             // Basic configuration for the moment.
@@ -229,6 +229,8 @@ namespace PsiWork_WPF
             calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
             bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
             bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+            bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
+            bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesDetection.InCamera2LearnedBodies);
 
             //visucalib
             sensor0.DepthDeviceCalibrationInfo.PipeTo(calib.InCalibrationMaster);
@@ -352,9 +354,9 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
+            BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
             bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-            BodiesDetection bodiesDetection = new BodiesDetection(pipeline, bodiesDetectionConfiguration);
+            BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
             
             ///*** POSITION SELECTER ***/
             //// Basic configuration for the moment.

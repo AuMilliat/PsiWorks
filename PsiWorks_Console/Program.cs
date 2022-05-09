@@ -78,8 +78,8 @@ class Program
 
         /*** BODY DETECTOR ***/
         // Basic configuration for the moment.
-        SimpleBodiesPositionExtractionConfiguration BodiesDetectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-        SimpleBodiesPositionExtraction BodiesDetection = new SimpleBodiesPositionExtraction(p, BodiesDetectionConfiguration);
+        SimpleBodiesPositionExtractionConfiguration BodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
+        SimpleBodiesPositionExtraction BodiesSelection = new SimpleBodiesPositionExtraction(p, BodiesSelectionConfiguration);
 
         /*** INSTANT GROUPS ***/
         // Basic configuration for the moment.
@@ -95,8 +95,8 @@ class Program
 
 
         /*** Linkage ***/
-        sensor.Bodies.PipeTo(BodiesDetection.InBodiesNuitrack);
-        BodiesDetection.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
+        sensor.Bodies.PipeTo(BodiesSelection.InBodiesNuitrack);
+        BodiesSelection.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
         frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
         /*** DATA STORING FOR PSI STUDIO ***/
@@ -125,8 +125,8 @@ class Program
 
         /*** BODIES DETECTION ***/
         // Basic configuration for the moment.
-        BodiesDetectionConfiguration bodiesDetectionConfiguration = new BodiesDetectionConfiguration();
-        BodiesDetection bodiesDetection = new BodiesDetection(p, bodiesDetectionConfiguration);
+        BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
+        BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
 
         /*** POSITION SELECTER ***/
         // Basic configuration for the moment.
@@ -209,8 +209,8 @@ class Program
 
         /*** BODY DETECTOR ***/
         // Basic configuration for the moment.
-        SimpleBodiesPositionExtractionConfiguration BodiesDetectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-        SimpleBodiesPositionExtraction BodiesDetection = new SimpleBodiesPositionExtraction(p, BodiesDetectionConfiguration);
+        SimpleBodiesPositionExtractionConfiguration BodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
+        SimpleBodiesPositionExtraction BodiesSelection = new SimpleBodiesPositionExtraction(p, BodiesSelectionConfiguration);
 
         /*** INSTANT GROUPS ***/
         // Basic configuration for the moment.
@@ -227,8 +227,8 @@ class Program
 
         /*** Linkage ***/
         //Bodies1.Process().ToList().ForEach(body => Console.WriteLine(body.TrackingId));
-        Bodies0.PipeTo(BodiesDetection.InBodiesAzure);
-        BodiesDetection.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
+        Bodies0.PipeTo(BodiesSelection.InBodiesAzure);
+        BodiesSelection.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
         frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
     }
 

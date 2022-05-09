@@ -4,10 +4,11 @@ using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using Helpers;
 using Microsoft.Azure.Kinect.BodyTracking;
+using MathNet.Numerics.Statistics;
 
 namespace Bodies
 {
-    public class BodiesDetectionConfiguration
+    public class BodiesSelectionConfiguration
     {
         /// <summary>
         /// Gets or sets in which space the bodies are sent.
@@ -25,7 +26,7 @@ namespace Bodies
         public double MaxDistance { get; set; } = 80.0;
 
     }
-    public class BodiesDetection : Subpipeline
+    public class BodiesSelection : Subpipeline
     {
         /// <summary>
         /// Gets the emitter of groups detected.
@@ -51,26 +52,46 @@ namespace Bodies
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
+        private Connector<List<LearnedBody>> InCamera1LearnedBodiesConnector;
+
+        // Receiver that encapsulates the input list of Nuitrack skeletons
+        public Receiver<List<LearnedBody>> InCamera1LearnedBodies => InCamera1LearnedBodiesConnector.In;
+
+        /// <summary>
+        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// </summary>
         private Connector<List<SimplifiedBody>> InCamera2BodiesConnector;
 
         // Receiver that encapsulates the input list of Nuitrack skeletons
         public Receiver<List<SimplifiedBody>> InCamera2Bodies => InCamera2BodiesConnector.In;
 
-        private BodiesDetectionConfiguration Configuration { get; }
+        /// <summary>
+        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// </summary>
+        private Connector<List<LearnedBody>> InCamera2LearnedBodiesConnector;
+
+        // Receiver that encapsulates the input list of Nuitrack skeletons
+        public Receiver<List<LearnedBody>> InCamera2LearnedBodies => InCamera2LearnedBodiesConnector.In;
+
+        private BodiesSelectionConfiguration Configuration { get; }
 
         private List<Tuple<uint, uint>> CorrespondanceList = new List<Tuple<uint, uint>>();
 
         private Dictionary<(uint, uint), uint> GeneratedIdsMap = new Dictionary<(uint, uint), uint>();
 
+        private Dictionary<uint, LearnedBody> Camera1LearnedBodies = new Dictionary<uint, LearnedBody>();
+        private Dictionary<uint, LearnedBody> Camera2LearnedBodies = new Dictionary<uint, LearnedBody>();
         private uint idCount = 1;
 
-        public BodiesDetection(Pipeline parent, BodiesDetectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
+        public BodiesSelection(Pipeline parent, BodiesSelectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
         {
-            Configuration = configuration ?? new BodiesDetectionConfiguration();
+            Configuration = configuration ?? new BodiesSelectionConfiguration();
 
             InCamera1BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera1BodiesConnector));
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
+            InCamera1LearnedBodiesConnector = CreateInputConnectorFrom<List<LearnedBody>>(parent, nameof(InCamera1LearnedBodiesConnector));
+            InCamera2LearnedBodiesConnector = CreateInputConnectorFrom<List<LearnedBody>>(parent, nameof(InCamera2LearnedBodiesConnector));
             InCalibrationMatrixConnector = CreateInputConnectorFrom<Matrix<double>>(parent, nameof(InCalibrationMatrixConnector));
             OutBodiesCalibrated = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesCalibrated));
 
@@ -78,6 +99,9 @@ namespace Bodies
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Out.Fuse(InCalibrationMatrixConnector.Out, Available.Nearest<Matrix<double>>()).Do(Process);
             else
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
+
+            InCamera1LearnedBodiesConnector.Do(LearnedBodyProcessing1);
+            InCamera2LearnedBodiesConnector.Do(LearnedBodyProcessing2);
         }
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>, Matrix<double>) bodies, Envelope envelope)
         {
@@ -92,6 +116,24 @@ namespace Bodies
             OutBodiesCalibrated.Post(SelectBestBody(dicsC1, dicsC2), envelope.OriginatingTime);
         }
 
+        private void LearnedBodyProcessing1(List<LearnedBody> list, Envelope envelope)
+        {
+            LearnedBodyProcessing(list, ref Camera1LearnedBodies);
+        }
+        private void LearnedBodyProcessing2(List<LearnedBody> list, Envelope envelope)
+        {
+            LearnedBodyProcessing(list, ref Camera2LearnedBodies);
+        }
+
+        private void LearnedBodyProcessing(List<LearnedBody> list, ref Dictionary<uint, LearnedBody> dic)
+        { 
+            foreach (var item in list)
+            {
+                if (dic.ContainsKey(item.Id))
+                    continue;
+                dic.Add(item.Id, item);
+            }
+        }
         private void UpdateCorrespondanceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2)
         {
             var newMapping = ComputeCorrespondenceMap(camera1, camera2, ref d1, ref d2);
@@ -108,8 +150,6 @@ namespace Bodies
                 }
                 else if(result > 0)
                 {
-                    if (iterator.Item2 == 0)
-                        continue;
                     // collision check and testing
                     if (tuple.Item2 == 0)
                         IntegrateInDicsAndList(iterator, tuple);
@@ -122,8 +162,6 @@ namespace Bodies
                 }
                 else //if (result < 0)
                 {
-                    if (iterator.Item1 == 0)
-                        continue;
                     // collision check and testing
                     if (tuple.Item1 == 0)
                         IntegrateInDicsAndList(iterator, tuple);
@@ -161,7 +199,7 @@ namespace Bodies
                 d1[bodyC1.Id] = bodyC1;
                 distances[bodyC1.Id] = new List<Tuple<double, uint>>();
                 foreach (SimplifiedBody bodyC2 in camera2)
-                    distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.SSD(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
+                    distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.Euclidean(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
             }
 
             List<Tuple<uint, uint>> correspondanceMap = new List<Tuple<uint, uint>>();
@@ -187,25 +225,61 @@ namespace Bodies
             return correspondanceMap;
         }
 
+        private void SelectByConfidence(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, Tuple<uint,uint> ids, ref List<SimplifiedBody> bestBodies)
+        {
+            if (AccumulatedConfidence(camera1[ids.Item1]) < AccumulatedConfidence(camera2[ids.Item2]))
+            {
+                SimplifiedBody body = camera1[ids.Item1];
+                body.Id = GeneratedIdsMap[(ids.Item1, ids.Item2)];
+                bestBodies.Add(body);
+            }
+            else
+            {
+                SimplifiedBody body = camera2[ids.Item2];
+                body.Id = GeneratedIdsMap[(ids.Item1, ids.Item2)];
+                bestBodies.Add(TransformBody(body));
+            }
+        }
+        private void SelectByLearnedBodies(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, Tuple<uint, uint> ids, ref List<SimplifiedBody> bestBodies)
+        {
+            SimplifiedBody b1 = camera1[ids.Item1], b2 = camera1[ids.Item2];
+            LearnedBody l1 = Camera1LearnedBodies[ids.Item1], l2 = Camera2LearnedBodies[ids.Item1];
+
+            List<double> dist1 = new List<double>(), dist2 = new List<double>();
+            foreach(var bones in l1.LearnedBones)
+            {
+                double boneC1 = MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector());
+                double boneC2 = MathNet.Numerics.Distance.Euclidean(b2.Joints[bones.Key.ParentJoint].Item2.ToVector(), b2.Joints[bones.Key.ChildJoint].Item2.ToVector());
+                dist1.Add(Math.Abs(boneC1 - bones.Value));
+                dist2.Add(Math.Abs(boneC2 - l2.LearnedBones[bones.Key]));
+            }
+            var statistics1 = Statistics.MeanStandardDeviation(dist1);
+            var statistics2 = Statistics.MeanStandardDeviation(dist2);
+            if (statistics1.Item2 < statistics2.Item2)
+            {
+                SimplifiedBody body = camera1[ids.Item1];
+                body.Id = GeneratedIdsMap[(ids.Item1, ids.Item2)];
+                bestBodies.Add(body);
+            }
+            else
+            {
+                SimplifiedBody body = camera2[ids.Item2];
+                body.Id = GeneratedIdsMap[(ids.Item1, ids.Item2)];
+                bestBodies.Add(TransformBody(body));
+            }
+        }
+
         private List<SimplifiedBody> SelectBestBody(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2)
         {
             List<SimplifiedBody> bestBodies = new List<SimplifiedBody>();
             foreach(var pair in CorrespondanceList)
             {
-               if (camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
+                if (camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
                 {
-                    if (AccumulatedConfidence(camera1[pair.Item1]) < AccumulatedConfidence(camera2[pair.Item2]))
-                    {
-                        SimplifiedBody body = camera1[pair.Item1];
-                        body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
-                        bestBodies.Add(body);
-                    }
+                    if(Camera1LearnedBodies.ContainsKey(pair.Item1) && Camera1LearnedBodies.ContainsKey(pair.Item2))
+                        SelectByLearnedBodies(camera1, camera2, pair, ref bestBodies);
                     else
-                    {
-                        SimplifiedBody body = camera2[pair.Item2];
-                        body.Id = GeneratedIdsMap[(pair.Item1, pair.Item2)];
-                        bestBodies.Add(TransformBody(body));
-                    }
+                        SelectByConfidence(camera1, camera2, pair, ref bestBodies);
                 }
                 else if (pair.Item1 == 0 || !camera1.ContainsKey(pair.Item1))
                 {
@@ -232,19 +306,19 @@ namespace Bodies
             switch(caseCheck)
             {
                 case 0:
-                    foreach (var iterator in CorrespondanceList)
-                    {
-                        if (iterator.Item1 == tuple.Item1)
-                        {
-                            value = iterator;
-                            return 1;
-                        }
-                        else if (iterator.Item2 == tuple.Item2)
-                        {
-                            value = iterator;
-                            return -1;
-                        }
-                    }
+                    //foreach (var iterator in CorrespondanceList)
+                    //{
+                    //    if (iterator.Item1 == tuple.Item1)
+                    //    {
+                    //        value = iterator;
+                    //        return 1;
+                    //    }
+                    //    else if (iterator.Item2 == tuple.Item2)
+                    //    {
+                    //        value = iterator;
+                    //        return -1;
+                    //    }
+                    //}
                     break;
                 case 1:
                     foreach (var iterator in CorrespondanceList)

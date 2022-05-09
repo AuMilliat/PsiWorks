@@ -69,6 +69,12 @@ namespace Bodies
         /// </summary>
         public Emitter<List<SimplifiedBody>> OutBodiesIdentified { get; private set; }
 
+
+        /// <summary>
+        /// Gets the emitter of new learned bodies.
+        /// </summary>
+        public Emitter<List<LearnedBody>> OutLearnedBodies { get; private set; }
+
         /// <summary>
         /// Gets the emitter of groups detected.
         /// </summary>
@@ -87,6 +93,7 @@ namespace Bodies
         private Dictionary<uint, uint> CorrespondanceMap = new Dictionary<uint, uint>();
         private Dictionary<uint, LearnedBody> LearnedBodies = new Dictionary<uint, LearnedBody>();
         private Dictionary<uint, LearningBody> LearningBodies = new Dictionary<uint, LearningBody>();
+        private List<LearnedBody> NewLearnedBodies = new List<LearnedBody>();
 
         public BodiesIdentification(Pipeline parent, BodiesIdentificationConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
@@ -95,7 +102,7 @@ namespace Bodies
 
             InCameraBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCameraBodiesConnector));
             OutBodiesIdentified = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesIdentified));
-
+            OutLearnedBodies = parent.CreateEmitter<List<LearnedBody>>(this, nameof(OutLearnedBodies));
             InCameraBodiesConnector.Out.Do(Process);
         }
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
@@ -127,17 +134,23 @@ namespace Bodies
             foreach (var body in bodies)
                 if (!foundBodies.Contains(body.Id))
                     ProcessLearningBody(body, envelope.OriginatingTime, idsBodies);
+            if(NewLearnedBodies.Count > 0)
+            {
+                OutLearnedBodies.Post(NewLearnedBodies, envelope.OriginatingTime);
+                NewLearnedBodies.Clear();
+            }
             OutBodiesIdentified.Post(identifiedBodies, envelope.OriginatingTime);
         }
 
         private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp, List<uint> idsBodies)
         {
+           
             if (!LearningBodies.ContainsKey(body.Id))
                 LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
 
             if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime))
                 foreach (var bone in Configuration.BonesUsedForCorrespondence)
-                    LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.SSD(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
+                    LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.Euclidean(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
             else
             {
                 List<LearnedBody> learnedBodiesNotVisible = new List<LearnedBody>();
@@ -148,6 +161,7 @@ namespace Bodies
                     learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
+                NewLearnedBodies.Add(newLearnedBody);
                 uint correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
                 if(correspondanceId > 0)
                 {
@@ -186,73 +200,6 @@ namespace Bodies
                     }
                 }
             }
-        }
-    }
-
-    internal class LearnedBody
-    {
-        public Dictionary<(JointId ChildJoint, JointId ParentJoint), double> LearnedBones { get; private set; }
-        public uint Id { get; private set; }
-        public DateTime LastSeen { get; set; }
-        public LearnedBody(uint id, Dictionary<(JointId ChildJoint, JointId ParentJoint), double> bones)
-        {
-            Id = id;
-            LearnedBones = bones;
-        }
-        public bool IsSameAs(LearnedBody b, double maxDeviation)
-        {
-            return ProcessDifference(b) < maxDeviation;
-        }
-        private double ProcessDifference(LearnedBody b)
-        {
-            List<double> diff = new List<double>();
-            foreach (var iterator in LearnedBones)
-                if (iterator.Value > 0.0 && b.LearnedBones[iterator.Key] > 0.0)
-                    diff.Add(Math.Abs(iterator.Value - b.LearnedBones[iterator.Key]));
-            var statistics = Statistics.MeanStandardDeviation(diff);
-            return statistics.Item2;
-        }
-        public uint FindClosest(List<LearnedBody> listOfBodies, double maxDeviation)
-        {
-            List<KeyValuePair<double, LearnedBody>> pairs = new List<KeyValuePair<double, LearnedBody>>();
-            foreach (var pair in listOfBodies)
-                pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
-            pairs.Sort();
-            if (maxDeviation < pairs.First().Key)
-                return 0;
-            return pairs.First().Value.Id;
-        }
-    }
-    internal class LearningBody
-    {
-        public Dictionary<(JointId ChildJoint, JointId ParentJoint), List<double>> LearningBones { get; set; }
-        public uint Id { get; private set; }
-        public DateTime CreationTime { get; private set; }
-
-        public LearningBody(uint id, DateTime time, List<(JointId ChildJoint, JointId ParentJoint)> bones)
-        {
-            Id = id;
-            CreationTime = time;
-            LearningBones = new Dictionary<(JointId ChildJoint, JointId ParentJoint), List<double>>();
-            foreach (var bone in bones)
-                LearningBones.Add(bone, new List<double>());
-        }
-        public bool StillLearning(DateTime time, TimeSpan duration)
-        {
-            return (time - CreationTime) < duration;
-        }
-        public LearnedBody GeneratorLearnedBody(double maxStdDev)
-        {
-            Dictionary<(JointId ChildJoint, JointId ParentJoint), double> learnedBones = new Dictionary<(JointId ChildJoint, JointId ParentJoint), double>();
-            foreach(var iterator in LearningBones)
-            {
-                var statistics = Statistics.MeanStandardDeviation(iterator.Value);
-                if (statistics.Item2 < maxStdDev)
-                    learnedBones[iterator.Key] = statistics.Item1;
-                else
-                    learnedBones[iterator.Key] = -1;
-            }
-            return new LearnedBody(Id, learnedBones);
         }
     }
 }
