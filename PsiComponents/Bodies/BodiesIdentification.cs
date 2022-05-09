@@ -140,22 +140,27 @@ namespace Bodies
                     LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.SSD(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
             else
             {
-                LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
+                List<LearnedBody> learnedBodiesNotVisible = new List<LearnedBody>();
                 foreach (var learnedBody in LearnedBodies)
                 {
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
-                    if (newLearnedBody.IsSameAs(learnedBody.Value, Configuration.MaximumDeviationAllowed))
-                    {
-                        learnedBody.Value.LastSeen = timestamp;
-                        CorrespondanceMap[body.Id] = learnedBody.Key;
-                        LearningBodies.Remove(body.Id);
-                        return false;
-                    }
+                    learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
-                newLearnedBody.LastSeen = timestamp;
-                LearnedBodies.Add(body.Id, newLearnedBody);
-                LearningBodies.Remove(body.Id);
+                LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
+                uint correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
+                if(correspondanceId > 0)
+                {
+                    newLearnedBody.LastSeen = timestamp;
+                    CorrespondanceMap[body.Id] = correspondanceId;
+                    LearningBodies.Remove(body.Id);
+                }
+                else
+                {
+                    newLearnedBody.LastSeen = timestamp;
+                    LearnedBodies.Add(body.Id, newLearnedBody);
+                    LearningBodies.Remove(body.Id);
+                }
                 return false;
             }
             return true;
@@ -196,12 +201,26 @@ namespace Bodies
         }
         public bool IsSameAs(LearnedBody b, double maxDeviation)
         {
+            return ProcessDifference(b) < maxDeviation;
+        }
+        private double ProcessDifference(LearnedBody b)
+        {
             List<double> diff = new List<double>();
             foreach (var iterator in LearnedBones)
-                if(iterator.Value > 0.0 && b.LearnedBones[iterator.Key] > 0.0)
+                if (iterator.Value > 0.0 && b.LearnedBones[iterator.Key] > 0.0)
                     diff.Add(Math.Abs(iterator.Value - b.LearnedBones[iterator.Key]));
             var statistics = Statistics.MeanStandardDeviation(diff);
-            return statistics.Item2 < maxDeviation;
+            return statistics.Item2;
+        }
+        public uint FindClosest(List<LearnedBody> listOfBodies, double maxDeviation)
+        {
+            List<KeyValuePair<double, LearnedBody>> pairs = new List<KeyValuePair<double, LearnedBody>>();
+            foreach (var pair in listOfBodies)
+                pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
+            pairs.Sort();
+            if (maxDeviation < pairs.First().Key)
+                return 0;
+            return pairs.First().Value.Id;
         }
     }
     internal class LearningBody
