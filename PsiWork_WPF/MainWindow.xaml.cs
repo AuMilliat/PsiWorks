@@ -93,8 +93,8 @@ namespace PsiWork_WPF
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             //PosturesPipeline();
-            KinectPipline(calibration);
-            //KinectMonoPipline(calibration);
+            //KinectPipline(calibration);
+            KinectMonoPipline(calibration);
             //NuitrackPipline(calibration);
             // RunAsync the pipeline in non-blocking mode.
             pipeline.RunAsync();

@@ -78,7 +78,7 @@ namespace Bodies
         /// <summary>
         /// Gets the emitter of groups detected.
         /// </summary>
-       // public Emitter<List<uint>> OutBodiesRemoved { get; private set; }
+        public Emitter<List<uint>> OutBodiesRemoved { get; private set; }
 
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
@@ -103,6 +103,7 @@ namespace Bodies
             InCameraBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCameraBodiesConnector));
             OutBodiesIdentified = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesIdentified));
             OutLearnedBodies = parent.CreateEmitter<List<LearnedBody>>(this, nameof(OutLearnedBodies));
+            OutBodiesRemoved = parent.CreateEmitter<List<uint>>(this, nameof(OutBodiesRemoved));
             InCameraBodiesConnector.Out.Do(Process);
         }
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
@@ -162,7 +163,9 @@ namespace Bodies
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
                 NewLearnedBodies.Add(newLearnedBody);
-                uint correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
+                uint correspondanceId = 0;
+                if(learnedBodiesNotVisible.Count > 0)
+                    correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
                 if(correspondanceId > 0)
                 {
                     newLearnedBody.LastSeen = timestamp;

@@ -34,11 +34,18 @@ namespace Bodies
         public Emitter<List<SimplifiedBody>> OutBodiesCalibrated{ get; private set; }
 
         /// <summary>
+        /// Gets the emitter of groups detected.
+        /// </summary>
+        public Emitter<List<uint>> OutBodiesRemoved { get; private set; }
+
+        /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<Matrix<double>> InCalibrationMatrixConnector;
 
-        // Receiver that encapsulates the input list of Nuitrack skeletons
+        /// <summary>
+        /// Receiver that encapsulates the input list of Nuitrack skeletons
+        /// </summary>
         public Receiver<Matrix<double>> InCalibrationMatrix => InCalibrationMatrixConnector.In;
 
         /// <summary>
@@ -46,32 +53,60 @@ namespace Bodies
         /// </summary>
         private Connector<List<SimplifiedBody>> InCamera1BodiesConnector;
 
-        // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<List<SimplifiedBody>> InCamera1Bodies => InCamera1BodiesConnector.In;
-
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Receiver that encapsulates the input list of simplified skeletons from first camera.
         /// </summary>
-        private Connector<List<LearnedBody>> InCamera1LearnedBodiesConnector;
-
-        // Receiver that encapsulates the input list of Nuitrack skeletons
-        public Receiver<List<LearnedBody>> InCamera1LearnedBodies => InCamera1LearnedBodiesConnector.In;
+        public Receiver<List<SimplifiedBody>> InCamera1Bodies => InCamera1BodiesConnector.In;
 
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<List<SimplifiedBody>> InCamera2BodiesConnector;
 
-        // Receiver that encapsulates the input list of Nuitrack skeletons
+        /// <summary>
+        /// Receiver that encapsulates the input list  of simplified skeletons from second camera
+        /// </summary>
         public Receiver<List<SimplifiedBody>> InCamera2Bodies => InCamera2BodiesConnector.In;
 
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
         /// </summary>
+        private Connector<List<LearnedBody>> InCamera1LearnedBodiesConnector;
+
+        /// <summary>
+        /// Receiver that encapsulates the input list of learned skeletons from first camera.
+        /// </summary>
+        public Receiver<List<LearnedBody>> InCamera1LearnedBodies => InCamera1LearnedBodiesConnector.In;
+
+        /// <summary>
+        /// Gets the nuitrack connector of new learned bodies from second camera..
+        /// </summary>
         private Connector<List<LearnedBody>> InCamera2LearnedBodiesConnector;
 
-        // Receiver that encapsulates the input list of Nuitrack skeletons
+        /// <summary>
+        /// Receiver that encapsulates the input list of learned skeletonsf from second camera.
+        /// </summary>
         public Receiver<List<LearnedBody>> InCamera2LearnedBodies => InCamera2LearnedBodiesConnector.In;
+
+        /// <summary>
+        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// </summary>
+        private Connector<List<uint>> InCamera1RemovedBodiesConnector;
+
+        /// <summary>
+        /// Receiver that encapsulates the input list of Nuitrack skeletons
+        /// </summary>
+        public Receiver<List<uint>> InCamera1RemovedBodies => InCamera1RemovedBodiesConnector.In;
+
+        /// <summary>
+        /// Gets the nuitrack connector of lists of removed bodies.
+        /// </summary>
+        private Connector<List<uint>> InCamera2RemovedBodiesConnector;
+
+        /// <summary>
+        /// Receiver that encapsulates the input list of removed skeletons
+        /// </summary>
+        public Receiver<List<uint>> InCamera2RemovedBodies => InCamera2RemovedBodiesConnector.In;
 
         private BodiesSelectionConfiguration Configuration { get; }
 
@@ -92,8 +127,11 @@ namespace Bodies
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
             InCamera1LearnedBodiesConnector = CreateInputConnectorFrom<List<LearnedBody>>(parent, nameof(InCamera1LearnedBodiesConnector));
             InCamera2LearnedBodiesConnector = CreateInputConnectorFrom<List<LearnedBody>>(parent, nameof(InCamera2LearnedBodiesConnector));
+            InCamera1RemovedBodiesConnector = CreateInputConnectorFrom<List<uint>>(parent, nameof(InCamera1RemovedBodiesConnector));
+            InCamera2RemovedBodiesConnector = CreateInputConnectorFrom<List<uint>>(parent, nameof(InCamera2RemovedBodiesConnector));
             InCalibrationMatrixConnector = CreateInputConnectorFrom<Matrix<double>>(parent, nameof(InCalibrationMatrixConnector));
             OutBodiesCalibrated = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesCalibrated));
+            OutBodiesRemoved = parent.CreateEmitter<List<uint>>(this, nameof(OutBodiesRemoved));
 
             if (Configuration.Camera2ToCamera1Transformation == null)
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Out.Fuse(InCalibrationMatrixConnector.Out, Available.Nearest<Matrix<double>>()).Do(Process);
@@ -102,6 +140,9 @@ namespace Bodies
 
             InCamera1LearnedBodiesConnector.Do(LearnedBodyProcessing1);
             InCamera2LearnedBodiesConnector.Do(LearnedBodyProcessing2);
+
+            InCamera1RemovedBodiesConnector.Do(RemovedBodyProcessing1);
+            InCamera2RemovedBodiesConnector.Do(RemovedBodyProcessing2);
         }
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>, Matrix<double>) bodies, Envelope envelope)
         {
@@ -124,7 +165,6 @@ namespace Bodies
         {
             LearnedBodyProcessing(list, ref Camera2LearnedBodies);
         }
-
         private void LearnedBodyProcessing(List<LearnedBody> list, ref Dictionary<uint, LearnedBody> dic)
         { 
             foreach (var item in list)
@@ -134,6 +174,40 @@ namespace Bodies
                 dic.Add(item.Id, item);
             }
         }
+
+        private void RemovedBodyProcessing1(List<uint> list, Envelope envelope)
+        {
+            RemovedBodyProcessing(list, true, ref Camera1LearnedBodies, envelope);
+        }
+        private void RemovedBodyProcessing2(List<uint> list, Envelope envelope)
+        {
+            RemovedBodyProcessing(list, false, ref Camera2LearnedBodies, envelope);
+        }
+        private void RemovedBodyProcessing(List<uint> list, bool isMaster, ref Dictionary<uint, LearnedBody> dic, Envelope envelope)
+        {
+            lock(this)
+            {
+                List<uint> removedId = new List<uint>();
+                foreach (uint id in list)
+                {
+                    if (dic.ContainsKey(id))
+                        dic.Remove(id);
+                    Tuple<uint, uint> tuple, ouTuple;
+                    if (isMaster)
+                        tuple = new Tuple<uint, uint>(id, 0);
+                    else
+                        tuple = new Tuple<uint, uint>(0, id);
+                    if (KeyOrValueExistInList(tuple, out ouTuple) != 0)
+                    {
+                        removedId.Add(GeneratedIdsMap[(ouTuple.Item1, ouTuple.Item2)]);
+                        GeneratedIdsMap.Remove((ouTuple.Item1, ouTuple.Item2));
+                        CorrespondanceList.Remove(ouTuple);
+                    }
+                }
+                OutBodiesRemoved.Post(removedId, envelope.OriginatingTime);
+            }
+        }
+
         private void UpdateCorrespondanceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2)
         {
             var newMapping = ComputeCorrespondenceMap(camera1, camera2, ref d1, ref d2);
@@ -248,10 +322,10 @@ namespace Bodies
             List<double> dist1 = new List<double>(), dist2 = new List<double>();
             foreach(var bones in l1.LearnedBones)
             {
-                double boneC1 = MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector());
-                double boneC2 = MathNet.Numerics.Distance.Euclidean(b2.Joints[bones.Key.ParentJoint].Item2.ToVector(), b2.Joints[bones.Key.ChildJoint].Item2.ToVector());
-                dist1.Add(Math.Abs(boneC1 - bones.Value));
-                dist2.Add(Math.Abs(boneC2 - l2.LearnedBones[bones.Key]));
+                if (bones.Value > 0.0)
+                    dist1.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
+                if (l2.LearnedBones[bones.Key] > 0.0)
+                    dist2.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b2.Joints[bones.Key.ParentJoint].Item2.ToVector(), b2.Joints[bones.Key.ChildJoint].Item2.ToVector()) - l2.LearnedBones[bones.Key]));
             }
             var statistics1 = Statistics.MeanStandardDeviation(dist1);
             var statistics2 = Statistics.MeanStandardDeviation(dist2);
