@@ -20,11 +20,13 @@ namespace Groups.Instant
         public Emitter<Dictionary<uint, List<uint>>> OutInstantGroups { get; private set; }
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the  connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<Dictionary<uint, Vector3D>> InBodiesPositionConnector;
-
-        // Receiver that encapsulates the input list of Nuitrack skeletons
+        
+        /// <summary>
+        /// Receiver that encapsulates the input list of skeletons
+        /// </summary>
         public Receiver<Dictionary<uint, Vector3D>> InBodiesPosition => InBodiesPositionConnector.In;
 
         
@@ -73,7 +75,7 @@ namespace Groups.Instant
             {
                 rawGroup.Value.Sort();
                 List<uint> group = rawGroup.Value;
-                uint uid = 1;// Helpers.Helpers.CantorParingSequence(ref group);
+                uint uid = Helpers.Helpers.CantorParingSequence(group);
                 outData.Add(uid, group);
             }
             OutInstantGroups.Post(outData, envelope.OriginatingTime);

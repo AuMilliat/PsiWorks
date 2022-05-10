@@ -6,20 +6,17 @@ namespace Helpers
 {
     public class Helpers
     {
-        static public T CantorPairing<T>(ref T k1, ref T k2)
+        static public uint CantorPairing(uint k1, uint k2)
         {
-            if(k1 != null && k2 != null)
-                return 0.5 * ((dynamic)k1 + (dynamic)k2) * ((dynamic)k1 + (dynamic)k2 + 1) + (dynamic)k2;
-            return default(T);
+             return (uint)(0.5 * (k1 + k2) * (k1 + k2 + 1) + k2);
         }
-
-        static public T CantorParingSequence<T>(ref List<T> set)
+        static public uint CantorParingSequence(List<uint> set)
         {
-            T value = set.ElementAt(0);
+            uint value = set.ElementAt(0);
             for (int iterator = 1; iterator < set.Count(); iterator++)
             { 
-                T value2 = set[iterator];
-                value = CantorPairing(ref value, ref value2);
+                uint value2 = set[iterator];
+                value = CantorPairing(value, value2);
             }
             return value;
         }
@@ -87,18 +84,21 @@ namespace Helpers
         }
 
         public static bool IsValidPoint2D(Point2D point) => IsValidDouble(point.X) && IsValidDouble(point.Y);
+        public static bool IsValidVector2D(Vector2D vector) => IsValidDouble(vector.X) && IsValidDouble(vector.Y);
+        public static bool IsValidPoint3D(Point3D point) => IsValidDouble(point.X) && IsValidDouble(point.Y) && IsValidDouble(point.Z);
+        public static bool IsValidVector3D(Vector3D vector) => IsValidDouble(vector.X) && IsValidDouble(vector.Y) && IsValidDouble(vector.Z);
 
         public static System.Drawing.Color ColorFromHSV(double hue, double saturation, double value)
         {
-            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
-            double f = hue / 60 - Math.Floor(hue / 60);
+            int hi = Convert.ToInt32(Math.Floor(hue / 60.0)) % 6;
+            double f = hue / 60.0 - Math.Floor(hue / 60.0);
 
-            value = value * 255;
+            value = value * 255.0;
             int v = Convert.ToInt32(value);
             int p = Convert.ToInt32(value * (1 - saturation));
             int q = Convert.ToInt32(value * (1 - f * saturation));
             int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
-            //exception?
+
             if (hi == 0)
                 return System.Drawing.Color.FromArgb(255, v, t, p);
             else if (hi == 1)
@@ -112,6 +112,5 @@ namespace Helpers
             else
                 return System.Drawing.Color.FromArgb(255, v, p, q);
         }
-
     }
 }
