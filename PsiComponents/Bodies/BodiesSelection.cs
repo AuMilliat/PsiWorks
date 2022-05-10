@@ -39,7 +39,7 @@ namespace Bodies
         public Emitter<List<uint>> OutBodiesRemoved { get; private set; }
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<Matrix<double>> InCalibrationMatrixConnector;
 
@@ -49,7 +49,7 @@ namespace Bodies
         public Receiver<Matrix<double>> InCalibrationMatrix => InCalibrationMatrixConnector.In;
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<List<SimplifiedBody>> InCamera1BodiesConnector;
 
@@ -59,7 +59,7 @@ namespace Bodies
         public Receiver<List<SimplifiedBody>> InCamera1Bodies => InCamera1BodiesConnector.In;
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<List<SimplifiedBody>> InCamera2BodiesConnector;
 
@@ -69,7 +69,7 @@ namespace Bodies
         public Receiver<List<SimplifiedBody>> InCamera2Bodies => InCamera2BodiesConnector.In;
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the connector of lists of currently tracked bodies.
         /// </summary>
         private Connector<List<LearnedBody>> InCamera1LearnedBodiesConnector;
 
@@ -79,22 +79,22 @@ namespace Bodies
         public Receiver<List<LearnedBody>> InCamera1LearnedBodies => InCamera1LearnedBodiesConnector.In;
 
         /// <summary>
-        /// Gets the nuitrack connector of new learned bodies from second camera..
+        /// Gets the connector of new learned bodies from second camera..
         /// </summary>
         private Connector<List<LearnedBody>> InCamera2LearnedBodiesConnector;
 
         /// <summary>
-        /// Receiver that encapsulates the input list of learned skeletonsf from second camera.
+        /// Receiver that encapsulates the input list of learned skeletons from second camera.
         /// </summary>
         public Receiver<List<LearnedBody>> InCamera2LearnedBodies => InCamera2LearnedBodiesConnector.In;
 
         /// <summary>
-        /// Gets the nuitrack connector of lists of currently tracked bodies.
+        /// Gets the connector of lists of removed skeletons from first camera.
         /// </summary>
         private Connector<List<uint>> InCamera1RemovedBodiesConnector;
 
         /// <summary>
-        /// Receiver that encapsulates the input list of Nuitrack skeletons
+        /// Receiver that encapsulates the input list of removed skeletons
         /// </summary>
         public Receiver<List<uint>> InCamera1RemovedBodies => InCamera1RemovedBodiesConnector.In;
 

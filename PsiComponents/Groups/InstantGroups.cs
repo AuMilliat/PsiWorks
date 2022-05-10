@@ -45,7 +45,7 @@ namespace Groups.Instant
             {
                 for (int iterator2 = iterator1+1; iterator2 < skeletons.Count; iterator2++)
                 {
-                    double distance = MathNet.Numerics.Distance.SSD(skeletons.ElementAt(iterator1).Value.ToVector(), skeletons.ElementAt(iterator2).Value.ToVector());
+                    double distance = MathNet.Numerics.Distance.Euclidean(skeletons.ElementAt(iterator1).Value.ToVector(), skeletons.ElementAt(iterator2).Value.ToVector());
                     if (distance > Configuration.DistanceThreshold)
                         continue;
 
