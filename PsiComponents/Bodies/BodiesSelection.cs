@@ -23,7 +23,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable distance for correpondance in millimeter
         /// </summary>
-        public double MaxDistance { get; set; } = 80.0;
+        public double MaxDistance { get; set; } = 8;
 
     }
     public class BodiesSelection : Subpipeline
@@ -117,6 +117,7 @@ namespace Bodies
         private Dictionary<uint, LearnedBody> Camera1LearnedBodies = new Dictionary<uint, LearnedBody>();
         private Dictionary<uint, LearnedBody> Camera2LearnedBodies = new Dictionary<uint, LearnedBody>();
         private uint idCount = 1;
+        private enum TupleState { AlreadyExist, Unkown, LeftJokerFound, RightJokerFound  };
 
         public BodiesSelection(Pipeline parent, BodiesSelectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
@@ -216,35 +217,22 @@ namespace Bodies
             foreach (var iterator in newMapping)
             {
                 Tuple<uint, uint> tuple;
-                int result = KeyOrValueExistInList(iterator, out tuple);
-                if (result == 0)
+                switch (KeyOrValueExistInList(iterator, out tuple))
                 {
-                    CorrespondanceList.Add(iterator);
-                    GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
-                }
-                else if(result > 0)
-                {
-                    // collision check and testing
-                    if (tuple.Item2 == 0)
-                        IntegrateInDicsAndList(iterator, tuple);
-                    else if (tuple.Item2 != iterator.Item2)
-                    {
-                        //oups!
-                        int IWantABreakPointHere = 0;
-                        IWantABreakPointHere++;
-                    }       
-                }
-                else //if (result < 0)
-                {
-                    // collision check and testing
-                    if (tuple.Item1 == 0)
-                        IntegrateInDicsAndList(iterator, tuple);
-                    else if (tuple.Item1 != iterator.Item1)
-                    {
-                        //oups!
-                        int IWantABreakPointHere = 0;
-                        IWantABreakPointHere++;
-                    }
+                    case TupleState.AlreadyExist:
+                        break;
+                    case TupleState.Unkown:
+                        CorrespondanceList.Add(iterator);
+                        GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
+                        break;
+                    case TupleState.RightJokerFound:
+                        if (tuple.Item2 != 0)
+                            IntegrateInDicsAndList(iterator, tuple);
+                        break;
+                    case TupleState.LeftJokerFound:
+                        if (tuple.Item1 != 0)
+                            IntegrateInDicsAndList(iterator, tuple);
+                        break;
                 }
             }
         }
@@ -258,6 +246,8 @@ namespace Bodies
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
                 GeneratedIdsMap.Remove((old.Item1, old.Item2));
             }
+            else
+                GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = idCount++;
         }
 
         private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
@@ -369,7 +359,7 @@ namespace Bodies
             return bestBodies;
         } 
         
-        private int KeyOrValueExistInList(Tuple<uint, uint> tuple, out Tuple<uint, uint> value)
+        private TupleState KeyOrValueExistInList(Tuple<uint, uint> tuple, out Tuple<uint, uint> value)
         {
             // zero is joker
             int caseCheck = 0;
@@ -380,19 +370,9 @@ namespace Bodies
             switch(caseCheck)
             {
                 case 0:
-                    //foreach (var iterator in CorrespondanceList)
-                    //{
-                    //    if (iterator.Item1 == tuple.Item1)
-                    //    {
-                    //        value = iterator;
-                    //        return 1;
-                    //    }
-                    //    else if (iterator.Item2 == tuple.Item2)
-                    //    {
-                    //        value = iterator;
-                    //        return -1;
-                    //    }
-                    //}
+                    value = tuple;
+                    if (CorrespondanceList.Contains(tuple)) 
+                        return TupleState.AlreadyExist;
                     break;
                 case 1:
                     foreach (var iterator in CorrespondanceList)
@@ -400,7 +380,7 @@ namespace Bodies
                         if (iterator.Item2 == tuple.Item2)
                         {
                             value = iterator;
-                            return -1;
+                            return TupleState.LeftJokerFound;
                         }
                     }
                     break;
@@ -410,7 +390,7 @@ namespace Bodies
                         if (iterator.Item1 == tuple.Item1)
                         {
                             value = iterator;
-                            return 1;
+                            return TupleState.RightJokerFound;
                         }
                     }
                     break;
@@ -418,7 +398,7 @@ namespace Bodies
                     throw new Exception("Critical bug");
             }
             value = tuple;
-            return 0;
+            return TupleState.Unkown;
         }
 
         private double AccumulatedConfidence(SimplifiedBody body)

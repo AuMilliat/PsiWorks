@@ -36,7 +36,6 @@ namespace Postures
 
         public int IncreaseFactor { get; set; } = 8;
         public int DecreaseFactor { get; set; } = 1;
-
         public int ThresholdAction { get; set; } = 1;
 
     }

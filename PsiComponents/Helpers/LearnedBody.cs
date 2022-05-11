@@ -17,6 +17,15 @@ namespace Helpers
         {
             return ProcessDifference(b) < maxDeviation;
         }
+
+        public bool SeemsTheSame(SimplifiedBody b, double maxDeviation)
+        {
+            List<double> dists = new List<double>();
+            foreach (var bones in LearnedBones)
+                if (bones.Value > 0.0)
+                    dists.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b.Joints[bones.Key.ParentJoint].Item2.ToVector(), b.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
+            return Statistics.MeanStandardDeviation(dists).Item2 < maxDeviation;
+        }
         private double ProcessDifference(LearnedBody b)
         {
             List<double> diff = new List<double>();

@@ -69,7 +69,6 @@ namespace Bodies
         /// </summary>
         public Emitter<List<SimplifiedBody>> OutBodiesIdentified { get; private set; }
 
-
         /// <summary>
         /// Gets the emitter of new learned bodies.
         /// </summary>
@@ -85,7 +84,9 @@ namespace Bodies
         /// </summary>
         private Connector<List<SimplifiedBody>> InCameraBodiesConnector;
 
-        // Receiver that encapsulates the input list of Nuitrack skeletons
+        /// <summary>
+        /// Receiver that encapsulates the input list of Nuitrack skeletons
+        /// </summary>
         public Receiver<List<SimplifiedBody>> InCameraBodies => InCameraBodiesConnector.In;
 
         private BodiesIdentificationConfiguration Configuration { get; }
@@ -111,6 +112,7 @@ namespace Bodies
             List<SimplifiedBody> identifiedBodies = new List<SimplifiedBody>();
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
+            List<uint> idsToRemove = new List<uint>();
             RemoveOldIds(envelope.OriginatingTime);
             foreach (var body in bodies)
             {
@@ -126,11 +128,21 @@ namespace Bodies
                 }
                 else if (LearnedBodies.ContainsKey(body.Id))
                 {
-                    LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
-                    identifiedBodies.Add(body);
-                    foundBodies.Add(body.Id);
-                    idsBodies.Add(body.Id);
+                    if(LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed))
+                    {
+                        LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
+                        identifiedBodies.Add(body);
+                        foundBodies.Add(body.Id);
+                        idsBodies.Add(body.Id);
+                    }
+                    else 
+                        idsToRemove.Add(body.Id);
                 }
+            }
+            if (idsToRemove.Count > 0)
+            { 
+                RemoveIds(idsToRemove);
+                OutBodiesRemoved.Post(idsToRemove, envelope.OriginatingTime);
             }
             foreach (var body in bodies)
                 if (!foundBodies.Contains(body.Id))
@@ -190,13 +202,19 @@ namespace Bodies
                 if((current - body.Value.LastSeen) > Configuration.MaximumLostTime)
                     idsToRemove.Add(body.Key);
 
-            foreach (uint id in idsToRemove)
+            RemoveIds(idsToRemove);
+            OutBodiesRemoved.Post(idsToRemove, current);
+        }
+
+        private void RemoveIds(List<uint> ids)
+        {
+            foreach (uint id in ids)
             {
                 LearnedBodies.Remove(id);
                 CorrespondanceMap.Remove(id);
                 foreach (var iterator in CorrespondanceMap)
                 {
-                    if(iterator.Value == id)
+                    if (iterator.Value == id)
                     {
                         CorrespondanceMap.Remove(iterator.Key);
                         break;
