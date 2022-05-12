@@ -25,7 +25,7 @@ namespace BodyCalibrationVisualizer
         protected Matrix<double> slaveToMasterMatrix;
 
         protected delegate MathNet.Spatial.Euclidean.Vector3D DelegateThatShouldBeLambda(MathNet.Spatial.Euclidean.Vector3D vector);
-        protected DelegateThatShouldBeLambda Lambda;
+        protected DelegateThatShouldBeLambda? Lambda = null;
         public BodyCalibrationVisualizer(Pipeline pipeline, Matrix<double>? calibration) : base(pipeline)
         {
             slaveToMasterMatrix = calibration ?? Matrix<double>.Build.DenseIdentity(4, 4);
@@ -66,6 +66,8 @@ namespace BodyCalibrationVisualizer
 
         protected void ProcessBodies(ref Graphics graphics, List<SimplifiedBody> bodies, Pen linePen, SolidBrush color, Font font)
         {
+            if (Lambda == null)
+                return;
             foreach (var body in bodies)
             {
                 foreach (var bone in AzureKinectBody.Bones)

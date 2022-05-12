@@ -22,30 +22,12 @@ namespace Bodies
         /// </summary>
         public string StoringPath { get; set; } = "./Stats.csv";
     }
-    public class BodiesStatistics : Subpipeline, INotifyPropertyChanged
+    public class BodiesStatistics : Subpipeline
     {
-        #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (!EqualityComparer<T>.Default.Equals(field, value))
-            {
-                field = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-        #endregion
-
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
         public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;
 
-        protected string statsCount = "";
-        public string StatsCount
-        {
-            get => statsCount;
-            set => SetProperty(ref statsCount, value);
-        }
+        protected string StatsCount = "";
 
         protected Dictionary<uint, StatisticBody> Data = new Dictionary<uint, StatisticBody>();
 

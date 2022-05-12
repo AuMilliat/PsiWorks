@@ -125,6 +125,7 @@ namespace LabJackComponent
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.Write(ex.Message);
                 return false;
             }
             return true;
@@ -162,6 +163,7 @@ namespace LabJackComponent
                     }
                     catch (Exception ex)
                     {
+                        System.Diagnostics.Debug.Write(ex.Message);
                         OutCommandsAck.Post(false, DateTime.UtcNow);
                         continue;
                     }

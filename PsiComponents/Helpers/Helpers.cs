@@ -69,6 +69,7 @@ namespace Helpers
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.Write(ex.Message);
                 return false;
             }
             return true;

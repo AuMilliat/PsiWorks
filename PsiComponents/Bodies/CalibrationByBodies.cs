@@ -101,12 +101,10 @@ namespace CalibrationByBodies
             InCamera1BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera1BodiesConnector));
             InCamera2BodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCamera2BodiesConnector));
             OutCalibration = parent.CreateEmitter<Matrix<double>>(this, nameof(OutCalibration));
-            
-            if(Configuration.SynchedCalibration)
-            {
-                InSynchEventConnector = CreateInputConnectorFrom<bool>(parent, nameof(InSynchEventConnector));
+            InSynchEventConnector = CreateInputConnectorFrom<bool>(parent, nameof(InSynchEventConnector));
+
+            if (Configuration.SynchedCalibration)
                 InSynchEventConnector.Pair(InCamera1BodiesConnector).Pair(InCamera2BodiesConnector).Do(Process);
-            }
             else
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
 
@@ -114,7 +112,7 @@ namespace CalibrationByBodies
             Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
             CalibrationJoints = new Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]>(camera1, camera2);
             TestingArray = new double[Configuration.NumberOfJointForTesting];
-            Configuration.SetStatus("Collecting data...");
+            SetStatus("Collecting data...");
         }
 
         private void Process((bool, List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
@@ -158,8 +156,7 @@ namespace CalibrationByBodies
                     JointAddedCount++;
                 }
             }
-            if (Configuration.SetStatus != null)
-                Configuration.SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForCalibration.ToString());
+            SetStatus("Calibration running:  " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForCalibration.ToString());
             if (JointAddedCount >= Configuration.NumberOfJointForCalibration)
             {
                 Emgu.CV.UMat outputArray = new Emgu.CV.UMat();
@@ -187,15 +184,13 @@ namespace CalibrationByBodies
                 CleanIteratorsAndCounters();
                 if(Configuration.TestMatrixBeforeSending)
                 {
-                    if (Configuration.SetStatus != null)
-                        Configuration.SetStatus("Calibration done! Checking...");
+                    SetStatus("Calibration done! Checking...");
                     return ECalibrationState.Testing;
                 }
                 else
                 {
                     OutCalibration.Post(TransformationMatrix, time);
-                    if (Configuration.SetStatus != null)
-                        Configuration.SetStatus("Calibration Done");
+                    SetStatus("Calibration Done");
                     StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
@@ -221,8 +216,7 @@ namespace CalibrationByBodies
                     TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
                 }
             }
-            if (Configuration.SetStatus != null)
-                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForTesting.ToString());
+            SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForTesting.ToString());
 
             if (JointAddedCount >= Configuration.NumberOfJointForTesting)
             {
@@ -230,16 +224,14 @@ namespace CalibrationByBodies
                 CleanIteratorsAndCounters();
                 if (statistics.Item2 < Configuration.AllowedMaxStdDeviation)
                 {
-                    if (Configuration.SetStatus != null)
-                        Configuration.SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
+                    SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
                     OutCalibration.Post(TransformationMatrix, time);
                     StoreCalibrationMatrix();
                     return ECalibrationState.Idle;
                 }
                 else
                 {
-                    if (Configuration.SetStatus != null)
-                        Configuration.SetStatus("Calibration running, StdDev: " + statistics.Item2.ToString());
+                    SetStatus("Test fail StdDev: " + statistics.Item2.ToString() + "/" + Configuration.AllowedMaxStdDeviation.ToString() + ", back to calibration");
                     return ECalibrationState.Running;
                 }
             }
@@ -262,6 +254,12 @@ namespace CalibrationByBodies
         {
             if(Configuration.StoringPath.Length > 4)
                 File.WriteAllText(Configuration.StoringPath, TransformationMatrix.ToMatrixString());
+        }
+
+        private void SetStatus(string message)
+        {
+            if (Configuration.SetStatus != null)
+                Configuration.SetStatus(message);
         }
     }
 }

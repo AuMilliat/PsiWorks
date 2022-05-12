@@ -13,9 +13,9 @@ namespace Visualizer
     /// </summary>
     public class DisplayVideo : INotifyPropertyChanged
     {
-        private Shared<Image> psiImage;
-        private Image psiDecodedImage;
-        private WriteableBitmap bmpImage;
+        private Shared<Image>? psiImage = null;
+        private Image? psiDecodedImage = null;
+        private WriteableBitmap? bmpImage = null;
 
 
         private readonly object bmpLock;
@@ -40,7 +40,7 @@ namespace Visualizer
         /// <summary>
         /// Gets or sets.
         /// </summary>
-        public WriteableBitmap VideoImage
+        public WriteableBitmap? VideoImage
         {
             get => bmpImage;
 

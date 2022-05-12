@@ -252,7 +252,7 @@ namespace Bodies
 
         private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
         {
-            if (camera1.Count == 0 || camera2.Count == 0) 
+            if (camera1.Count == 0 || camera2.Count == 0 || Configuration.Camera2ToCamera1Transformation == null) 
                 return new List<Tuple<uint, uint>>();
 
             // Bruteforce ftm, might simplify to check directly the max allowed distance.
@@ -412,9 +412,11 @@ namespace Bodies
 
         private SimplifiedBody TransformBody(SimplifiedBody body)
         {
+            if(Configuration.Camera2ToCamera1Transformation == null)
+                return body;
             SimplifiedBody transformed = body;
             foreach (var joint in body.Joints)
-                transformed.Joints[joint.Key] = new Tuple<JointConfidenceLevel, Vector3D>(joint.Value.Item1, Helpers.Helpers.CalculateTransform(joint.Value.Item2, Configuration.Camera2ToCamera1Transformation)); ;
+                transformed.Joints[joint.Key] = new Tuple<JointConfidenceLevel, Vector3D>(joint.Value.Item1, Helpers.Helpers.CalculateTransform(joint.Value.Item2, Configuration.Camera2ToCamera1Transformation));
             return transformed;
         }
     }

@@ -11,7 +11,7 @@ namespace BodyCalibrationVisualizer
         private Connector<IDepthDeviceCalibrationInfo> InCalibrationMasterConnector;
         public Receiver<IDepthDeviceCalibrationInfo> InCalibrationMaster => InCalibrationMasterConnector.In;
        
-        private IDepthDeviceCalibrationInfo MasterCalibration = null;
+        private IDepthDeviceCalibrationInfo? MasterCalibration = null;
 
         public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, Matrix<double>? calibration) : base(pipeline, calibration)
         {
@@ -36,6 +36,11 @@ namespace BodyCalibrationVisualizer
         }
         protected override bool toProjection(Vector3D point, out Point2D proj)
         {
+            if (MasterCalibration == null)
+            {
+                proj = new Point2D(-1, -1);
+                return false;
+            }
             return MasterCalibration.TryGetPixelPosition(point.ToPoint3D(), out proj);
         }
     }

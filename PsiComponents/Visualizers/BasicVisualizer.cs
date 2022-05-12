@@ -9,9 +9,9 @@ namespace Visualizer
     public abstract class BasicVisualizer : Subpipeline, IProducer<Shared<Image>>, INotifyPropertyChanged
     {
         #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged ;
 
-        protected void SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (!EqualityComparer<T>.Default.Equals(field, value))
             {
@@ -21,13 +21,11 @@ namespace Visualizer
         }
         #endregion
 
-
-
         public Emitter<Shared<Image>> Out { get; protected set; }
 
         protected DisplayVideo display = new DisplayVideo();
 
-        public WriteableBitmap Image
+        public WriteableBitmap? Image
         {
             get => display.VideoImage;
         }
