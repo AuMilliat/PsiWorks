@@ -214,18 +214,17 @@ namespace CalibrationByBodies
             CalibrationTime = time;
             for (JointId iterator = JointId.Pelvis; iterator < JointId.Count; iterator++)
             {
-                if (camera1.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration &&
-                    camera2.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration)
+                if (camera1.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration && camera2.Joints[iterator].Item1 >= Configuration.ConfidenceLevelForCalibration)
                 {
-                    if (JointAddedCount >= Configuration.NumberOfJointForCalibration/2)
+                    if (JointAddedCount >= Configuration.NumberOfJointForTesting)
                         break;
                     TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
                 }
             }
             if (Configuration.SetStatus != null)
-                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + (Configuration.NumberOfJointForCalibration/2).ToString());
+                Configuration.SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForTesting.ToString());
 
-            if (JointAddedCount >= Configuration.NumberOfJointForCalibration/2)
+            if (JointAddedCount >= Configuration.NumberOfJointForTesting)
             {
                 var statistics = Statistics.MeanStandardDeviation(TestingArray);
                 CleanIteratorsAndCounters();

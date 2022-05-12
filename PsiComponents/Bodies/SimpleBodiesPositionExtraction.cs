@@ -24,7 +24,7 @@ namespace Bodies
         /// <summary>
         /// Gets the emitter of groups detected.
         /// </summary>
-        public Emitter<Dictionary<uint,   Vector3D>> OutBodiesPositions { get; private set; }
+        public Emitter<Dictionary<uint, Vector3D>> OutBodiesPositions { get; private set; }
 
         /// <summary>
         /// Gets the nuitrack connector of lists of currently tracked bodies.
@@ -76,7 +76,7 @@ namespace Bodies
 
         private void Process(List<AzureKinectBody> bodies, Envelope envelope)
         {
-            Dictionary<uint, Vector3D> skeletons = new Dictionary<uint,   Vector3D>();
+            Dictionary<uint, Vector3D> skeletons = new Dictionary<uint, Vector3D>();
 
             foreach (var skeleton in bodies)
                 skeletons.Add(skeleton.TrackingId, skeleton.Joints[Configuration.AzureJointAsPosition].Pose.Origin.ToVector3D());
