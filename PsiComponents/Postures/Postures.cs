@@ -30,7 +30,7 @@ namespace Postures
         public double SpeedWalkingThreshold { get; set; } = 0.025;
         public double JumpingThreshold { get; set; } = 0.5;
 
-        public double PointingAngleThreshold { get; set; } = 15.0;
+        public double PointingAngleThreshold { get; set; } = 55.0;
         public double SittingFactor { get; set; } = 2.0; 
         public double SittingAngleThreshold { get; set; } = 115.0;
 
@@ -113,7 +113,7 @@ namespace Postures
             Vector2D oldPelvis = new Vector2D(BodiesData[body.Id].LastPosition.X, BodiesData[body.Id].LastPosition.Y);
        
             TimeSpan duration = time - BodiesData[body.Id].LastSeen;
-            double distance = MathNet.Numerics.Distance.SSD(newPelvis.ToVector(), oldPelvis.ToVector() / duration.TotalMilliseconds);
+            double distance = MathNet.Numerics.Distance.Euclidean(newPelvis.ToVector(), oldPelvis.ToVector() / duration.TotalMilliseconds);
             if (duration.TotalSeconds > 0.0 && (distance / duration.TotalSeconds) > Configuration.SpeedWalkingThreshold)
                 BodiesData[body.Id].Detected[Postures.Moving] += Configuration.IncreaseFactor;
             BodiesData[body.Id].Detected[Postures.Moving] -= Configuration.DecreaseFactor;
@@ -135,7 +135,7 @@ namespace Postures
             MathNet.Spatial.Units.Angle rightAngle = fkRight.AngleTo(khRight);
 
             double height = body.Joints[JointId.Pelvis].Item2.Z - body.Joints[JointId.FootLeft].Item2.Z;
-            double distance = MathNet.Numerics.Distance.SSD(body.Joints[JointId.FootLeft].Item2.ToVector(), body.Joints[JointId.FootRight].Item2.ToVector()) * Configuration.SittingFactor;
+            double distance = MathNet.Numerics.Distance.Euclidean(body.Joints[JointId.FootLeft].Item2.ToVector(), body.Joints[JointId.FootRight].Item2.ToVector()) * Configuration.SittingFactor;
 
             if (leftAngle.Degrees < Configuration.SittingAngleThreshold && rightAngle.Degrees < Configuration.SittingAngleThreshold && height < distance)
                 BodiesData[body.Id].Detected[Postures.Sitting] += Configuration.IncreaseFactor;

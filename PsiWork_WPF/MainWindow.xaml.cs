@@ -121,7 +121,6 @@ namespace PsiWork_WPF
             Visu1 = visu1;
             // Linkage
 
-
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
             BodiesConverter bodiesConverter1 = new BodiesConverter(pipeline, "kinectecConverter1");
@@ -169,18 +168,18 @@ namespace PsiWork_WPF
 
             /*** POSTURES ***/
             // Basic configuration for the moment.
-            SimplePostures postures = new SimplePostures(pipeline);
+            //SimplePostures postures = new SimplePostures(pipeline);
 
             /*** STATS ***/
-            BodiesStatisticsConfiguration bodiesStatisticsConfiguration0 = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration0.StoringPath = "F:/Stats/Kinect0Stats.csv";
-            BodiesStatistics stat0 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration0);
-            BodiesStatisticsConfiguration bodiesStatisticsConfiguration1 = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration1.StoringPath = "F:/Stats/Kinect1Stats.csv";
-            BodiesStatistics stat1 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration1);
-            BodiesStatisticsConfiguration bodiesStatisticsConfiguration = new BodiesStatisticsConfiguration();
-            bodiesStatisticsConfiguration.StoringPath = "F:/Stats/KinectStats.csv";
-            BodiesStatistics stat = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration);
+            //BodiesStatisticsConfiguration bodiesStatisticsConfiguration0 = new BodiesStatisticsConfiguration();
+            //bodiesStatisticsConfiguration0.StoringPath = "F:/Stats/Kinect0Stats.csv";
+            //BodiesStatistics stat0 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration0);
+            //BodiesStatisticsConfiguration bodiesStatisticsConfiguration1 = new BodiesStatisticsConfiguration();
+            //bodiesStatisticsConfiguration1.StoringPath = "F:/Stats/Kinect1Stats.csv";
+            //BodiesStatistics stat1 = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration1);
+            //BodiesStatisticsConfiguration bodiesStatisticsConfiguration = new BodiesStatisticsConfiguration();
+            //bodiesStatisticsConfiguration.StoringPath = "F:/Stats/KinectStats.csv";
+            //BodiesStatistics stat = new BodiesStatistics(pipeline, bodiesStatisticsConfiguration);
 
             /*** Visualizers ! ***/
             GroupsVisualizerConfguration confifGroupsVisu = new GroupsVisualizerConfguration();
@@ -201,9 +200,10 @@ namespace PsiWork_WPF
 
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
-            //identificator0
 
+            //identificator0
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+
             //visu0
             sensor0.ColorImage.PipeTo(Visu0.InColorImage);
             sensor0.DepthDeviceCalibrationInfo.PipeTo(visu0.InCalibration);
@@ -240,10 +240,10 @@ namespace PsiWork_WPF
             bodiesIdentification1.OutBodiesIdentified.PipeTo(Calib.InBodiesSlave);
 
             //extractor
-           // bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+            bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
 
             //Instant
-            //positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
+            positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
 
             //integrated
             //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
@@ -267,7 +267,7 @@ namespace PsiWork_WPF
             bodiesDetection.OutBodiesCalibrated.PipeTo(integratedVisu.InBodies);
 
             //postures
-            bodiesDetection.OutBodiesCalibrated.PipeTo(postures.InBodies);
+            //bodiesDetection.OutBodiesCalibrated.PipeTo(postures.InBodies);
 
             //posturesVisu
             //bodiesDetection.OutBodiesCalibrated.PipeTo(posturesVisualizer.InBodies);
@@ -275,9 +275,9 @@ namespace PsiWork_WPF
             //postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
 
             //Stats
-            bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
-            bodiesConverter1.OutBodies.PipeTo(stat1.InBodies);
-            bodiesDetection.OutBodiesCalibrated.PipeTo(stat.InBodies);
+            //bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
+            //bodiesConverter1.OutBodies.PipeTo(stat1.InBodies);
+            //bodiesDetection.OutBodiesCalibrated.PipeTo(stat.InBodies);
         }
 
         private void KinectMonoPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -434,8 +434,15 @@ namespace PsiWork_WPF
             configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
             AzureKinectSensor sensor0 = new AzureKinectSensor(pipeline, configKinect0);
 
-              /*** BODIES CONVERTERS ***/
+            /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline);
+
+            /*** BODIES IDENTIFICATION ***/
+            BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
+            BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
+
+            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            Visu0 = visu0;
 
             /*** POSTURES ***/
             // Basic configuration for the moment.
@@ -447,11 +454,19 @@ namespace PsiWork_WPF
             PosturesVisu = posturesVisualizer;
 
             /*** LINKAGE ***/
-            // Sensor0 -> Converter0 -> Visu0     |  
-            //                       -> Postures -> VisuPostures
+            // Sensor0 -> Converter0 -> Identification -> Visu0     |  
+            //                                         -> Postures -> VisuPostures
 
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+
+            //identificator0
+            bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+
+            //visu0
+            sensor0.ColorImage.PipeTo(Visu0.InColorImage);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(visu0.InCalibration);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(Visu0.InBodies);
 
             //postures
             bodiesConverter0.OutBodies.PipeTo(postures.InBodies);
