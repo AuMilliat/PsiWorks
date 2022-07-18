@@ -88,7 +88,8 @@ namespace Bodies
             Dictionary<uint, Vector3D> skeletons = new Dictionary<uint, Vector3D>();
 
             foreach (var skeleton in bodies)
-                skeletons.Add(skeleton.Id, skeleton.Joints[Configuration.AzureJointAsPosition].Item2);
+                if(!skeletons.ContainsKey(skeleton.Id))
+                    skeletons.Add(skeleton.Id, skeleton.Joints[Configuration.AzureJointAsPosition].Item2);
             OutBodiesPositions.Post(skeletons, envelope.OriginatingTime);
         }
     }

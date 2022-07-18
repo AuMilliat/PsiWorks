@@ -60,7 +60,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
         /// </summary>
-        public double MaximumDeviationAllowed { get; set; } = 0.05;
+        public double MaximumDeviationAllowed { get; set; } = 0.005;
     }
     public class BodiesIdentification : Subpipeline
     {
@@ -107,13 +107,14 @@ namespace Bodies
             OutBodiesRemoved = parent.CreateEmitter<List<uint>>(this, nameof(OutBodiesRemoved));
             InCameraBodiesConnector.Out.Do(Process);
         }
+
         private void Process(List<SimplifiedBody> bodies, Envelope envelope)
         {
             List<SimplifiedBody> identifiedBodies = new List<SimplifiedBody>();
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
             List<uint> idsToRemove = new List<uint>();
-            RemoveOldIds(envelope.OriginatingTime);
+            RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
             foreach (var body in bodies)
             {
                 if (CorrespondanceMap.ContainsKey(body.Id))
@@ -121,7 +122,6 @@ namespace Bodies
                     idsBodies.Add(CorrespondanceMap[body.Id]);
                     idsBodies.Add(body.Id);
                     body.Id = CorrespondanceMap[body.Id];
-                    LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                     identifiedBodies.Add(body);
                     foundBodies.Add(body.Id);
                     continue;
@@ -195,15 +195,13 @@ namespace Bodies
             return true;
         }
 
-        private void RemoveOldIds(DateTime current)
+        private void RemoveOldIds(DateTime current, ref List<uint> idsToRemove)
         {
-            List<uint> idsToRemove = new List<uint>();
             foreach (var body in LearnedBodies)
                 if((current - body.Value.LastSeen) > Configuration.MaximumLostTime)
                     idsToRemove.Add(body.Key);
 
             RemoveIds(idsToRemove);
-            OutBodiesRemoved.Post(idsToRemove, current);
         }
 
         private void RemoveIds(List<uint> ids)
