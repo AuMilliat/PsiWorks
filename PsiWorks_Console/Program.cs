@@ -175,7 +175,7 @@ class Program
 
     static void GroupSinleIdentificationTesting(Pipeline p)
     {
-        var store = PsiStore.Open(p, "GroupsStoring", "C:\\IMT\\Stores\\Free2");
+        var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
         var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
 
         /*** BODIES CONVERTERS ***/
@@ -207,7 +207,7 @@ class Program
         if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
             calibration = null;
 
-        var store = PsiStore.Open(p, "GroupsStoring", "C:\\IMT\\Stores\\Free2");
+        var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
         var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
         var Bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
 
@@ -392,7 +392,7 @@ class Program
         /*** Record Groups ***/
         //GroupsRecording(p);
         GroupSinleIdentificationTesting(p);
-        GroupsUsingRecords(p);
+        //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
         //HololensImporter(p);

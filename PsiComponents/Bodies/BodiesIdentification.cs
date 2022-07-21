@@ -55,7 +55,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable duration for between old id pop again without identification in millisecond
         /// </summary>
-        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 2, 0);
+        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 5, 0);
 
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
@@ -114,7 +114,7 @@ namespace Bodies
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
             List<uint> idsToRemove = new List<uint>();
-            RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
+            //RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
             foreach (var body in bodies)
             {
                 if (CorrespondanceMap.ContainsKey(body.Id))
@@ -128,14 +128,14 @@ namespace Bodies
                 }
                 else if (LearnedBodies.ContainsKey(body.Id))
                 {
-                    if(LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed))
+                    if (envelope.OriginatingTime - LearnedBodies[body.Id].LastSeen < Configuration.MaximumLostTime || LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed))
                     {
                         LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                         identifiedBodies.Add(body);
                         foundBodies.Add(body.Id);
                         idsBodies.Add(body.Id);
                     }
-                    else 
+                    else
                         idsToRemove.Add(body.Id);
                 }
             }
@@ -189,6 +189,7 @@ namespace Bodies
                     newLearnedBody.LastSeen = timestamp;
                     LearnedBodies.Add(body.Id, newLearnedBody);
                     LearningBodies.Remove(body.Id);
+                    idsBodies.Add(body.Id);
                 }
                 return false;
             }
