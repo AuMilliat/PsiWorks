@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-	  <TargetFramework>net472</TargetFramework>
+	  <TargetFramework>net48</TargetFramework>
 	  <Nullable>enable</Nullable>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <LangVersion>latest</LangVersion>
@@ -20,13 +19,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetty.Codecs.Mqtt" Version="0.7.2" />
+    <PackageReference Include="DotNetty.Codecs.Mqtt-signed" Version="0.3.2" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.5.4823" />
     <PackageReference Include="Microsoft.Azure.Kinect.BodyTracking" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Psi.Audio" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.DeviceManagement" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Imaging" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Interop" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Runtime" Version="0.17.52.1-beta" />
+    <PackageReference Include="MQTTnet" Version="4.0.2.221" />
+    <PackageReference Include="VL.IO.NDI" Version="0.3.0-alpha" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,13 +1,12 @@
 ﻿using System;
 using NewTek;
-using NewTek.NDI;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Psi.Components;
 using Microsoft.Psi;
 using Microsoft.Psi.Imaging;
 using Microsoft.Psi.Audio;
-
+using VL.IO.NDI;
 
 namespace ORMonitoring
 {

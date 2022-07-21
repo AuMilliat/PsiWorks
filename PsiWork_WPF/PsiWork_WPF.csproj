@@ -2,13 +2,17 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-	  <TargetFramework>net472</TargetFramework>
+	  <TargetFramework>net48</TargetFramework>
 	  <Nullable>enable</Nullable>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <LangVersion>Preview</LangVersion>
     <UseWPF>true</UseWPF>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2021.4.10" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PsiComponents\PsiComponents.csproj" />
