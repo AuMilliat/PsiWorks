@@ -55,7 +55,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable duration for between old id pop again without identification in millisecond
         /// </summary>
-        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 5, 0);
+        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 1, 0);
 
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
@@ -114,7 +114,7 @@ namespace Bodies
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
             List<uint> idsToRemove = new List<uint>();
-            //RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
+            RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
             foreach (var body in bodies)
             {
                 if (CorrespondanceMap.ContainsKey(body.Id))
@@ -122,6 +122,8 @@ namespace Bodies
                     idsBodies.Add(CorrespondanceMap[body.Id]);
                     idsBodies.Add(body.Id);
                     body.Id = CorrespondanceMap[body.Id];
+                    LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
+                    LearnedBodies[body.Id].LastPosition = body.Joints[JointId.Pelvis].Item2;
                     identifiedBodies.Add(body);
                     foundBodies.Add(body.Id);
                     continue;
@@ -131,6 +133,7 @@ namespace Bodies
                     if (envelope.OriginatingTime - LearnedBodies[body.Id].LastSeen < Configuration.MaximumLostTime || LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed))
                     {
                         LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
+                        LearnedBodies[body.Id].LastPosition = body.Joints[JointId.Pelvis].Item2;
                         identifiedBodies.Add(body);
                         foundBodies.Add(body.Id);
                         idsBodies.Add(body.Id);
@@ -171,24 +174,22 @@ namespace Bodies
                 {
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
-                    learnedBodiesNotVisible.Add(learnedBody.Value);
+                    if (timestamp - learnedBody.Value.LastSeen > Configuration.MaximumIdentificationTime)
+                        learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
                 NewLearnedBodies.Add(newLearnedBody);
+                newLearnedBody.LastSeen = timestamp;
+                newLearnedBody.LastPosition = body.Joints[JointId.Pelvis].Item2;
+                LearningBodies.Remove(body.Id);
                 uint correspondanceId = 0;
                 if(learnedBodiesNotVisible.Count > 0)
                     correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
                 if(correspondanceId > 0)
-                {
-                    newLearnedBody.LastSeen = timestamp;
                     CorrespondanceMap[body.Id] = correspondanceId;
-                    LearningBodies.Remove(body.Id);
-                }
                 else
                 {
-                    newLearnedBody.LastSeen = timestamp;
                     LearnedBodies.Add(body.Id, newLearnedBody);
-                    LearningBodies.Remove(body.Id);
                     idsBodies.Add(body.Id);
                 }
                 return false;

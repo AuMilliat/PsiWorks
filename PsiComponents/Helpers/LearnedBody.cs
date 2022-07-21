@@ -8,6 +8,7 @@ namespace Helpers
         public Dictionary<(JointId ChildJoint, JointId ParentJoint), double> LearnedBones { get; private set; }
         public uint Id { get; private set; }
         public DateTime LastSeen { get; set; }
+        public MathNet.Spatial.Euclidean.Vector3D LastPosition { get; set; }
         public LearnedBody(uint id, Dictionary<(JointId ChildJoint, JointId ParentJoint), double> bones)
         {
             Id = id;
@@ -39,9 +40,12 @@ namespace Helpers
         {
             List<KeyValuePair<double, LearnedBody>> pairs = new List<KeyValuePair<double, LearnedBody>>();
             foreach (var pair in listOfBodies)
-                pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
+            {
+                if (MathNet.Numerics.Distance.Euclidean(pair.LastPosition.ToVector(), LastPosition.ToVector()) < (LastSeen - pair.LastSeen).TotalSeconds)
+                    pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
+            }
             pairs.Sort(new TupleDoubleLearnedBodyComparer());
-            if (maxDeviation < pairs.First().Key)
+            if (pairs.Count == 0 || maxDeviation < pairs.First().Key)
                 return 0;
             return pairs.First().Value.Id;
         }
