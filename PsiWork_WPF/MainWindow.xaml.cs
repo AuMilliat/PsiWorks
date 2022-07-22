@@ -65,14 +65,18 @@ namespace PsiWork_WPF
 
 
         public BasicVisualizer Visu0 { get; private set; }
+        public BasicVisualizer Visu1 { get; private set; }
         //public BodyTrackerVisualizer.BodyTrackerVisualizer Visu0 { get; private set; }
-        public BodyTrackerVisualizer.BodyTrackerVisualizer Visu1 { get; private set; }
+        //public BodyTrackerVisualizer.BodyTrackerVisualizer Visu1 { get; private set; }
         public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
         public GroupsVisualizer.GroupsVisualizer InstantVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer EntryVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
         public PosturesVisualizer.PosturesVisualizer PosturesVisu { get; private set; }
 
+        public DateTime stoppingTime { get; set; }
+        private bool isPlaying = false;
+        //private Microsoft.Psi.Data.PsiImporter? store = null;
 
         private string status = "";
         public string Status
@@ -88,6 +92,7 @@ namespace PsiWork_WPF
         private Pipeline pipeline;
         public MainWindow()
         {
+            stoppingTime = new DateTime();
             DataContext = this;
             MathNet.Numerics.LinearAlgebra.Matrix<double> calibration;
             if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
@@ -102,22 +107,29 @@ namespace PsiWork_WPF
             //NuitrackPipline(calibration);
             StoreDisplayAndProcess();
             // RunAsync the pipeline in non-blocking mode.
-            pipeline.RunAsync();
+            pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
+            isPlaying = true;
             InitializeComponent();
+            
         }
 
         private void StoreDisplayAndProcess()
         {
             var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\Free2");
-            var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
-            var calib0 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies1");
+            var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
+            var calib0 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies0");
+            var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
+            var calib1 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies1");
 
+            //pipeline = store;
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "converter0");
+            BodiesConverter bodiesConverter1 = new BodiesConverter(pipeline, "converter1");
 
             /*** BODIES IDENTIFICATION ***/
             BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
             BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
+            BodiesIdentification bodiesIdentification1 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -126,18 +138,28 @@ namespace PsiWork_WPF
             BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
 
             /*** BODIES DISPLAY ***/
-            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
-            Visu0 = bodyVisualizer;
-            /*** Linkage ***/
-            Bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
+            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
+            Visu0 = bodyVisualizer0;
+            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
+            Visu1 = bodyVisualizer1;
 
+            /*** Linkage ***/
+            bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+
+            bodies1.PipeTo(bodiesConverter1.InBodiesAzure);
+            bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
             bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
             bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
 
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer.InBodies);
-            calib0.PipeTo(bodyVisualizer.InCalibration);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera2Bodies);
+            bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesDetection.InCamera2LearnedBodies);
+
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
+            calib0.PipeTo(bodyVisualizer0.InCalibration);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
+            calib1.PipeTo(bodyVisualizer1.InCalibration);
         }
 
         private void KinectPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -255,9 +277,9 @@ namespace PsiWork_WPF
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
             //visu1
-            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
+            sensor1.ColorImage.PipeTo(visu1.InColorImage);
             sensor1.DepthDeviceCalibrationInfo.PipeTo(visu1.InCalibration);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(Visu1.InBodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(visu1.InBodies);
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
@@ -438,8 +460,8 @@ namespace PsiWork_WPF
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
             //visu1
-            sensor1.ColorImage.PipeTo(Visu1.InColorImage);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(Visu1.InBodies);
+            sensor1.ColorImage.PipeTo(visu1.InColorImage);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(visu1.InBodies);
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
@@ -517,7 +539,7 @@ namespace PsiWork_WPF
             sensor0.DepthDeviceCalibrationInfo.PipeTo(posturesVisualizer.InCalibration);
             sensor0.ColorImage.PipeTo(posturesVisualizer.InColorImage);
             postures.OutPostures.PipeTo(posturesVisualizer.InPostures);
-    }
+        }
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             // Stop correctly the pipeline.
@@ -535,7 +557,19 @@ namespace PsiWork_WPF
         private void HandleKeyPress(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Space)
-                Out.Post(true, DateTime.UtcNow);
+            {
+                if (isPlaying)
+                {
+                    //store.s
+                    isPlaying = false;
+                }
+                else
+                {
+                    StoreDisplayAndProcess();
+                    pipeline.RunAsync(new ReplayDescriptor(stoppingTime));
+                    isPlaying = true;
+                }
+            }
         }
     }
 }

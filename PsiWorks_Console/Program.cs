@@ -398,7 +398,7 @@ class Program
         //HololensImporter(p);
 
         // RunAsync the pipeline in non-blocking mode.
-        p.RunAsync();
+        p.RunAsync(ReplayDescriptor.ReplayAllRealTime);
         // Wainting for an out key
         Console.WriteLine("Press any key to stop the application.");
         Console.ReadLine();
