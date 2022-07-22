@@ -560,7 +560,7 @@ namespace PsiWork_WPF
             {
                 if (isPlaying)
                 {
-                    //store.s
+                    pipeline.Dispose();
                     isPlaying = false;
                 }
                 else
