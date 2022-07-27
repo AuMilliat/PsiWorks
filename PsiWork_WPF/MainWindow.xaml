@@ -5,11 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PsiWork_WPF"
         mc:Ignorable="d"
-        Title="DebugWindow" Height="450" Width="800">
+        Title="DebugWindow" Height="920" Width="2160">
     <UserControl Loaded="UserControl_Loaded">
         <Grid>
-             <!--Configuration for calibration-->
-             <Grid.ColumnDefinitions>
+            <!--Configuration for calibration-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="{Binding Path=Visu0.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
+            <Label Grid.Row="0" Grid.Column="1" Content="{Binding Path=Visu1.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
+            <Image Grid.Row="1" Grid.Column="0" Source="{Binding Path=Visu0.Image}"/>
+            <Image Grid.Row="1" Grid.Column="1" Source="{Binding Path=Visu1.Image}"/>
+            <!--Configuration for calibration-->
+            <!--<Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
@@ -24,7 +37,7 @@
             <Image Grid.Row="1" Grid.Column="0" Source="{Binding Path=Visu0.Image}"/>
             <Image Grid.Row="1" Grid.Column="1" Source="{Binding Path=Visu1.Image}"/>
             <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Source="{Binding Path=Calib.Image}"/>
-            <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Path=Status}" FontSize="48" FontWeight="Bold"/>
+            <Label Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Path=Status}" FontSize="48" FontWeight="Bold"/>-->
             <!--Configuration for groups-->
             <!-- <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>

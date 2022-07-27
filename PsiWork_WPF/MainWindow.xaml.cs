@@ -107,7 +107,7 @@ namespace PsiWork_WPF
             //NuitrackPipline(calibration);
             StoreDisplayAndProcess();
             // RunAsync the pipeline in non-blocking mode.
-            pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
+            //pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             isPlaying = true;
             InitializeComponent();
             
@@ -558,17 +558,7 @@ namespace PsiWork_WPF
         {
             if (e.Key == Key.Space)
             {
-                if (isPlaying)
-                {
-                    pipeline.Dispose();
-                    isPlaying = false;
-                }
-                else
-                {
-                    StoreDisplayAndProcess();
-                    pipeline.RunAsync(new ReplayDescriptor(stoppingTime));
-                    isPlaying = true;
-                }
+                pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             }
         }
     }

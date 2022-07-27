@@ -11,8 +11,8 @@ namespace BodyVisualizer
 {
     public class BodyVisualizerConfguration
     {
-        public int Width { get; set; } = 1080;
-        public int Height { get; set; } = 920;
+        public int Width { get; set; } = 1920;
+        public int Height { get; set; } = 1080;
     }
     public abstract class BodyVisualizer : BasicVisualizer
     {
