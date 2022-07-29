@@ -105,7 +105,7 @@ namespace PsiWork_WPF
             //KinectPipline(calibration);
             //KinectMonoPipline(calibration);
             //NuitrackPipline(calibration);
-            StoreDisplayAndProcess();
+            StoreDisplayAndProcess(calibration);
             // RunAsync the pipeline in non-blocking mode.
             //pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             isPlaying = true;
@@ -113,9 +113,9 @@ namespace PsiWork_WPF
             
         }
 
-        private void StoreDisplayAndProcess()
+        private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
         {
-            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\Free2");
+            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\2-2-1_5");
             var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
             var calib0 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies0");
             var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
@@ -133,9 +133,9 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-
-            BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
+            BodiesSelectionConfiguration bodiesSelectionConfiguration = new BodiesSelectionConfiguration();
+            bodiesSelectionConfiguration.Camera2ToCamera1Transformation = calibration;
+            BodiesSelection bodiesSelection = new BodiesSelection(pipeline, bodiesSelectionConfiguration);
 
             /*** BODIES DISPLAY ***/
             BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
@@ -150,16 +150,18 @@ namespace PsiWork_WPF
             bodies1.PipeTo(bodiesConverter1.InBodiesAzure);
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
-            bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesSelection.InCamera1Bodies);
+            bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesSelection.InCamera1LearnedBodies);
 
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera2Bodies);
-            bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesDetection.InCamera2LearnedBodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesSelection.InCamera2Bodies);
+            bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesSelection.InCamera2LearnedBodies);
 
             bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
             calib0.PipeTo(bodyVisualizer0.InCalibration);
             bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
             calib1.PipeTo(bodyVisualizer1.InCalibration);
+
+
         }
 
         private void KinectPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)

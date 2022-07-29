@@ -53,9 +53,14 @@ namespace Bodies
         public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0,0,1);
 
         /// <summary>
+        /// Gets or sets minimum time for trying the correspondance below that time we trust the Kinect identification algo
+        /// </summary>
+        public TimeSpan MinimumIdentificationTime { get; set; } = new TimeSpan(0, 1, 0);
+
+        /// <summary>
         /// Gets or sets maximum acceptable duration for between old id pop again without identification in millisecond
         /// </summary>
-        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 1, 0);
+        public TimeSpan MaximumLostTime { get; set; } = new TimeSpan(0, 5, 0);
 
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
@@ -96,11 +101,11 @@ namespace Bodies
         private Dictionary<uint, LearningBody> LearningBodies = new Dictionary<uint, LearningBody>();
         private List<LearnedBody> NewLearnedBodies = new List<LearnedBody>();
 
+
         public BodiesIdentification(Pipeline parent, BodiesIdentificationConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
         {
             Configuration = configuration ?? new BodiesIdentificationConfiguration();
-
             InCameraBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(parent, nameof(InCameraBodiesConnector));
             OutBodiesIdentified = parent.CreateEmitter<List<SimplifiedBody>>(this, nameof(OutBodiesIdentified));
             OutLearnedBodies = parent.CreateEmitter<List<LearnedBody>>(this, nameof(OutLearnedBodies));
@@ -174,7 +179,7 @@ namespace Bodies
                 {
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
-                    if (timestamp - learnedBody.Value.LastSeen > Configuration.MaximumIdentificationTime)
+                    if (timestamp - learnedBody.Value.LastSeen > Configuration.MinimumIdentificationTime)
                         learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);

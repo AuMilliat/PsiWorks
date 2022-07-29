@@ -170,12 +170,15 @@ namespace Bodies
             LearnedBodyProcessing(list, ref Camera2LearnedBodies);
         }
         private void LearnedBodyProcessing(List<LearnedBody> list, ref Dictionary<uint, LearnedBody> dic)
-        { 
-            foreach (var item in list)
+        {
+            lock (this)
             {
-                if (dic.ContainsKey(item.Id))
-                    continue;
-                dic.Add(item.Id, item);
+                foreach (var item in list)
+                {
+                    if (dic.ContainsKey(item.Id))
+                        continue;
+                    dic.Add(item.Id, item);
+                }
             }
         }
 
@@ -360,15 +363,18 @@ namespace Bodies
         private void SelectByLearnedBodies(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, Tuple<uint, uint> ids, ref List<SimplifiedBody> bestBodies)
         {
             SimplifiedBody b1 = camera1[ids.Item1], b2 = camera2[ids.Item2];
-            LearnedBody l1 = Camera1LearnedBodies[ids.Item1], l2 = Camera2LearnedBodies[ids.Item1];
+            LearnedBody l1 = Camera1LearnedBodies[ids.Item1], l2 = Camera2LearnedBodies[ids.Item2];
 
             List<double> dist1 = new List<double>(), dist2 = new List<double>();
-            foreach(var bones in l1.LearnedBones)
+            lock (this)
             {
-                if (bones.Value > 0.0)
-                    dist1.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
-                if (l2.LearnedBones[bones.Key] > 0.0)
-                    dist2.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b2.Joints[bones.Key.ParentJoint].Item2.ToVector(), b2.Joints[bones.Key.ChildJoint].Item2.ToVector()) - l2.LearnedBones[bones.Key]));
+                foreach (var bones in l1.LearnedBones)
+                {
+                    if (bones.Value > 0.0)
+                        dist1.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
+                    if (l2.LearnedBones[bones.Key] > 0.0)
+                        dist2.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b2.Joints[bones.Key.ParentJoint].Item2.ToVector(), b2.Joints[bones.Key.ChildJoint].Item2.ToVector()) - l2.LearnedBones[bones.Key]));
+                }
             }
             var statistics1 = Statistics.MeanStandardDeviation(dist1);
             var statistics2 = Statistics.MeanStandardDeviation(dist2);

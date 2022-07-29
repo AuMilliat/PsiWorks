@@ -40,10 +40,7 @@ namespace Helpers
         {
             List<KeyValuePair<double, LearnedBody>> pairs = new List<KeyValuePair<double, LearnedBody>>();
             foreach (var pair in listOfBodies)
-            {
-                if (MathNet.Numerics.Distance.Euclidean(pair.LastPosition.ToVector(), LastPosition.ToVector()) < (LastSeen - pair.LastSeen).TotalSeconds)
-                    pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
-            }
+                pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
             pairs.Sort(new TupleDoubleLearnedBodyComparer());
             if (pairs.Count == 0 || maxDeviation < pairs.First().Key)
                 return 0;
