@@ -1,5 +1,6 @@
 ﻿using NuitrackComponent;
 using Microsoft.Psi;
+using Image = Microsoft.Psi.Imaging.Image;
 
 namespace BodyVisualizer
 {
@@ -9,7 +10,13 @@ namespace BodyVisualizer
         public NuitrackBodyVisualizer(Pipeline pipeline, NuitrackSensor sensor, BodyVisualizerConfguration? configuration) : base(pipeline, configuration)
         {
             Sensor = sensor;
-            InBodiesConnector.Do(Process);
+            if(Configuration.WithVideoStream)
+            {
+                var joined2 = InBodiesConnector.Out.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>());
+                joined2.Do(Process);
+            }
+            else
+                InBodiesConnector.Do(Process);
         }
         protected override bool toProjection(MathNet.Spatial.Euclidean.Vector3D point, out MathNet.Spatial.Euclidean.Point2D proj)
         {

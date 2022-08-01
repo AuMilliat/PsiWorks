@@ -118,7 +118,7 @@ namespace Bodies
         private Dictionary<uint, LearnedBody> Camera1LearnedBodies = new Dictionary<uint, LearnedBody>();
         private Dictionary<uint, LearnedBody> Camera2LearnedBodies = new Dictionary<uint, LearnedBody>();
         private uint idCount = 1;
-        private enum TupleState { AlreadyExist, KeyAlreadyInserted, GoodToInsert, LeftJokerFound, RightJokerFound  };
+        private enum TupleState { AlreadyExist, KeyAlreadyInserted, GoodToInsert, Replace  };
 
         public BodiesSelection(Pipeline parent, BodiesSelectionConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
@@ -236,20 +236,25 @@ namespace Bodies
                         CorrespondanceList.Add(iterator);
                         GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
                         break;
-                    case TupleState.RightJokerFound:
-                        if (tuple.Item2 != 0)
-                            IntegrateInDicsAndList(iterator, tuple);
-                        break;
-                    case TupleState.LeftJokerFound:
-                        if (tuple.Item1 != 0)
-                            IntegrateInDicsAndList(iterator, tuple);
-                        break;
+                    case TupleState.Replace:
+                        IntegrateInDicsAndList(iterator, tuple);
+                         break;
+                        //case TupleState.RightJokerFound:
+                        //    if (tuple.Item2 == 0)
+                        //        IntegrateInDicsAndList(iterator, tuple);
+                        //    break;
+                        //case TupleState.LeftJokerFound:
+                        //    if (tuple.Item1 = 0)
+                        //        IntegrateInDicsAndList(iterator, tuple);
+                        //break;
                 }
             }
         }
 
         private void IntegrateInDicsAndList(Tuple<uint, uint> old, Tuple<uint, uint> newItem)
         {
+            if (old == newItem)
+                return;
             CorrespondanceList.Remove(newItem);
             CorrespondanceList.Add(new Tuple<uint, uint>(newItem.Item1, newItem.Item2));
             if (GeneratedIdsMap.ContainsKey((old.Item1, old.Item2)))
@@ -416,8 +421,9 @@ namespace Bodies
                         case TupleState.GoodToInsert:
                             throw new Exception("oups");
                         case TupleState.AlreadyExist:
-                        case TupleState.RightJokerFound:
-                        case TupleState.LeftJokerFound:
+                        case TupleState.Replace:
+                        //case TupleState.RightJokerFound:
+                        //case TupleState.LeftJokerFound:
                             break;
                     }
                     SimplifiedBody simplifiedBody = camera2[pair.Item2];
@@ -436,8 +442,9 @@ namespace Bodies
                         case TupleState.GoodToInsert:
                             throw new Exception("oups");
                         case TupleState.AlreadyExist:
-                        case TupleState.RightJokerFound:
-                        case TupleState.LeftJokerFound:
+                        case TupleState.Replace:
+                            //case TupleState.RightJokerFound:
+                            //case TupleState.LeftJokerFound:
                             break;
                     }
                     SimplifiedBody simplifiedBody = camera1[pair.Item1];
@@ -450,52 +457,82 @@ namespace Bodies
         
         private TupleState KeyOrValueExistInList(Tuple<uint, uint> tuple, out Tuple<uint, uint> value)
         {
-            // zero is joker
-            int caseCheck = 0;
-            if(tuple.Item1 == 0)
-                caseCheck = 1;
-            if(tuple.Item2 == 0)
-                caseCheck += 2;
-            switch(caseCheck)
+
+            if (CorrespondanceList.Contains(tuple))
             {
-                case 0:
-                    if (CorrespondanceList.Contains(tuple))
-                    {
-                        value = tuple;
-                        return TupleState.AlreadyExist;
-                    }
-                    foreach (var iterator in CorrespondanceList)
-                    {
-                        if (((iterator.Item2 == tuple.Item2 && iterator.Item1 != 0) || (iterator.Item1 == tuple.Item1 && iterator.Item2 !=0)))
-                        {
-                            value = iterator;
-                            return TupleState.KeyAlreadyInserted;
-                        }
-                    }
-                     break;
-                case 1:
-                    foreach (var iterator in CorrespondanceList)
-                    {
-                        if (iterator.Item2 == tuple.Item2)
-                        {
-                            value = iterator;
-                            return TupleState.LeftJokerFound;
-                        }
-                    }
-                    break;
-                case 2:
-                    foreach (var iterator in CorrespondanceList)
-                    {
-                        if (iterator.Item1 == tuple.Item1)
-                        {
-                            value = iterator;
-                            return TupleState.RightJokerFound;
-                        }
-                    }
-                    break;
-                case 3:
-                    throw new Exception("Critical bug");
+                value = tuple;
+                return TupleState.AlreadyExist;
             }
+            bool checkTupleItem1 = tuple.Item1 != 0;
+            bool checkTupleItem2 = tuple.Item2 != 0;
+            foreach (var iterator in CorrespondanceList)
+            {
+                bool checkIteratorItem1 = iterator.Item1 != 0;
+                bool checkIteratorItem2 = iterator.Item2 != 0;
+                bool checkSameItem1 = iterator.Item1 == tuple.Item1;
+                bool checkSameItem2 = iterator.Item2 == tuple.Item2;
+                if ((!checkTupleItem1 && checkSameItem2) || (!checkSameItem1 && checkTupleItem2))
+                {
+                    value = tuple;
+                    return TupleState.AlreadyExist;
+                }
+                else if((!checkIteratorItem1 && checkSameItem2) || (!checkSameItem1 && checkIteratorItem2))
+                {
+                    value = iterator;
+                    return TupleState.Replace;
+                }
+                //if (((iterator.Item2 == tuple.Item2 && iterator.Item1 != 0) || (iterator.Item1 == tuple.Item1 && iterator.Item2 != 0)))
+                //{
+                //    value = iterator;
+                //    return TupleState.KeyAlreadyInserted;
+                //}
+            }
+            // zero is joker
+            //int caseCheck = 0;
+            //if(tuple.Item1 == 0)
+            //    caseCheck = 1;
+            //if(tuple.Item2 == 0)
+            //    caseCheck += 2;
+            //switch(caseCheck)
+            //{
+            //    case 0:
+            //        if (CorrespondanceList.Contains(tuple))
+            //        {
+            //            value = tuple;
+            //            return TupleState.AlreadyExist;
+            //        }
+            //        foreach (var iterator in CorrespondanceList)
+            //        {
+            //            if (((iterator.Item2 == tuple.Item2 && iterator.Item1 != 0) || (iterator.Item1 == tuple.Item1 && iterator.Item2 !=0)))
+            //            {
+            //                value = iterator;
+            //                return TupleState.KeyAlreadyInserted;
+            //            }
+            //        }
+            //         break;
+            //    case 1:
+            //        foreach (var iterator in CorrespondanceList)
+            //        {
+            //            if (iterator.Item2 == tuple.Item2)
+            //            {
+            //                value = iterator;
+            //                return TupleState.LeftJokerFound;
+            //            }
+            //        }
+            //        break;
+            //    case 2:
+            //        foreach (var iterator in CorrespondanceList)
+            //        {
+            //            if (iterator.Item1 == tuple.Item1)
+            //            {
+            //                value = iterator;
+            //                return TupleState.RightJokerFound;
+            //            }
+            //        }
+            //        break;
+            //    case 3:
+            //        throw new Exception("Critical bug");
+            //}
             value = tuple;
             return TupleState.GoodToInsert;
         }

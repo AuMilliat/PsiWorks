@@ -66,9 +66,10 @@ namespace PsiWork_WPF
 
         public BasicVisualizer Visu0 { get; private set; }
         public BasicVisualizer Visu1 { get; private set; }
-        //public BodyTrackerVisualizer.BodyTrackerVisualizer Visu0 { get; private set; }
-        //public BodyTrackerVisualizer.BodyTrackerVisualizer Visu1 { get; private set; }
-        public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
+        public BasicVisualizer Calib { get; private set; }
+        //public BodyVisualizer.BodyVisualizer Visu0 { get; private set; }
+        //public BodyVisualizer.BodyVisualizer Visu1 { get; private set; }
+        //public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
         public GroupsVisualizer.GroupsVisualizer InstantVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer EntryVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
@@ -138,10 +139,19 @@ namespace PsiWork_WPF
             BodiesSelection bodiesSelection = new BodiesSelection(pipeline, bodiesSelectionConfiguration);
 
             /*** BODIES DISPLAY ***/
-            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
+            BodyVisualizer.BodyVisualizerConfguration configurationBV = new BodyVisualizer.BodyVisualizerConfguration();
+            configurationBV.WithVideoStream = false;
+            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, configurationBV);
             Visu0 = bodyVisualizer0;
-            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
+            BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, configurationBV);
             Visu1 = bodyVisualizer1;
+
+            /*** CALIBRATION VISUALIZER ***/
+            BodyCalibrationVisualizer.BodyCalibrationVisualizerConfiguration configurationCV = new BodyCalibrationVisualizer.BodyCalibrationVisualizerConfiguration();
+            configurationCV.WithVideoStream = false;
+            configurationCV.calibration = calibration;
+            BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, configurationCV);
+            Calib = calib;
 
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
@@ -152,16 +162,17 @@ namespace PsiWork_WPF
 
             bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesSelection.InCamera1Bodies);
             bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesSelection.InCamera1LearnedBodies);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
 
             bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesSelection.InCamera2Bodies);
             bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesSelection.InCamera2LearnedBodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
             bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
             calib0.PipeTo(bodyVisualizer0.InCalibration);
+            calib0.PipeTo(calib.InCalibrationMaster);
             bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
             calib1.PipeTo(bodyVisualizer1.InCalibration);
-
-
         }
 
         private void KinectPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -178,9 +189,9 @@ namespace PsiWork_WPF
             AzureKinectSensor sensor1 = new AzureKinectSensor(pipeline, configKinect1);
 
             /*** BODIES VISUALIZERS ***/
-            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            BodyVisualizer.AzureKinectBodyVisualizer visu0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
             Visu0 = visu0;
-            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu1 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            BodyVisualizer.AzureKinectBodyVisualizer visu1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
             Visu1 = visu1;
             // Linkage
 
@@ -200,7 +211,7 @@ namespace PsiWork_WPF
             CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
 
             /*** CALIBRATION VISUALIZER ***/
-            BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, calibration);
+            BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, null);
             Calib = calib;
 
             /*** BODIES DETECTION ***/
@@ -297,10 +308,10 @@ namespace PsiWork_WPF
 
             //visucalib
             sensor0.DepthDeviceCalibrationInfo.PipeTo(calib.InCalibrationMaster);
-            sensor0.ColorImage.PipeTo(Calib.InColorImage);
-            calibrationByBodies.OutCalibration.PipeTo(Calib.InCalibrationSlave);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(Calib.InBodiesMaster);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(Calib.InBodiesSlave);
+            sensor0.ColorImage.PipeTo(calib.InColorImage);
+            calibrationByBodies.OutCalibration.PipeTo(calib.InCalibrationSlave);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
             //extractor
             bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
@@ -352,7 +363,7 @@ namespace PsiWork_WPF
             AzureKinectSensor sensor0 = new AzureKinectSensor(pipeline, configKinect0);
 
             /*** BODIES VISUALIZERS ***/
-            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            BodyVisualizer.AzureKinectBodyVisualizer visu0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
             Visu0 = visu0;
          
 
@@ -393,9 +404,9 @@ namespace PsiWork_WPF
             NuitrackSensor sensor1 = new NuitrackSensor(pipeline, configNui1);
 
             /*** BODIES VISUALIZERS ***/
-            BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer(pipeline, sensor0);
+            BodyVisualizer.NuitrackBodyVisualizer visu0 = new BodyVisualizer.NuitrackBodyVisualizer(pipeline, sensor0, null);
             Visu0 = Visu0;
-            BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer visu1 = new BodyTrackerVisualizer.NuitrackBodyTrackerVisualizer(pipeline, sensor1);
+            BodyVisualizer.NuitrackBodyVisualizer visu1 = new BodyVisualizer.NuitrackBodyVisualizer(pipeline, sensor1, null);
             Visu1 = Visu1;
 
             /*** BODIES CONVERTERS ***/
@@ -414,8 +425,8 @@ namespace PsiWork_WPF
             CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
 
             /*** CALIBRATION VISUALIZER ***/
-            Calib = new BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer(pipeline, sensor0, null);
-
+            BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer(pipeline, sensor0, null);
+            Calib = calib;
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -476,10 +487,10 @@ namespace PsiWork_WPF
             //bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
 
             //visucalib
-            sensor0.ColorImage.PipeTo(Calib.InColorImage);
-            calibrationByBodies.OutCalibration.PipeTo(Calib.InCalibrationSlave);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(Calib.InBodiesMaster);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(Calib.InBodiesSlave);
+            sensor0.ColorImage.PipeTo(calib.InColorImage);
+            calibrationByBodies.OutCalibration.PipeTo(calib.InCalibrationSlave);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
             ////extractor
             //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
@@ -506,7 +517,7 @@ namespace PsiWork_WPF
             BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
             BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
 
-            BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer visu0 = new BodyTrackerVisualizer.AzureKinectBodyTrackerVisualizer(pipeline);
+            BodyVisualizer.AzureKinectBodyVisualizer visu0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
             Visu0 = visu0;
 
             /*** POSTURES ***/

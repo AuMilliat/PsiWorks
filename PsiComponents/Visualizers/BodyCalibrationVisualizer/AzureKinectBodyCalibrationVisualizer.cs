@@ -13,18 +13,18 @@ namespace BodyCalibrationVisualizer
        
         private IDepthDeviceCalibrationInfo? MasterCalibration = null;
 
-        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, Matrix<double>? calibration) : base(pipeline, calibration)
+        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, BodyCalibrationVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             InCalibrationMasterConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibrationMasterConnector));
             
-            if(calibration == null)
+            if(configuration.calibration == null)
                 InCalibrationSlaveConnector.Out.Fuse(InCalibrationMasterConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>()).Do(Initialisation);
             else
                 InCalibrationMasterConnector.Out.Do(Initialisation);
         }
         private void Initialisation(ValueTuple<Matrix<double>, IDepthDeviceCalibrationInfo> data, Envelope envelope)
         {
-            slaveToMasterMatrix = data.Item1;
+            Configuration.calibration = data.Item1;
             MasterCalibration = data.Item2;
             mute = false;
         }

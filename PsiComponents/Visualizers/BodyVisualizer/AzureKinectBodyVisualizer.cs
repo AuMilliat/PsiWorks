@@ -1,6 +1,7 @@
 ﻿using Microsoft.Psi.Components;
 using MathNet.Spatial.Euclidean;
 using Microsoft.Psi.Calibration;
+using Image = Microsoft.Psi.Imaging.Image;
 using Helpers;
 using Microsoft.Psi;
 
@@ -17,7 +18,13 @@ namespace BodyVisualizer
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
 
             var joined1 = InBodiesConnector.Out.Fuse(InCalibrationConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>());//Note: Calibration only given once, Join is not aplicable here
-            joined1.Do(Process);
+            if (Configuration.WithVideoStream)
+            {
+                var joined2 = joined1.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>());
+                joined2.Do(Process);
+            }
+            else
+                joined1.Do(Process);
         }
 
         private void Process(ValueTuple<List<SimplifiedBody>, IDepthDeviceCalibrationInfo> data, Envelope envelope)
@@ -29,6 +36,17 @@ namespace BodyVisualizer
             var (bodies, calibration) = data;
             CalibrationInfo = calibration;
             Process(bodies, envelope);
+        }
+
+        private void Process(ValueTuple<List<SimplifiedBody>, IDepthDeviceCalibrationInfo, Shared<Image>> data, Envelope envelope)
+        {
+            if (Mute)
+            {
+                return;
+            }
+            var (bodies, calibration, image) = data;
+            CalibrationInfo = calibration;
+            Process((bodies, image), envelope);
         }
 
         protected override bool toProjection(Vector3D point, out Point2D proj)
