@@ -110,9 +110,6 @@ namespace Bodies
 
         private BodiesSelectionConfiguration Configuration { get; }
 
-        private List<Tuple<uint, uint>> CorrespondanceList = new List<Tuple<uint, uint>>();
-        private List<Tuple<uint, uint>> NotCorrespondanceList = new List<Tuple<uint, uint>>();
-
         private Dictionary<(uint, uint), uint> GeneratedIdsMap = new Dictionary<(uint, uint), uint>();
 
         private Dictionary<uint, LearnedBody> Camera1LearnedBodies = new Dictionary<uint, LearnedBody>();
@@ -201,16 +198,15 @@ namespace Bodies
                 {
                     if (dic.ContainsKey(id))
                         dic.Remove(id);
-                    Tuple<uint, uint> tuple, ouTuple;
+                    (uint, uint) tuple, ouTuple;
                     if (isMaster)
-                        tuple = new Tuple<uint, uint>(id, 0);
+                        tuple = (id, 0);
                     else
-                        tuple = new Tuple<uint, uint>(0, id);
+                        tuple = (0, id);
                     if (KeyOrValueExistInList(tuple, out ouTuple) != 0)
                     {
                         removedId.Add(GeneratedIdsMap[(ouTuple.Item1, ouTuple.Item2)]);
                         GeneratedIdsMap.Remove((ouTuple.Item1, ouTuple.Item2));
-                        CorrespondanceList.Remove(ouTuple);
                     }
                 }
                 OutBodiesRemoved.Post(removedId, envelope.OriginatingTime);
@@ -224,7 +220,7 @@ namespace Bodies
             //checking consistancy with old mapping
             foreach (var iterator in newMapping)
             {
-                Tuple<uint, uint> tuple;
+                (uint, uint) tuple;
                 switch (KeyOrValueExistInList(iterator, out tuple))
                 {
                     case TupleState.AlreadyExist:
@@ -233,30 +229,19 @@ namespace Bodies
                         FindCorrectPairFromBones(ref d1, ref d2, iterator, tuple);
                         break;
                     case TupleState.GoodToInsert:
-                        CorrespondanceList.Add(iterator);
                         GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
                         break;
                     case TupleState.Replace:
-                        IntegrateInDicsAndList(iterator, tuple);
+                        IntegrateInDicsAndList(tuple, iterator);
                          break;
-                        //case TupleState.RightJokerFound:
-                        //    if (tuple.Item2 == 0)
-                        //        IntegrateInDicsAndList(iterator, tuple);
-                        //    break;
-                        //case TupleState.LeftJokerFound:
-                        //    if (tuple.Item1 = 0)
-                        //        IntegrateInDicsAndList(iterator, tuple);
-                        //break;
                 }
             }
         }
 
-        private void IntegrateInDicsAndList(Tuple<uint, uint> old, Tuple<uint, uint> newItem)
+        private void IntegrateInDicsAndList((uint, uint) old, (uint, uint) newItem)
         {
             if (old == newItem)
                 return;
-            CorrespondanceList.Remove(newItem);
-            CorrespondanceList.Add(new Tuple<uint, uint>(newItem.Item1, newItem.Item2));
             if (GeneratedIdsMap.ContainsKey((old.Item1, old.Item2)))
             {
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
@@ -266,14 +251,9 @@ namespace Bodies
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = idCount++;
         }
 
-        private void FindCorrectPairFromBones(ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2, Tuple<uint, uint> iterator, Tuple<uint, uint> tuple)
+        private void FindCorrectPairFromBones(ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2, (uint, uint) iterator, (uint, uint) tuple)
         {
             LearnedBody unique, p1, p2;
-            if ((iterator.Item2 + iterator.Item1 + tuple.Item1 + tuple.Item2) == 0)
-            {
-                uint i = 0;
-                i++;
-            }
             if (iterator.Item1 == tuple.Item1)
             {
                 p1 = Camera2LearnedBodies[iterator.Item2];
@@ -282,9 +262,9 @@ namespace Bodies
             }
             else if (iterator.Item2 == tuple.Item2)
             {
-                p1 = Camera2LearnedBodies[iterator.Item2];
-                p2 = Camera2LearnedBodies[tuple.Item2];
-                unique = Camera1LearnedBodies[iterator.Item1];
+                p1 = Camera1LearnedBodies[iterator.Item1];
+                p2 = Camera1LearnedBodies[tuple.Item1];
+                unique = Camera2LearnedBodies[iterator.Item2];
             }
             else
             {
@@ -311,10 +291,10 @@ namespace Bodies
                 IntegrateInDicsAndList(iterator, tuple);
         }
 
-        private List<Tuple<uint, uint>> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
+        private List<(uint, uint)> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 
         {
-            if (camera1.Count == 0 || camera2.Count == 0 || Configuration.Camera2ToCamera1Transformation == null) 
-                return new List<Tuple<uint, uint>>();
+            if ((camera1.Count == 0 && camera2.Count == 0) || Configuration.Camera2ToCamera1Transformation == null) 
+                return new List<(uint, uint)>();
 
             // Bruteforce ftm, might simplify to check directly the max allowed distance.
             Dictionary<uint, List<Tuple<double, uint>>> distances = new Dictionary<uint, List<Tuple<double, uint>>>();
@@ -327,30 +307,30 @@ namespace Bodies
                     distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.Euclidean(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
             }
 
-            List<Tuple<uint, uint>> correspondanceMap = new List<Tuple<uint, uint>>();
+            List<(uint, uint)> correspondanceMap = new List<(uint, uint)>();
             List<uint> notMissingC2 = new List<uint>();
             foreach(var iterator in distances)
             { 
                 iterator.Value.Sort(new TupleDoubleUintComparer());
                 //to check if sort is good
-                if (iterator.Value.First().Item1 < Configuration.MaxDistance)
+                if (iterator.Value.Count > 1 && iterator.Value.First().Item1 < Configuration.MaxDistance)
                 {
-                    correspondanceMap.Add(new Tuple<uint, uint>(iterator.Key, iterator.Value.First().Item2));
+                    correspondanceMap.Add((iterator.Key, iterator.Value.First().Item2));
                     notMissingC2.Add(iterator.Value.First().Item2);
                 }
                 else
-                    correspondanceMap.Add(new Tuple<uint, uint>(iterator.Key, 0));
+                    correspondanceMap.Add((iterator.Key, 0));
             }
             foreach(SimplifiedBody bodyC2 in camera2)
             {
                 d2[bodyC2.Id] = bodyC2;
                 if (!notMissingC2.Contains(bodyC2.Id))
-                    correspondanceMap.Add(new Tuple<uint, uint>(0, bodyC2.Id));
+                    correspondanceMap.Add((0, bodyC2.Id));
             }
             return correspondanceMap;
         }
 
-        private void SelectByConfidence(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, Tuple<uint,uint> ids, ref List<SimplifiedBody> bestBodies)
+        private void SelectByConfidence(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, (uint,uint) ids, ref List<SimplifiedBody> bestBodies)
         {
             if (AccumulatedConfidence(camera1[ids.Item1]) < AccumulatedConfidence(camera2[ids.Item2]))
             {
@@ -365,7 +345,7 @@ namespace Bodies
                 bestBodies.Add(TransformBody(body));
             }
         }
-        private void SelectByLearnedBodies(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, Tuple<uint, uint> ids, ref List<SimplifiedBody> bestBodies)
+        private void SelectByLearnedBodies(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2, (uint, uint) ids, ref List<SimplifiedBody> bestBodies)
         {
             SimplifiedBody b1 = camera1[ids.Item1], b2 = camera2[ids.Item2];
             LearnedBody l1 = Camera1LearnedBodies[ids.Item1], l2 = Camera2LearnedBodies[ids.Item2];
@@ -375,6 +355,8 @@ namespace Bodies
             {
                 foreach (var bones in l1.LearnedBones)
                 {
+                    if (!l2.LearnedBones.ContainsKey(bones.Key))
+                        continue;
                     if (bones.Value > 0.0)
                         dist1.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b1.Joints[bones.Key.ParentJoint].Item2.ToVector(), b1.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
                     if (l2.LearnedBones[bones.Key] > 0.0)
@@ -400,21 +382,21 @@ namespace Bodies
         private List<SimplifiedBody> SelectBestBody(Dictionary<uint, SimplifiedBody> camera1, Dictionary<uint, SimplifiedBody> camera2)
         {
             List<SimplifiedBody> bestBodies = new List<SimplifiedBody>();
-            foreach(var pair in CorrespondanceList)
+            foreach(var pair in GeneratedIdsMap)
             {
-                if (camera1.ContainsKey(pair.Item1) && camera2.ContainsKey(pair.Item2))
+                if (camera1.ContainsKey(pair.Key.Item1) && camera2.ContainsKey(pair.Key.Item2))
                 {
-                    if(Camera1LearnedBodies.ContainsKey(pair.Item1) && Camera1LearnedBodies.ContainsKey(pair.Item2))
-                        SelectByLearnedBodies(camera1, camera2, pair, ref bestBodies);
+                    if(Camera1LearnedBodies.ContainsKey(pair.Key.Item1) && Camera1LearnedBodies.ContainsKey(pair.Key.Item2))
+                        SelectByLearnedBodies(camera1, camera2, pair.Key, ref bestBodies);
                     else
-                        SelectByConfidence(camera1, camera2, pair, ref bestBodies);
+                        SelectByConfidence(camera1, camera2, pair.Key, ref bestBodies);
                 }
-                else if (pair.Item1 == 0 || !camera1.ContainsKey(pair.Item1))
+                else if (pair.Key.Item1 == 0 || !camera1.ContainsKey(pair.Key.Item1))
                 {
-                    if (!camera2.ContainsKey(pair.Item2))
+                    if (!camera2.ContainsKey(pair.Key.Item2))
                         continue;
-                    Tuple<uint, uint> tuple;
-                    var enumT = KeyOrValueExistInList(pair, out tuple);
+                    (uint, uint) tuple;
+                    var enumT = KeyOrValueExistInList(pair.Key, out tuple);
                     switch (enumT)
                     {
                         case TupleState.KeyAlreadyInserted:
@@ -422,20 +404,18 @@ namespace Bodies
                             throw new Exception("oups");
                         case TupleState.AlreadyExist:
                         case TupleState.Replace:
-                        //case TupleState.RightJokerFound:
-                        //case TupleState.LeftJokerFound:
                             break;
                     }
-                    SimplifiedBody simplifiedBody = camera2[pair.Item2];
+                    SimplifiedBody simplifiedBody = TransformBody(camera2[pair.Key.Item2]);
                     simplifiedBody.Id = GeneratedIdsMap[(tuple.Item1, tuple.Item2)];
                     bestBodies.Add(simplifiedBody);
                 }
-                else if (pair.Item2 == 0 || !camera2.ContainsKey(pair.Item2))
+                else if (pair.Key.Item2 == 0 || !camera2.ContainsKey(pair.Key.Item2))
                 {
-                    if (!camera1.ContainsKey(pair.Item1))
+                    if (!camera1.ContainsKey(pair.Key.Item1))
                         continue;
-                    Tuple<uint, uint> tuple;
-                    var enumT = KeyOrValueExistInList(pair, out tuple);
+                    (uint, uint) tuple;
+                    var enumT = KeyOrValueExistInList(pair.Key, out tuple);
                     switch (enumT)
                     {
                         case TupleState.KeyAlreadyInserted:
@@ -443,11 +423,9 @@ namespace Bodies
                             throw new Exception("oups");
                         case TupleState.AlreadyExist:
                         case TupleState.Replace:
-                            //case TupleState.RightJokerFound:
-                            //case TupleState.LeftJokerFound:
                             break;
                     }
-                    SimplifiedBody simplifiedBody = camera1[pair.Item1];
+                    SimplifiedBody simplifiedBody = camera1[pair.Key.Item1];
                     simplifiedBody.Id = GeneratedIdsMap[(tuple.Item1, tuple.Item2)];
                     bestBodies.Add(simplifiedBody);
                 }
@@ -455,84 +433,32 @@ namespace Bodies
             return bestBodies;
         } 
         
-        private TupleState KeyOrValueExistInList(Tuple<uint, uint> tuple, out Tuple<uint, uint> value)
+        private TupleState KeyOrValueExistInList((uint, uint) tuple, out (uint, uint) value)
         {
-
-            if (CorrespondanceList.Contains(tuple))
-            {
-                value = tuple;
-                return TupleState.AlreadyExist;
-            }
             bool checkTupleItem1 = tuple.Item1 != 0;
             bool checkTupleItem2 = tuple.Item2 != 0;
-            foreach (var iterator in CorrespondanceList)
+            foreach (var iterator in GeneratedIdsMap)
             {
-                bool checkIteratorItem1 = iterator.Item1 != 0;
-                bool checkIteratorItem2 = iterator.Item2 != 0;
-                bool checkSameItem1 = iterator.Item1 == tuple.Item1;
-                bool checkSameItem2 = iterator.Item2 == tuple.Item2;
-                if ((!checkTupleItem1 && checkSameItem2) || (!checkSameItem1 && checkTupleItem2))
+                bool checkIteratorItem1 = iterator.Key.Item1 != 0;
+                bool checkIteratorItem2 = iterator.Key.Item2 != 0;
+                bool checkSameItem1 = iterator.Key.Item1 == tuple.Item1;
+                bool checkSameItem2 = iterator.Key.Item2 == tuple.Item2;
+                if ((checkSameItem2 && checkSameItem1) || (!checkTupleItem1 && checkSameItem2) || (checkSameItem1 && !checkTupleItem2))
                 {
                     value = tuple;
                     return TupleState.AlreadyExist;
                 }
-                else if((!checkIteratorItem1 && checkSameItem2) || (!checkSameItem1 && checkIteratorItem2))
+                else if((!checkIteratorItem1 && checkSameItem2) || (checkSameItem1 && !checkIteratorItem2))
                 {
-                    value = iterator;
+                    value = iterator.Key;
                     return TupleState.Replace;
                 }
-                //if (((iterator.Item2 == tuple.Item2 && iterator.Item1 != 0) || (iterator.Item1 == tuple.Item1 && iterator.Item2 != 0)))
-                //{
-                //    value = iterator;
-                //    return TupleState.KeyAlreadyInserted;
-                //}
+                else if (checkTupleItem1 && checkTupleItem2 && checkIteratorItem1 && checkIteratorItem2 && (checkSameItem2 || checkSameItem1))
+                {
+                    value = iterator.Key;
+                    return TupleState.KeyAlreadyInserted;
+                }
             }
-            // zero is joker
-            //int caseCheck = 0;
-            //if(tuple.Item1 == 0)
-            //    caseCheck = 1;
-            //if(tuple.Item2 == 0)
-            //    caseCheck += 2;
-            //switch(caseCheck)
-            //{
-            //    case 0:
-            //        if (CorrespondanceList.Contains(tuple))
-            //        {
-            //            value = tuple;
-            //            return TupleState.AlreadyExist;
-            //        }
-            //        foreach (var iterator in CorrespondanceList)
-            //        {
-            //            if (((iterator.Item2 == tuple.Item2 && iterator.Item1 != 0) || (iterator.Item1 == tuple.Item1 && iterator.Item2 !=0)))
-            //            {
-            //                value = iterator;
-            //                return TupleState.KeyAlreadyInserted;
-            //            }
-            //        }
-            //         break;
-            //    case 1:
-            //        foreach (var iterator in CorrespondanceList)
-            //        {
-            //            if (iterator.Item2 == tuple.Item2)
-            //            {
-            //                value = iterator;
-            //                return TupleState.LeftJokerFound;
-            //            }
-            //        }
-            //        break;
-            //    case 2:
-            //        foreach (var iterator in CorrespondanceList)
-            //        {
-            //            if (iterator.Item1 == tuple.Item1)
-            //            {
-            //                value = iterator;
-            //                return TupleState.RightJokerFound;
-            //            }
-            //        }
-            //        break;
-            //    case 3:
-            //        throw new Exception("Critical bug");
-            //}
             value = tuple;
             return TupleState.GoodToInsert;
         }

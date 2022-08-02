@@ -66,7 +66,8 @@ namespace PsiWork_WPF
 
         public BasicVisualizer Visu0 { get; private set; }
         public BasicVisualizer Visu1 { get; private set; }
-        public BasicVisualizer Calib { get; private set; }
+        public BasicVisualizer Visu2 { get; private set; }
+        public BasicVisualizer Visu3 { get; private set; }
         //public BodyVisualizer.BodyVisualizer Visu0 { get; private set; }
         //public BodyVisualizer.BodyVisualizer Visu1 { get; private set; }
         //public BodyCalibrationVisualizer.BodyCalibrationVisualizer Calib { get; private set; }
@@ -74,10 +75,6 @@ namespace PsiWork_WPF
         public GroupsVisualizer.GroupsVisualizer EntryVisu { get; private set; }
         public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
         public PosturesVisualizer.PosturesVisualizer PosturesVisu { get; private set; }
-
-        public DateTime stoppingTime { get; set; }
-        private bool isPlaying = false;
-        //private Microsoft.Psi.Data.PsiImporter? store = null;
 
         private string status = "";
         public string Status
@@ -93,7 +90,6 @@ namespace PsiWork_WPF
         private Pipeline pipeline;
         public MainWindow()
         {
-            stoppingTime = new DateTime();
             DataContext = this;
             MathNet.Numerics.LinearAlgebra.Matrix<double> calibration;
             if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
@@ -109,7 +105,6 @@ namespace PsiWork_WPF
             StoreDisplayAndProcess(calibration);
             // RunAsync the pipeline in non-blocking mode.
             //pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
-            isPlaying = true;
             InitializeComponent();
             
         }
@@ -151,7 +146,10 @@ namespace PsiWork_WPF
             configurationCV.WithVideoStream = false;
             configurationCV.calibration = calibration;
             BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, configurationCV);
-            Calib = calib;
+            Visu2 = calib;
+
+            BodyVisualizer.AzureKinectBodyVisualizer selectionVisualizer = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, configurationBV);
+            Visu3 = selectionVisualizer;
 
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
@@ -168,11 +166,14 @@ namespace PsiWork_WPF
             bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesSelection.InCamera2LearnedBodies);
             bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
+            //bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
             calib0.PipeTo(bodyVisualizer0.InCalibration);
             calib0.PipeTo(calib.InCalibrationMaster);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
+            //bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
             calib1.PipeTo(bodyVisualizer1.InCalibration);
+
+            bodiesSelection.OutBodiesCalibrated.PipeTo(selectionVisualizer.InBodies);
+            calib0.PipeTo(selectionVisualizer.InCalibration);
         }
 
         private void KinectPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -212,7 +213,8 @@ namespace PsiWork_WPF
 
             /*** CALIBRATION VISUALIZER ***/
             BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, null);
-            Calib = calib;
+            Visu2 = calib;
+
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -426,7 +428,7 @@ namespace PsiWork_WPF
 
             /*** CALIBRATION VISUALIZER ***/
             BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer(pipeline, sensor0, null);
-            Calib = calib;
+            Visu2 = calib;
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.

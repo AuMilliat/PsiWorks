@@ -10,9 +10,9 @@ using Helpers;
 using Visualizer;
 
 
-namespace BodyCalibrationVisualizer
+namespace BodySelectionVisualizer
 {
-    public class BodyCalibrationVisualizerConfiguration
+    public class BodySelectionVisualizerConfiguration
     {
         public bool WithVideoStream { get; set; }  = true;
         public int Width { get; set; } = 1920;
@@ -20,7 +20,7 @@ namespace BodyCalibrationVisualizer
         public Matrix<double> calibration { get; set; } = Matrix<double>.Build.DenseIdentity(4, 4);
     }
 
-    public abstract class BodyCalibrationVisualizer : StreamVisualizer
+    public abstract class BodySelectionVisualizer : StreamVisualizer
     {
         protected Connector<List<SimplifiedBody>> InBodiesMasterConnector;
         protected Connector<List<SimplifiedBody>> InBodiesSlaveConnector;
@@ -30,13 +30,13 @@ namespace BodyCalibrationVisualizer
         public Receiver<List<SimplifiedBody>> InBodiesSlave => InBodiesSlaveConnector.In;
         public Receiver<Matrix<double>> InCalibrationSlave => InCalibrationSlaveConnector.In;
 
-        protected BodyCalibrationVisualizerConfiguration Configuration;
+        protected BodySelectionVisualizerConfiguration Configuration;
 
         protected delegate MathNet.Spatial.Euclidean.Vector3D DelegateThatShouldBeLambda(MathNet.Spatial.Euclidean.Vector3D vector);
         protected DelegateThatShouldBeLambda? Lambda = null;
-        public BodyCalibrationVisualizer(Pipeline pipeline, BodyCalibrationVisualizerConfiguration? configuration) : base(pipeline)
+        public BodySelectionVisualizer(Pipeline pipeline, BodySelectionVisualizerConfiguration? configuration) : base(pipeline)
         {
-            Configuration = configuration ?? new BodyCalibrationVisualizerConfiguration();
+            Configuration = configuration ?? new BodySelectionVisualizerConfiguration();
             InBodiesMasterConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesMasterConnector));
             InBodiesSlaveConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesSlaveConnector));
             InCalibrationSlaveConnector = CreateInputConnectorFrom<Matrix<double>>(pipeline, nameof(InCalibrationSlaveConnector));
