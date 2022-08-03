@@ -12,7 +12,7 @@ namespace Visualizer
 
         public Receiver<Shared<Image>> InColorImage => InColorImageConnector.In;
 
-        public StreamVisualizer(Pipeline pipeline) : base(pipeline)
+        public StreamVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImage));
         }

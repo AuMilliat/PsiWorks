@@ -2,7 +2,7 @@
 using Microsoft.Psi;
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.AzureKinect;
-using BodyTrackerVisualizer;
+using BodyVisualizer;
 using Bodies;
 
 namespace PsiGroupsRecorder
@@ -12,8 +12,8 @@ namespace PsiGroupsRecorder
     /// </summary>
     public partial class MainWindow : Window
     {
-        public AzureKinectBodyTrackerVisualizer Visu0 { get; }
-        public AzureKinectBodyTrackerVisualizer Visu1 { get; }
+        public AzureKinectBodyVisualizer Visu0 { get; }
+        public AzureKinectBodyVisualizer Visu1 { get; }
 
         private Pipeline pipeline;
         public MainWindow()
@@ -50,8 +50,8 @@ namespace PsiGroupsRecorder
             var group5 = importer.Importer.OpenStream<uint>("Group5");
 
             /*** BODIES VISUALIZERS ***/
-            Visu0 = new AzureKinectBodyTrackerVisualizer(pipeline);
-            Visu1 = new AzureKinectBodyTrackerVisualizer(pipeline);
+            Visu0 = new AzureKinectBodyVisualizer(pipeline,null);
+            Visu1 = new AzureKinectBodyVisualizer(pipeline,null);
             // Linkage
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);

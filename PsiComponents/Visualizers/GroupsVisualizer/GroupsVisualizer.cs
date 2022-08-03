@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using Microsoft.Psi.Imaging;
+using Image = Microsoft.Psi.Imaging.Image;
 using Microsoft.Azure.Kinect.BodyTracking;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi;
@@ -9,79 +10,83 @@ using Helpers;
 
 namespace GroupsVisualizer
 {
-    public class GroupsVisualizerConfguration
-    {
-        public int Width { get; set; } = 1920;
-        public int Height { get; set; } = 1080;
-    }
-    public abstract class GroupsVisualizer : BasicVisualizer
-    {
 
+    public abstract class GroupsVisualizer : StreamVisualizer
+    {
         protected Connector<Dictionary<uint, List<uint>>> InGroupsConnector;
-        protected Connector<List<SimplifiedBody>> InBodiesConnector;
-        public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;
         public Receiver<Dictionary<uint, List<uint>>> InGroups => InGroupsConnector.In;
 
-        protected GroupsVisualizerConfguration Configuration;
-        public GroupsVisualizer(Pipeline pipeline, GroupsVisualizerConfguration? configuration) : base(pipeline)
+        public GroupsVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
-            Configuration = configuration ?? new GroupsVisualizerConfguration();
-            InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
             InGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(pipeline, nameof(InGroups));
-
-            InBodiesConnector.Out.Join(InGroupsConnector.Out, Reproducible.Nearest<Dictionary<uint, List<uint>>>()).Do(Process);
-            Mute = true;
+            var pair = InBodiesConnector.Out.Join(InGroupsConnector.Out, Reproducible.Nearest<Dictionary<uint, List<uint>>>());
+            if (Configuration.WithVideoStream)
+                pair.Join(InColorImageConnector.Out, Reproducible.Nearest<Shared<Image>>()).Do(Process);
+            else
+                pair.Do(Process);
         }
+
         protected void Process((List<SimplifiedBody>, Dictionary<uint, List<uint>>) data, Envelope envelope)
         {
             var (bodies, groups) = data;
-            Dictionary<uint, SimplifiedBody> bodiesDics = new Dictionary<uint, SimplifiedBody>();
-            foreach(SimplifiedBody body in bodies)
-                bodiesDics[body.Id] = body;
             lock (this)
             {
                 Bitmap bitmap = new Bitmap(Configuration.Width, Configuration.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                using var graphics = Graphics.FromImage(bitmap);
-                foreach (var group in groups)
-                {
-                    Color groupColor = GenerateColorFromGroupId(group.Key);
-                    Brush brush = new SolidBrush(groupColor);
-                    Pen linePen = new Pen(groupColor, LineThickness);
-                    Font font = new Font(FontFamily.GenericSerif, 64);
-                    foreach (uint id in group.Value)
-                    {
-                        if (!bodiesDics.ContainsKey(id))
-                            continue;
-                        SimplifiedBody body = bodiesDics[id];
-                        void drawLine(JointId joint1, JointId joint2)
-                        {
-                            MathNet.Spatial.Euclidean.Point2D p1 = new MathNet.Spatial.Euclidean.Point2D();
-                            MathNet.Spatial.Euclidean.Point2D p2 = new MathNet.Spatial.Euclidean.Point2D();
-                            if (toProjection(body.Joints[joint1].Item2, out p1) && toProjection(body.Joints[joint2].Item2, out p2))
-                            {
-                                var _p1 = new PointF((float)p1.X, (float)p1.Y);
-                                var _p2 = new PointF((float)p2.X, (float)p2.Y);
-                                graphics.DrawLine(linePen, _p1, _p2);
-                                graphics.FillEllipse(brush, _p1.X, _p1.Y, circleRadius, circleRadius);
-                                graphics.FillEllipse(brush, _p2.X, _p2.Y, circleRadius, circleRadius);
-                            }
-                        }
-                        foreach (var bone in AzureKinectBody.Bones)
-                            drawLine(bone.ParentJoint, bone.ChildJoint);
-                        MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
-                        if (toProjection(body.Joints[JointId.Head].Item2, out head))
-                        {
-                            string text = body.Id.ToString() + " _ " + group.Key.ToString();
-                            graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
-                        }
-                    }
-                }
-                using var img = ImagePool.GetOrCreate(Configuration.Width, Configuration.Height, PixelFormat.BGRA_32bpp);
-                img.Resource.CopyFrom(bitmap);
-                Out.Post(img, envelope.OriginatingTime);
-                display.Update(img);
+                Shared<Image> image = ImagePool.GetOrCreate(Configuration.Width, Configuration.Height, PixelFormat.BGRA_32bpp);
+                Graphics graphics = Graphics.FromImage(bitmap);
+                Process(ref graphics, bodies, groups, envelope, ref bitmap, ref image);
             }
         }
+
+        protected void Process((List<SimplifiedBody>, Dictionary<uint, List<uint>>, Shared<Image>) data, Envelope envelope)
+        {
+            var (bodies, groups, frame) = data;
+            lock (this)
+            {
+                //draw
+                if (frame?.Resource != null)
+                {
+                    Bitmap bitmap = frame.Resource.ToBitmap();
+                    Graphics graphics = Graphics.FromImage(bitmap);
+                    Shared<Image> image = ImagePool.GetOrCreate(frame.Resource.Width, frame.Resource.Height, frame.Resource.PixelFormat);
+                    Process(ref graphics, bodies, groups, envelope, ref bitmap, ref image);
+                }
+            }
+        }
+
+        protected void Process(ref Graphics graphics, List<SimplifiedBody> bodies, Dictionary<uint, List<uint>> groups, Envelope envelope, ref Bitmap bitmap, ref Shared<Image> image)
+        {
+            Dictionary<uint, SimplifiedBody> bodiesDics = new Dictionary<uint, SimplifiedBody>();
+            foreach (SimplifiedBody body in bodies)
+                bodiesDics[body.Id] = body;
+            foreach (var group in groups)
+            {
+                Color groupColor = GenerateColorFromGroupId(group.Key);
+                Brush brush = new SolidBrush(groupColor);
+                Pen linePen = new Pen(groupColor, LineThickness);
+                Font font = new Font(FontFamily.GenericSerif, 64);
+                foreach (uint id in group.Value)
+                {
+                    if (!bodiesDics.ContainsKey(id))
+                        continue;
+                    SimplifiedBody body = bodiesDics[id];
+
+                    foreach (var bone in AzureKinectBody.Bones)
+                        DrawLine(ref graphics, linePen, body.Joints[bone.ParentJoint], body.Joints[bone.ChildJoint]);
+
+                    MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                    if (toProjection(body.Joints[JointId.Head].Item2, out head))
+                    {
+                        string text = body.Id.ToString() + " _ " + group.Key.ToString();
+                        graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
+                    }
+                }
+            }
+            image.Resource.CopyFrom(bitmap);
+            Out.Post(image, envelope.OriginatingTime);
+            display.Update(image);
+         }
+        
 
         protected Color GenerateColorFromGroupId(uint id)
         {

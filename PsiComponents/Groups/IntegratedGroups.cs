@@ -1,7 +1,7 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Components;
 
-namespace Groups.Integrated
+namespace Groups
 {
     public class IntegratedGroupsConfiguration
     {

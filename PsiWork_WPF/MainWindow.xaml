@@ -17,6 +17,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="{Binding Path=Visu0.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
             <Label Grid.Row="0" Grid.Column="1" Content="{Binding Path=Visu1.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
@@ -24,6 +25,8 @@
             <Image Grid.Row="1" Grid.Column="1" Source="{Binding Path=Visu1.Image}"/>
             <Image Grid.Row="2" Grid.Column="0" Source="{Binding Path=Visu2.Image}"/>
             <Image Grid.Row="2" Grid.Column="1" Source="{Binding Path=Visu3.Image}"/>
+            <Image Grid.Row="3" Grid.Column="0" Source="{Binding Path=Visu4.Image}"/>
+            <Image Grid.Row="3" Grid.Column="1" Source="{Binding Path=Visu5.Image}"/>
             <!--Configuration for calibration-->
             <!--<Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>

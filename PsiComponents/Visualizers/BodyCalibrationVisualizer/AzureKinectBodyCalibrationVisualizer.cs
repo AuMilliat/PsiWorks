@@ -3,6 +3,7 @@ using MathNet.Spatial.Euclidean;
 using Microsoft.Psi;
 using Microsoft.Psi.Calibration;
 using Microsoft.Psi.Components;
+using Visualizer;
 
 namespace BodyCalibrationVisualizer
 {
@@ -13,26 +14,24 @@ namespace BodyCalibrationVisualizer
        
         private IDepthDeviceCalibrationInfo? MasterCalibration = null;
 
-        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, BodyCalibrationVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, bool calibrationByPipeline) : base(pipeline, configuration)
         {
             InCalibrationMasterConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibrationMasterConnector));
             
-            if(configuration.calibration == null)
+            if(calibrationByPipeline)
                 InCalibrationSlaveConnector.Out.Fuse(InCalibrationMasterConnector.Out, Available.Nearest<IDepthDeviceCalibrationInfo>()).Do(Initialisation);
             else
                 InCalibrationMasterConnector.Out.Do(Initialisation);
         }
         private void Initialisation(ValueTuple<Matrix<double>, IDepthDeviceCalibrationInfo> data, Envelope envelope)
         {
-            Configuration.calibration = data.Item1;
+            Calibration = data.Item1;
             MasterCalibration = data.Item2;
-            mute = false;
         }
 
         private void Initialisation(IDepthDeviceCalibrationInfo data, Envelope envelope)
         {
             MasterCalibration = data;
-            mute = false;
         }
         protected override bool toProjection(Vector3D point, out Point2D proj)
         {

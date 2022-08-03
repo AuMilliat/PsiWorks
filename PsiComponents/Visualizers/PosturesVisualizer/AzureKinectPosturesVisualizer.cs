@@ -2,6 +2,7 @@ using Microsoft.Psi;
 using Microsoft.Psi.Calibration;
 using Microsoft.Psi.Components;
 using MathNet.Spatial.Euclidean;
+using Visualizer;
 
 namespace PosturesVisualizer
 {
@@ -11,7 +12,7 @@ namespace PosturesVisualizer
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
         private IDepthDeviceCalibrationInfo? CalibrationInfo;
-        public AzureKinectPosturesVisualizer(Pipeline pipeline) : base(pipeline)
+        public AzureKinectPosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration configuration) : base(pipeline, configuration)
         {
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
             InCalibrationConnector.Out.Do(Initialisation);
@@ -19,7 +20,6 @@ namespace PosturesVisualizer
 
         private void Initialisation(IDepthDeviceCalibrationInfo data, Envelope envelope)
         {
-            Mute = false;
             CalibrationInfo = data;
         }
 

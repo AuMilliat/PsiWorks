@@ -2,12 +2,14 @@
 using Microsoft.Psi;
 using Image = Microsoft.Psi.Imaging.Image;
 
+using Visualizer;
+
 namespace BodyVisualizer
 {
     public class NuitrackBodyVisualizer : BodyVisualizer
     {
         private NuitrackSensor Sensor;
-        public NuitrackBodyVisualizer(Pipeline pipeline, NuitrackSensor sensor, BodyVisualizerConfguration? configuration) : base(pipeline, configuration)
+        public NuitrackBodyVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             Sensor = sensor;
             if(Configuration.WithVideoStream)

@@ -2,6 +2,7 @@
 using Microsoft.Psi.Calibration;
 using Microsoft.Psi.Components;
 using MathNet.Spatial.Euclidean;
+using Visualizer;
 
 namespace GroupsVisualizer
 {
@@ -11,7 +12,7 @@ namespace GroupsVisualizer
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
         private IDepthDeviceCalibrationInfo? CalibrationInfo=null;
-        public AzureKinectGroupsVisualizer(Pipeline pipeline, GroupsVisualizerConfguration? configuration) : base(pipeline, configuration)
+        public AzureKinectGroupsVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
             InCalibrationConnector.Out.Do(Initialisation);
@@ -19,7 +20,6 @@ namespace GroupsVisualizer
 
         private void Initialisation(IDepthDeviceCalibrationInfo data, Envelope envelope)
         {
-            Mute = false;
             CalibrationInfo = data;
         }
 

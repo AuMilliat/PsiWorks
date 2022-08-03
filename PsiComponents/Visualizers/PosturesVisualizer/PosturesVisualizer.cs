@@ -20,7 +20,7 @@ namespace PosturesVisualizer
         public Receiver<Dictionary<uint, List<Postures.Postures>>> InPostures => InPosturesConnector.In;
 
         protected Dictionary<JointConfidenceLevel, SolidBrush> confidenceColor = new Dictionary<JointConfidenceLevel, SolidBrush>();
-        public PosturesVisualizer(Pipeline pipeline) : base(pipeline)
+        public PosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
             InPosturesConnector = CreateInputConnectorFrom<Dictionary<uint, List<Postures.Postures>>>(pipeline, nameof(InPostures));

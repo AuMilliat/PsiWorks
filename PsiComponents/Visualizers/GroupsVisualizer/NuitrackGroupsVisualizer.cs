@@ -1,5 +1,5 @@
 ﻿using Microsoft.Psi;
-using Microsoft.Psi.Calibration;
+using Visualizer;
 using NuitrackComponent;
 using MathNet.Spatial.Euclidean;
 
@@ -8,7 +8,7 @@ namespace GroupsVisualizer
     public class NuitrackGroupsVisualizer : GroupsVisualizer
     {
         private NuitrackSensor Sensor;
-        public NuitrackGroupsVisualizer(Pipeline pipeline, NuitrackSensor sensor, GroupsVisualizerConfguration? configuration) : base(pipeline, configuration)
+        public NuitrackGroupsVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
         {
             Sensor = sensor;
         }

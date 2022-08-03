@@ -2,14 +2,14 @@
 using Microsoft.Psi.Components;
 using MathNet.Spatial.Euclidean;
 
-namespace Groups.Instant
+namespace Groups
 {
     public class InstantGroupsConfiguration
     {
         /// <summary>
         /// Gets or sets the distance threshold between skeletons for constitute a grou^p.
         /// </summary>
-        public double DistanceThreshold { get; set; } = 800.0;
+        public double DistanceThreshold { get; set; } = 1.0;
     }
 
     public class InstantGroups : Subpipeline
@@ -45,30 +45,34 @@ namespace Groups.Instant
             Dictionary<uint, List<uint>> rawGroups = new Dictionary<uint, List<uint>>();
             for (int iterator1 = 0; iterator1 < skeletons.Count; iterator1++)
             {
-                for (int iterator2 = iterator1+1; iterator2 < skeletons.Count; iterator2++)
+                for (int iterator2 = iterator1 + 1; iterator2 < skeletons.Count; iterator2++)
                 {
                     double distance = MathNet.Numerics.Distance.Euclidean(skeletons.ElementAt(iterator1).Value.ToVector(), skeletons.ElementAt(iterator2).Value.ToVector());
                     if (distance > Configuration.DistanceThreshold)
                         continue;
 
-                    if (rawGroups.ContainsKey(skeletons.ElementAt(iterator1).Key) && rawGroups.ContainsKey(skeletons.ElementAt(iterator2).Key))
+                    uint idBody1 = skeletons.ElementAt(iterator1).Key;
+                    uint idBody2 = skeletons.ElementAt(iterator2).Key; 
+                    if (rawGroups.ContainsKey(idBody1) && rawGroups.ContainsKey(idBody2))
                     {
-                        rawGroups[skeletons.ElementAt(iterator1).Key].AddRange(rawGroups[skeletons.ElementAt(iterator2).Key]);
-                        rawGroups.Remove(skeletons.ElementAt(iterator2).Key);
+                        rawGroups[idBody1].AddRange(rawGroups[idBody2]);
+                        rawGroups.Remove(idBody2);
                     }
-                    else if (rawGroups.ContainsKey(skeletons.ElementAt(iterator1).Key))
-                        rawGroups[skeletons.ElementAt(iterator1).Key].Add(skeletons.ElementAt(iterator2).Key);
-                    else if (rawGroups.ContainsKey(skeletons.ElementAt(iterator2).Key))
-                        rawGroups[skeletons.ElementAt(iterator2).Key].Add(skeletons.ElementAt(iterator1).Key);
+                    else if (rawGroups.ContainsKey(idBody1))
+                        rawGroups[idBody1].Add(idBody2);
+                    else if (rawGroups.ContainsKey(idBody2))
+                        rawGroups[idBody2].Add(idBody1);
                     else 
                     {
                         List<uint> group = new List<uint>();
-                        group.Add(skeletons.ElementAt(iterator1).Key);
-                        group.Add(skeletons.ElementAt(iterator2).Key);
-                        rawGroups.Add(skeletons.ElementAt(iterator1).Key, group); 
+                        group.Add(idBody1);
+                        group.Add(idBody2);
+                        rawGroups.Add(idBody1, group); 
                     }
                 }
             }
+
+            ReduceGroups(ref rawGroups);
 
             Dictionary<uint, List<uint>> outData = new Dictionary<uint, List<uint>>();
             foreach (var rawGroup in rawGroups)
@@ -79,6 +83,28 @@ namespace Groups.Instant
                 outData.Add(uid, group);
             }
             OutInstantGroups.Post(outData, envelope.OriginatingTime);
+        }
+
+        protected void ReduceGroups(ref Dictionary<uint, List<uint>> groups)
+        {
+            bool call = false;
+            foreach (var group in groups)
+            {
+                foreach (var id in group.Value)
+                {
+                    if (groups.ContainsKey(id) && group.Key != id)
+                    {
+                        groups[group.Key].AddRange(groups[id]);
+                        groups.Remove(id);
+                        call = true;
+                        break;
+                    }
+                }
+                if (call)
+                    break;
+            }
+            if (call)
+                ReduceGroups(ref groups);
         }
     }
 }

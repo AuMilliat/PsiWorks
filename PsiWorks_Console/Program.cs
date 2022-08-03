@@ -2,8 +2,7 @@
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.AzureKinect;
 using NuitrackComponent;
-using Groups.Instant;
-using Groups.Integrated;
+using Groups;
 using Bodies;
 using Postures;
 using NatNetComponent;
