@@ -50,7 +50,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable duration for correpondance in millisecond
         /// </summary>
-        public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0,0,1);
+        public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0, 0, 1);
 
         /// <summary>
         /// Gets or sets minimum time for trying the correspondance below that time we trust the Kinect identification algo

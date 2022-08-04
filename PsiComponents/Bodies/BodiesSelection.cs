@@ -152,7 +152,7 @@ namespace Bodies
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
         {
             Dictionary<uint, SimplifiedBody> dicsC1 = new Dictionary<uint, SimplifiedBody>(), dicsC2 = new Dictionary<uint, SimplifiedBody>();
-            UpdateCorrespondanceMap(bodies.Item1, bodies.Item2, ref dicsC1, ref dicsC2);
+            UpdateCorrespondanceMap(bodies.Item1, bodies.Item2, ref dicsC1, ref dicsC2, envelope.OriginatingTime);
             var bbody = SelectBestBody(dicsC1, dicsC2);
             OutBodiesCalibrated.Post(bbody, envelope.OriginatingTime);
             //OutBodiesCalibrated.Post(SelectBestBody(dicsC1, dicsC2), envelope.OriginatingTime);
@@ -213,7 +213,7 @@ namespace Bodies
             }
         }
 
-        private void UpdateCorrespondanceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2)
+        private void UpdateCorrespondanceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2, DateTime time)
         {
             var newMapping = ComputeCorrespondenceMap(camera1, camera2, ref d1, ref d2);
 
@@ -226,19 +226,19 @@ namespace Bodies
                     case TupleState.AlreadyExist:
                         break;
                     case TupleState.KeyAlreadyInserted:
-                        FindCorrectPairFromBones(ref d1, ref d2, iterator, tuple);
+                        FindCorrectPairFromBones(ref d1, ref d2, iterator, tuple, time);
                         break;
                     case TupleState.GoodToInsert:
                         GeneratedIdsMap[(iterator.Item1, iterator.Item2)] = idCount++;
                         break;
                     case TupleState.Replace:
-                        IntegrateInDicsAndList(tuple, iterator);
-                         break;
+                        IntegrateInDicsAndList(tuple, iterator, time);
+                        break;
                 }
             }
         }
 
-        private void IntegrateInDicsAndList((uint, uint) old, (uint, uint) newItem)
+        private void IntegrateInDicsAndList((uint, uint) old, (uint, uint) newItem, DateTime time)
         {
             if (old == newItem)
                 return;
@@ -246,12 +246,27 @@ namespace Bodies
             {
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
                 GeneratedIdsMap.Remove((old.Item1, old.Item2));
+                if (GeneratedIdsMap.ContainsKey((newItem.Item1, 0)))
+                {
+                    List<uint> removedId = new List<uint>();
+                    removedId.Add(GeneratedIdsMap[(newItem.Item1, 0)]);
+                    OutBodiesRemoved.Post(removedId, time);
+                    GeneratedIdsMap.Remove((0, old.Item2));
+                }
+                if (GeneratedIdsMap.ContainsKey((0, newItem.Item2)))
+                {
+                    List<uint> removedId = new List<uint>();
+                    removedId.Add(GeneratedIdsMap[(0, newItem.Item2)]);
+                    OutBodiesRemoved.Post(removedId, time);
+                    GeneratedIdsMap.Remove((old.Item1, 0));
+                }
+
             }
             else if(!GeneratedIdsMap.ContainsKey((newItem.Item1, newItem.Item2)))
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = idCount++;
         }
 
-        private void FindCorrectPairFromBones(ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2, (uint, uint) iterator, (uint, uint) tuple)
+        private void FindCorrectPairFromBones(ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2, (uint, uint) iterator, (uint, uint) tuple, DateTime time)
         {
             LearnedBody unique, p1, p2;
             if (iterator.Item1 == tuple.Item1)
@@ -286,9 +301,9 @@ namespace Bodies
             var statistics2 = Statistics.MeanStandardDeviation(dist2);
             
             if (statistics1.Item2 < statistics2.Item2)
-                IntegrateInDicsAndList(tuple, iterator);
+                IntegrateInDicsAndList(tuple, iterator, time);
             else
-                IntegrateInDicsAndList(iterator, tuple);
+                IntegrateInDicsAndList(iterator, tuple, time);
         }
 
         private List<(uint, uint)> ComputeCorrespondenceMap(List<SimplifiedBody> camera1, List<SimplifiedBody> camera2, ref Dictionary<uint, SimplifiedBody> d1, ref Dictionary<uint, SimplifiedBody> d2) 

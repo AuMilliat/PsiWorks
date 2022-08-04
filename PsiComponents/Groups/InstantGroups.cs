@@ -78,7 +78,7 @@ namespace Groups
             foreach (var rawGroup in rawGroups)
             {
                 rawGroup.Value.Sort();
-                List<uint> group = rawGroup.Value;
+                List<uint> group = rawGroup.Value.Distinct().ToList();
                 uint uid = Helpers.Helpers.CantorParingSequence(group);
                 outData.Add(uid, group);
             }

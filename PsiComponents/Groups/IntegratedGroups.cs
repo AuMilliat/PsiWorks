@@ -8,17 +8,12 @@ namespace Groups
         /// <summary>
         /// Gets or sets the weight for body on group.
         /// </summary>
-        public double IncreaseWeightFactor { get; set; } = 1.0;
+        public double IncreaseWeightFactor { get; set; } = 2.0;
 
         /// <summary>
         /// Gets or sets the value of decreasong weight when a body is not found un a group.
         /// </summary>
         public double DecreaseWeightFactor { get; set; } = 1.0;
-
-        /// <summary>
-        /// Gets or sets the threshold value for removing a body not seen for a period of time (in second).
-        /// </summary>
-        public uint RemovingNotSeenBody { get; set; } = 90;
     }
     public class IntegratedGroups : Subpipeline
     {
@@ -32,7 +27,7 @@ namespace Groups
         /// </summary>
         private Connector<Dictionary<uint, List<uint>>> InInstantGroupsConnector;
         /// <summary>
-        // Receiver that encapsulates the instant groups
+        /// Receiver that encapsulates the instant groups
         /// </summary>
         public Receiver<Dictionary<uint, List<uint>>> InInstantGroups => InInstantGroupsConnector.In;
 
@@ -40,7 +35,6 @@ namespace Groups
         ///Gets the nuitrack connector of lists of removed skeletons 
         /// </summary>
         private Connector<List<uint>> InRemovedBodiesConnector;
-
         /// <summary>
         /// Receiver that encapsulates the input list of Nuitrack skeletons
         /// </summary>
@@ -58,7 +52,7 @@ namespace Groups
             InRemovedBodiesConnector.Do(ProcessBodiesRemoving);
         }
 
-        private Dictionary<uint ,DateTime> BodyDateTime = new Dictionary<uint, DateTime>();
+        private Dictionary<uint, DateTime> BodyDateTime = new Dictionary<uint, DateTime>();
         private Dictionary<uint, Dictionary<uint, double>> BodyToWeightedGroups = new Dictionary<uint, Dictionary<uint, double>>();
 
         private void Process(Dictionary<uint, List<uint>> instantGroups, Envelope envelope)
@@ -73,14 +67,15 @@ namespace Groups
                     {
                         TimeSpan span = envelope.OriginatingTime - BodyDateTime[body];
                         if (BodyToWeightedGroups[body].ContainsKey(group.Key))
-                            BodyToWeightedGroups[body][group.Key] += span.TotalMilliseconds * Configuration.IncreaseWeightFactor;
+                            BodyToWeightedGroups[body][group.Key] += Math.Pow(span.TotalMilliseconds,Configuration.IncreaseWeightFactor);
                         else 
                             BodyToWeightedGroups[body].Add(group.Key, Configuration.IncreaseWeightFactor);
-                        foreach(var iterator in BodyToWeightedGroups[body])
+                        for(uint iterator = 0; iterator < BodyToWeightedGroups[body].Count; iterator++)
                         {
-                            if (iterator.Key == group.Key)
+                            uint Key = BodyToWeightedGroups[body].ElementAt((int)iterator).Key;
+                            if (Key == group.Key)
                                 continue;
-                            BodyToWeightedGroups[body][iterator.Key] -= span.TotalMilliseconds * Configuration.DecreaseWeightFactor;
+                            BodyToWeightedGroups[body][Key] -= Math.Pow(span.TotalMilliseconds,Configuration.DecreaseWeightFactor);
                         }
                         BodyDateTime[body] = envelope.OriginatingTime;
                     }
@@ -94,29 +89,17 @@ namespace Groups
                 }
             }
 
-            // Cleaning old bodies
-            List<uint> toRemove = new List<uint>();
-            foreach(var body in BodyDateTime)
-            {
-                TimeSpan span = envelope.OriginatingTime - body.Value;
-                if(span.Seconds > Configuration.RemovingNotSeenBody)
-                    toRemove.Add(body.Key);
-            }
-            foreach (uint bodyToRemove in toRemove)
-            {
-                BodyToWeightedGroups.Remove(bodyToRemove);
-                BodyDateTime.Remove(bodyToRemove);
-            }
-
             // Generating Interated Groups
             Dictionary<uint, List<uint>> integratedGroups = new Dictionary<uint, List<uint>>();
             foreach(var iterator in BodyToWeightedGroups)
             {
+                if (iterator.Value.Count == 0)
+                    continue;
                 var list = iterator.Value.ToList();
-                list.Sort((x, y) => x.Value.CompareTo(y.Value));
+                list.Sort((x, y) => y.Value.CompareTo(x.Value));
                 uint groupId = list.ElementAt(0).Key;
                 if (integratedGroups.ContainsKey(groupId))
-                    integratedGroups[iterator.Key].Add(groupId);
+                    integratedGroups[groupId].Add(iterator.Key);
                 else
                 {
                     List<uint> groupList = new List<uint>();
@@ -134,18 +117,20 @@ namespace Groups
                 foreach (uint id in idsToRemove)
                 {
                     BodyDateTime.Remove(id);
-                    uint groupId = 0;
-                    foreach (var group in BodyToWeightedGroups)
+                    foreach(var pair in BodyToWeightedGroups[id])
                     {
-                        if (group.Value.ContainsKey(id))
+                        List<uint> bodiesInGroup = new List<uint>();
+                        foreach (var body in BodyToWeightedGroups)
                         {
-                            groupId = group.Key;
-                            break;
+                            if (body.Key == id)
+                                continue;
+                            if (body.Value.ContainsKey(pair.Key))
+                                bodiesInGroup.Add(body.Key);
                         }
+                        if (bodiesInGroup.Count == 1)
+                            BodyToWeightedGroups[bodiesInGroup.ElementAt(0)].Remove(pair.Key);
                     }
-                    BodyToWeightedGroups[groupId].Remove(id);
-                    if (BodyToWeightedGroups[groupId].Count < 1)
-                        BodyToWeightedGroups.Remove(groupId);
+                    BodyToWeightedGroups.Remove(id);
                 }
             }
         }

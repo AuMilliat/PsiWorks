@@ -74,10 +74,7 @@ namespace GroupsVisualizer
 
                     MathNet.Spatial.Euclidean.Point2D head;
                     if (toProjection(body.Joints[JointId.Head].Item2, out head))
-                    {
-                        string text = body.Id.ToString() + " _ " + group.Key.ToString();
                         graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
-                    }
                 }
             }
             image.Resource.CopyFrom(bitmap);

@@ -155,8 +155,16 @@ namespace PsiWork_WPF
             InstantGroups instantGroups = new InstantGroups(pipeline, IGConfiguration);
 
             /* INSTANT GROUPS VISUALIZER */
-            AzureKinectGroupsVisualizer azureKinectGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
-            Visu4 = azureKinectGroupsVisualizer;
+            AzureKinectGroupsVisualizer azureKinectInstantGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
+            Visu4 = azureKinectInstantGroupsVisualizer;
+
+            /*** INTEGRATED GROUPS ***/
+            IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
+            IntegratedGroups integratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
+
+            /* INTEGRATED GROUPS VISUALIZER */
+            AzureKinectGroupsVisualizer azureKinectIntegratedGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
+            Visu5 = azureKinectIntegratedGroupsVisualizer;
 
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
@@ -185,10 +193,15 @@ namespace PsiWork_WPF
             bodiesSelection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
             positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
 
-            instantGroups.OutInstantGroups.PipeTo(azureKinectGroupsVisualizer.InGroups);
-            bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectGroupsVisualizer.InBodies);
-            calib0.PipeTo(azureKinectGroupsVisualizer.InCalibration);
+            instantGroups.OutInstantGroups.PipeTo(azureKinectInstantGroupsVisualizer.InGroups);
+            bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectInstantGroupsVisualizer.InBodies);
+            calib0.PipeTo(azureKinectInstantGroupsVisualizer.InCalibration);
 
+            bodiesSelection.OutBodiesRemoved.PipeTo(integratedGroups.InRemovedBodies);
+            instantGroups.OutInstantGroups.PipeTo(integratedGroups.InInstantGroups);
+            integratedGroups.OutIntegratedGroups.PipeTo(azureKinectIntegratedGroupsVisualizer.InGroups);
+            bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectIntegratedGroupsVisualizer.InBodies);
+            calib0.PipeTo(azureKinectIntegratedGroupsVisualizer.InCalibration);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -306,7 +319,7 @@ namespace PsiWork_WPF
             //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
             // Stop correctly the pipeline.
             pipeline.Dispose();
