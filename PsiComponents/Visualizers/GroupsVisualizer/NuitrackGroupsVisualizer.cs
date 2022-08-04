@@ -8,7 +8,7 @@ namespace GroupsVisualizer
     public class NuitrackGroupsVisualizer : GroupsVisualizer
     {
         private NuitrackSensor Sensor;
-        public NuitrackGroupsVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public NuitrackGroupsVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             Sensor = sensor;
         }

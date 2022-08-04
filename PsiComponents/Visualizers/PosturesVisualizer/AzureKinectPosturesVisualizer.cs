@@ -12,7 +12,7 @@ namespace PosturesVisualizer
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
         private IDepthDeviceCalibrationInfo? CalibrationInfo;
-        public AzureKinectPosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration configuration) : base(pipeline, configuration)
+        public AzureKinectPosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
             InCalibrationConnector.Out.Do(Initialisation);

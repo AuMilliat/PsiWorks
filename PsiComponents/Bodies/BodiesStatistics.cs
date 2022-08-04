@@ -32,7 +32,7 @@ namespace Bodies
         protected Dictionary<uint, StatisticBody> Data = new Dictionary<uint, StatisticBody>();
 
         protected BodiesStatisticsConfiguration Configuration;
-        public BodiesStatistics(Pipeline pipeline, BodiesStatisticsConfiguration? configuration) : base(pipeline)
+        public BodiesStatistics(Pipeline pipeline, BodiesStatisticsConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, name, defaultDeliveryPolicy)
         {
             Configuration = configuration ?? new BodiesStatisticsConfiguration(); 
             InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));

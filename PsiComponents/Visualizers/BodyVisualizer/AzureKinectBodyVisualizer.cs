@@ -14,7 +14,7 @@ namespace BodyVisualizer
         public Receiver<IDepthDeviceCalibrationInfo> InCalibration => InCalibrationConnector.In;
 
         private IDepthDeviceCalibrationInfo? CalibrationInfo = null;
-        public AzureKinectBodyVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public AzureKinectBodyVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InCalibrationConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibration));
 

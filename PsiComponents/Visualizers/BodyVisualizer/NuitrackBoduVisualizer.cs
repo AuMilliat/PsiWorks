@@ -9,7 +9,7 @@ namespace BodyVisualizer
     public class NuitrackBodyVisualizer : BodyVisualizer
     {
         private NuitrackSensor Sensor;
-        public NuitrackBodyVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public NuitrackBodyVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             Sensor = sensor;
             if(Configuration.WithVideoStream)

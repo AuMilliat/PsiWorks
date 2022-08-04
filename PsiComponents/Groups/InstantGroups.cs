@@ -7,9 +7,9 @@ namespace Groups
     public class InstantGroupsConfiguration
     {
         /// <summary>
-        /// Gets or sets the distance threshold between skeletons for constitute a grou^p.
+        /// Gets or sets the distance threshold between skeletons for constitute a group.
         /// </summary>
-        public double DistanceThreshold { get; set; } = 1.0;
+        public double DistanceThreshold { get; set; } = 0.8;
     }
 
     public class InstantGroups : Subpipeline

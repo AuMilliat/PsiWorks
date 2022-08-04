@@ -9,7 +9,7 @@ namespace BodyCalibrationVisualizer
     {
 
         private NuitrackSensor Sensor;
-        public NuitrackBodyCalibrationVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public NuitrackBodyCalibrationVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             Sensor = sensor;
             InCalibrationSlaveConnector.Out.Do(Initialisation);

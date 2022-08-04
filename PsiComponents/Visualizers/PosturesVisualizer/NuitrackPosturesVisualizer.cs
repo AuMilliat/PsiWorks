@@ -10,7 +10,7 @@ namespace PosturesVisualizer
     {
         private NuitrackSensor Sensor;
         
-        public NuitrackPosturesVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public NuitrackPosturesVisualizer(Pipeline pipeline, NuitrackSensor sensor, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             Sensor = sensor;
         }

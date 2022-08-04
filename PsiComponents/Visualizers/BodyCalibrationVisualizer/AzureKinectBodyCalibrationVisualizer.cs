@@ -14,7 +14,7 @@ namespace BodyCalibrationVisualizer
        
         private IDepthDeviceCalibrationInfo? MasterCalibration = null;
 
-        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, bool calibrationByPipeline) : base(pipeline, configuration)
+        public AzureKinectBodyCalibrationVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, bool calibrationByPipeline, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InCalibrationMasterConnector = CreateInputConnectorFrom<IDepthDeviceCalibrationInfo>(pipeline, nameof(InCalibrationMasterConnector));
             

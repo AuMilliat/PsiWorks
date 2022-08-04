@@ -10,13 +10,12 @@ using Helpers;
 
 namespace GroupsVisualizer
 {
-
     public abstract class GroupsVisualizer : BasicVisualizer
     {
         protected Connector<Dictionary<uint, List<uint>>> InGroupsConnector;
         public Receiver<Dictionary<uint, List<uint>>> InGroups => InGroupsConnector.In;
 
-        public GroupsVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public GroupsVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(pipeline, nameof(InGroups));
             var pair = InBodiesConnector.Out.Join(InGroupsConnector.Out, Reproducible.Nearest<Dictionary<uint, List<uint>>>());
@@ -43,7 +42,6 @@ namespace GroupsVisualizer
             var (bodies, groups, frame) = data;
             lock (this)
             {
-                //draw
                 if (frame?.Resource != null)
                 {
                     Bitmap bitmap = frame.Resource.ToBitmap();
@@ -69,12 +67,12 @@ namespace GroupsVisualizer
                 {
                     if (!bodiesDics.ContainsKey(id))
                         continue;
-                    SimplifiedBody body = bodiesDics[id];
 
+                    SimplifiedBody body = bodiesDics[id];
                     foreach (var bone in AzureKinectBody.Bones)
                         DrawLine(ref graphics, linePen, body.Joints[bone.ParentJoint], body.Joints[bone.ChildJoint]);
 
-                    MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                    MathNet.Spatial.Euclidean.Point2D head;
                     if (toProjection(body.Joints[JointId.Head].Item2, out head))
                     {
                         string text = body.Id.ToString() + " _ " + group.Key.ToString();
@@ -87,7 +85,6 @@ namespace GroupsVisualizer
             display.Update(image);
          }
         
-
         protected Color GenerateColorFromGroupId(uint id)
         {
             double value = (id % 255) * 10.0;

@@ -22,7 +22,7 @@ namespace BodyVisualizer
             set => SetProperty(ref skeletonCount, value);
         }
 
-        public BodyVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public BodyVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {}
 
         protected void Process(List<SimplifiedBody> data, Envelope envelope)
@@ -41,7 +41,6 @@ namespace BodyVisualizer
             var (bodies, frame) = data;
             lock (this)
             {
-                //draw
                 if (frame?.Resource != null)
                 {
                     Bitmap bitmap = frame.Resource.ToBitmap();
@@ -63,7 +62,7 @@ namespace BodyVisualizer
                 foreach (var bone in AzureKinectBody.Bones)
                     DrawLine(ref graphics, linePen, body.Joints[bone.ParentJoint], body.Joints[bone.ChildJoint]);
 
-                MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                MathNet.Spatial.Euclidean.Point2D head;
                 if (toProjection(body.Joints[JointId.Head].Item2, out head))
                     graphics.DrawString(body.Id.ToString(), font, brush, new PointF((float)head.X, (float)head.Y - 150.0f));
             }

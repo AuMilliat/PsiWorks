@@ -67,7 +67,7 @@ namespace Visualizer
             set => SetProperty(ref lineThickness, value);
         }
 
-        public BasicVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline)
+        public BasicVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, name, defaultDeliveryPolicy)
         {
             Configuration = configuration ?? new BasicVisualizerConfiguration();
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));

@@ -27,7 +27,7 @@ namespace BodyCalibrationVisualizer
         protected delegate Tuple<JointConfidenceLevel, MathNet.Spatial.Euclidean.Vector3D> DelegateThatShouldBeLambda(Tuple<JointConfidenceLevel, MathNet.Spatial.Euclidean.Vector3D> vector);
         protected DelegateThatShouldBeLambda? Lambda = null;
 
-        public BodyCalibrationVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public BodyCalibrationVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InBodiesMasterConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesMasterConnector));
             InBodiesSlaveConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodiesSlaveConnector));
@@ -56,7 +56,6 @@ namespace BodyCalibrationVisualizer
             var (bodiesMaster, bodiesSlave, frame) = data;
             lock (this)
             {
-                //draw
                 if (frame?.Resource != null)
                 {
                     Bitmap bitmap = frame.Resource.ToBitmap();
@@ -88,7 +87,7 @@ namespace BodyCalibrationVisualizer
                 foreach (var bone in AzureKinectBody.Bones)
                     DrawLine(ref graphics, linePen, Lambda(body.Joints[bone.ParentJoint]), Lambda(body.Joints[bone.ChildJoint]));
 
-                MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                MathNet.Spatial.Euclidean.Point2D head;
                 if (toProjection(Lambda(body.Joints[JointId.Head]).Item2, out head))
                     graphics.DrawString(body.Id.ToString(), font, color, new PointF((float)head.X, (float)head.Y-150.0F));
             }

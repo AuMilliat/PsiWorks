@@ -16,7 +16,7 @@ namespace PosturesVisualizer
         protected Connector<Dictionary<uint, List<Postures.Postures>>> InPosturesConnector;
         public Receiver<Dictionary<uint, List<Postures.Postures>>> InPostures => InPosturesConnector.In;
 
-        public PosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration) : base(pipeline, configuration)
+        public PosturesVisualizer(Pipeline pipeline, BasicVisualizerConfiguration? configuration, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null) : base(pipeline, configuration, name, defaultDeliveryPolicy)
         {
             InPosturesConnector = CreateInputConnectorFrom<Dictionary<uint, List<Postures.Postures>>>(pipeline, nameof(InPostures));
             var pair = InBodiesConnector.Join(InPosturesConnector);
@@ -64,7 +64,7 @@ namespace PosturesVisualizer
                 foreach (var bone in AzureKinectBody.Bones)
                     DrawLine(ref graphics, linePen, body.Joints[bone.ParentJoint], body.Joints[bone.ChildJoint]);
 
-                MathNet.Spatial.Euclidean.Point2D head = new MathNet.Spatial.Euclidean.Point2D();
+                MathNet.Spatial.Euclidean.Point2D head;
                 if (toProjection(body.Joints[JointId.Head].Item2, out head))
                 {
                     string headName = body.Id.ToString();
