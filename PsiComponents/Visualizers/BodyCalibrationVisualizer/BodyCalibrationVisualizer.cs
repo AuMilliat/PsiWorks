@@ -12,7 +12,7 @@ using Visualizer;
 
 namespace BodyCalibrationVisualizer
 {
-    public abstract class BodyCalibrationVisualizer : StreamVisualizer
+    public abstract class BodyCalibrationVisualizer : BasicVisualizer
     {
         protected Connector<List<SimplifiedBody>> InBodiesMasterConnector;
         protected Connector<List<SimplifiedBody>> InBodiesSlaveConnector;

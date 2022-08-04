@@ -11,7 +11,7 @@ using Postures;
 
 namespace PosturesVisualizer
 {
-    public abstract class PosturesVisualizer : StreamVisualizer
+    public abstract class PosturesVisualizer : BasicVisualizer
     {
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
         public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;

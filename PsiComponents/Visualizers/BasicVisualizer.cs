@@ -35,6 +35,9 @@ namespace Visualizer
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
         public Receiver<List<SimplifiedBody>> InBodies => InBodiesConnector.In;
 
+        protected Connector<Shared<Image>> InColorImageConnector;
+        public Receiver<Shared<Image>> InColorImage => InColorImageConnector.In;
+
         protected Dictionary<JointConfidenceLevel, SolidBrush> confidenceColor = new Dictionary<JointConfidenceLevel, SolidBrush>();
 
         protected BasicVisualizerConfiguration Configuration;
@@ -69,6 +72,7 @@ namespace Visualizer
             Configuration = configuration ?? new BasicVisualizerConfiguration();
             Out = pipeline.CreateEmitter<Shared<Image>>(this, nameof(Out));
             InBodiesConnector = CreateInputConnectorFrom<List<SimplifiedBody>>(pipeline, nameof(InBodies));
+            InColorImageConnector = CreateInputConnectorFrom<Shared<Image>>(pipeline, nameof(InColorImage));
 
             confidenceColor.Add(JointConfidenceLevel.None, new SolidBrush(Color.Black));
             confidenceColor.Add(JointConfidenceLevel.Low, new SolidBrush(Color.Red));
@@ -81,6 +85,7 @@ namespace Visualizer
                 if (e.PropertyName == nameof(display.VideoImage))
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
             };
+
         }
 
         protected abstract bool toProjection(MathNet.Spatial.Euclidean.Vector3D point, out MathNet.Spatial.Euclidean.Point2D proj);

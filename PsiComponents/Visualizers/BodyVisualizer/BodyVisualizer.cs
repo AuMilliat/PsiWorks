@@ -11,7 +11,7 @@ using Visualizer;
 namespace BodyVisualizer
 {
 
-    public abstract class BodyVisualizer : StreamVisualizer
+    public abstract class BodyVisualizer : BasicVisualizer
     {
         protected readonly string SkeletonsCountBase = "Skeletons: ";
 

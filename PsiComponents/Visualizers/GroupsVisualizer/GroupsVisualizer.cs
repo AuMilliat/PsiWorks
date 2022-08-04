@@ -11,7 +11,7 @@ using Helpers;
 namespace GroupsVisualizer
 {
 
-    public abstract class GroupsVisualizer : StreamVisualizer
+    public abstract class GroupsVisualizer : BasicVisualizer
     {
         protected Connector<Dictionary<uint, List<uint>>> InGroupsConnector;
         public Receiver<Dictionary<uint, List<uint>>> InGroups => InGroupsConnector.In;
