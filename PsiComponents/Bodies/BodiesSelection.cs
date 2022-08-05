@@ -242,6 +242,7 @@ namespace Bodies
         {
             if (old == newItem)
                 return;
+
             if (GeneratedIdsMap.ContainsKey((old.Item1, old.Item2)))
             {
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = GeneratedIdsMap[(old.Item1, old.Item2)];
@@ -251,16 +252,15 @@ namespace Bodies
                     List<uint> removedId = new List<uint>();
                     removedId.Add(GeneratedIdsMap[(newItem.Item1, 0)]);
                     OutBodiesRemoved.Post(removedId, time);
-                    GeneratedIdsMap.Remove((0, old.Item2));
+                    GeneratedIdsMap.Remove((newItem.Item1, 0));
                 }
                 if (GeneratedIdsMap.ContainsKey((0, newItem.Item2)))
                 {
                     List<uint> removedId = new List<uint>();
                     removedId.Add(GeneratedIdsMap[(0, newItem.Item2)]);
                     OutBodiesRemoved.Post(removedId, time);
-                    GeneratedIdsMap.Remove((old.Item1, 0));
+                    GeneratedIdsMap.Remove((0, newItem.Item2));
                 }
-
             }
             else if(!GeneratedIdsMap.ContainsKey((newItem.Item1, newItem.Item2)))
                 GeneratedIdsMap[(newItem.Item1, newItem.Item2)] = idCount++;
@@ -458,7 +458,7 @@ namespace Bodies
                 bool checkIteratorItem2 = iterator.Key.Item2 != 0;
                 bool checkSameItem1 = iterator.Key.Item1 == tuple.Item1;
                 bool checkSameItem2 = iterator.Key.Item2 == tuple.Item2;
-                if ((checkSameItem2 && checkSameItem1) || (!checkTupleItem1 && checkSameItem2) || (checkSameItem1 && !checkTupleItem2))
+                if (GeneratedIdsMap.ContainsKey(tuple) || (!checkTupleItem1 && checkSameItem2) || (checkSameItem1 && !checkTupleItem2))
                 {
                     value = tuple;
                     return TupleState.AlreadyExist;

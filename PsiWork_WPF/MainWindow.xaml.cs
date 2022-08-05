@@ -1,17 +1,15 @@
-﻿using System.Windows;
+﻿using Bodies;
+using CalibrationByBodies;
+using Groups;
+using GroupsVisualizer;
 using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
-using Groups;
-using Bodies;
-using CalibrationByBodies;
+using Microsoft.Psi.Calibration;
 using NuitrackComponent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
-using GroupsVisualizer;
-using Postures;
-using PosturesVisualizer;
-using Microsoft.Psi.Calibration;
 using Visualizer;
 
 
@@ -100,7 +98,7 @@ namespace PsiWork_WPF
 
             StoreDisplayAndProcess(calibration);
             InitializeComponent();
-            
+
         }
 
         private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -250,7 +248,7 @@ namespace PsiWork_WPF
             BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
             bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
             BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
-            
+
             ///*** POSITION SELECTER ***/
             //// Basic configuration for the moment.
             //SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
