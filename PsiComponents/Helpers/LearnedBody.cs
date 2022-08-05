@@ -27,7 +27,7 @@ namespace Helpers
                     dists.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b.Joints[bones.Key.ParentJoint].Item2.ToVector(), b.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
             return Statistics.MeanStandardDeviation(dists).Item2 < maxDeviation;
         }
-        private double ProcessDifference(LearnedBody b)
+        public double ProcessDifference(LearnedBody b)
         {
             List<double> diff = new List<double>();
             foreach (var iterator in LearnedBones)
@@ -42,7 +42,7 @@ namespace Helpers
             foreach (var pair in listOfBodies)
                 pairs.Add(new KeyValuePair<double, LearnedBody>(ProcessDifference(pair), pair));
             pairs.Sort(new TupleDoubleLearnedBodyComparer());
-            if (pairs.Count == 0 || maxDeviation < pairs.First().Key)
+            if (pairs.Count == 0 || Double.IsNaN(pairs.First().Key) ||  maxDeviation < pairs.First().Key)
                 return 0;
             return pairs.First().Value.Id;
         }

@@ -65,7 +65,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable deviation for correpondance in meter
         /// </summary>
-        public double MaximumDeviationAllowed { get; set; } = 0.005;
+        public double MaximumDeviationAllowed { get; set; } = 0.0025;
     }
     public class BodiesIdentification : Subpipeline
     {
@@ -179,7 +179,7 @@ namespace Bodies
                 {
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
-                    if (timestamp - learnedBody.Value.LastSeen > Configuration.MinimumIdentificationTime)
+                    //if (timestamp - learnedBody.Value.LastSeen > Configuration.MinimumIdentificationTime)
                         learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
