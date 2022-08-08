@@ -142,7 +142,7 @@ namespace PsiWork_WPF
 
             /*** SELECTION VISUALIZER ***/
             BodyVisualizer.AzureKinectBodyVisualizer selectionVisualizer = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, visualizerConfiguration);
-            Visu3 = selectionVisualizer;
+            //Visu3 = selectionVisualizer;
 
             /*** POSITION EXTRACTOR ***/
             SimpleBodiesPositionExtractionConfiguration PEConfiguration = new SimpleBodiesPositionExtractionConfiguration();
@@ -154,7 +154,7 @@ namespace PsiWork_WPF
 
             /* INSTANT GROUPS VISUALIZER */
             AzureKinectGroupsVisualizer azureKinectInstantGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
-            Visu4 = azureKinectInstantGroupsVisualizer;
+            Visu3 = azureKinectInstantGroupsVisualizer;
 
             /*** INTEGRATED GROUPS ***/
             IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
@@ -163,6 +163,14 @@ namespace PsiWork_WPF
             /* INTEGRATED GROUPS VISUALIZER */
             AzureKinectGroupsVisualizer azureKinectIntegratedGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
             Visu5 = azureKinectIntegratedGroupsVisualizer;
+
+            /*** ENTRY GROUPS ***/
+            EntryGroupsConfiguration entryGroupsConfiguration = new EntryGroupsConfiguration();
+            EntryGroups entryGroups = new EntryGroups(pipeline, entryGroupsConfiguration);
+
+            /* ENTRY GROUPS VISUALIZER */
+            AzureKinectGroupsVisualizer azureKinectEntryGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
+            Visu4 = azureKinectEntryGroupsVisualizer;
 
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
@@ -200,6 +208,12 @@ namespace PsiWork_WPF
             integratedGroups.OutIntegratedGroups.PipeTo(azureKinectIntegratedGroupsVisualizer.InGroups);
             bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectIntegratedGroupsVisualizer.InBodies);
             calib0.PipeTo(azureKinectIntegratedGroupsVisualizer.InCalibration);
+
+            bodiesSelection.OutBodiesRemoved.PipeTo(entryGroups.InRemovedBodies);
+            instantGroups.OutInstantGroups.PipeTo(entryGroups.InInstantGroups);
+            entryGroups.OutFormedEntryGroups.PipeTo(azureKinectEntryGroupsVisualizer.InGroups);
+            bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectEntryGroupsVisualizer.InBodies);
+            calib0.PipeTo(azureKinectEntryGroupsVisualizer.InCalibration);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)

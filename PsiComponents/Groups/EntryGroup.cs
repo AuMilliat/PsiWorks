@@ -8,7 +8,7 @@ namespace Groups
         /// <summary>
         /// Gets or sets the threshold time (in second).
         /// </summary>
-        public uint GroupFormationDelay { get; set; } = 10;
+        public TimeSpan GroupFormationDelay { get; set; } = new TimeSpan(0, 0, 2);
     }
     public class EntryGroups : Subpipeline
     {
@@ -55,48 +55,45 @@ namespace Groups
         private void Process(Dictionary<uint, List<uint>> instantGroups, Envelope envelope)
         {
             // Entry algo:
-            // Once a group is stable for 10 second we consder it as stable for entry group (basic)
+            // Once a group is stable for x seconds we consder it as stable for entry group (basic)
             // First clean storage from groups that does not exist in this frame and are not already considered as formed.
-            bool newGroups = false;
             List<uint> unstableGroups = new List<uint>();
-            foreach (var group in GroupDateTime)
-                if (!instantGroups.ContainsKey(group.Key)&&!FormedEntryGroups.ContainsKey(group.Key))
+            foreach (var group in instantGroups)
+                if (!GroupDateTime.ContainsKey(group.Key) && !FormedEntryGroups.ContainsKey(group.Key))
                     unstableGroups.Add(group.Key);
-            foreach (uint groupToRemove in unstableGroups)
 
             // Check if groups exists and if it's stable enough set it as formed
-            foreach (var group in instantGroups)
+            foreach (uint groupToRemove in unstableGroups)
             {
-                if (GroupDateTime.ContainsKey(group.Key))
+                foreach (var group in instantGroups)
                 {
-                    TimeSpan span = envelope.OriginatingTime - GroupDateTime[group.Key];
-                    if (span.Seconds > Configuration.GroupFormationDelay)
+                    if (GroupDateTime.ContainsKey(group.Key))
                     {
-                        foreach(var body in group.Value)
-                            FixedBodies.Add(body);
-                        FormedEntryGroups.Add(group.Key, group.Value);
-                        newGroups = true;
-                    }
-                }
-                else
-                {
-                    // Checking collision with formed groups?
-                    bool noCollision = true;
-                    foreach(uint body in group.Value)
-                    {
-                        if(FixedBodies.Contains(body))
+                        if (!FormedEntryGroups.ContainsKey(group.Key) && (FixedBodies.Intersect(group.Value).Count() == 0) && ((envelope.OriginatingTime - GroupDateTime[group.Key]) > Configuration.GroupFormationDelay))
                         {
-                            noCollision = false;
-                            break;
+                            foreach (var body in group.Value)
+                                FixedBodies.Add(body);
+                            FormedEntryGroups.Add(group.Key, group.Value.DeepClone());
                         }
                     }
-                    if(noCollision)
-                        GroupDateTime.Add(group.Key, envelope.OriginatingTime);
+                    else
+                    {
+                        // Checking collision with formed groups?
+                        bool noCollision = true;
+                        foreach (uint body in group.Value)
+                        {
+                            if (FixedBodies.Contains(body))
+                            {
+                                noCollision = false;
+                                break;
+                            }
+                        }
+                        if (noCollision)
+                            GroupDateTime.Add(group.Key, envelope.OriginatingTime);
+                    }
                 }
             }
-            // If new groups added, sending new definition
-            if(newGroups)
-                OutFormedEntryGroups.Post(FormedEntryGroups, envelope.OriginatingTime);
+            OutFormedEntryGroups.Post(FormedEntryGroups, envelope.OriginatingTime);
         }
         private void ProcessBodiesRemoving(List<uint> idsToRemove, Envelope envelope)
         {
@@ -104,6 +101,8 @@ namespace Groups
             {
                 foreach(uint id in idsToRemove)
                 {
+                    if (!FixedBodies.Contains(id))
+                        continue;
                     FixedBodies.Remove(id);
                     uint groupId = 0;
                     foreach (var group in FormedEntryGroups)
@@ -115,8 +114,9 @@ namespace Groups
                         }
                     }
                     FormedEntryGroups[groupId].Remove(id);
-                    if (FormedEntryGroups[groupId].Count < 1)
+                    if (FormedEntryGroups[groupId].Count <= 1)
                     {
+                        FixedBodies.Remove(FormedEntryGroups[groupId].ElementAt(0));
                         FormedEntryGroups.Remove(groupId);
                         GroupDateTime.Remove(groupId);
                     }
