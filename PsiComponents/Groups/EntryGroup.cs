@@ -57,42 +57,35 @@ namespace Groups
             // Entry algo:
             // Once a group is stable for x seconds we consder it as stable for entry group (basic)
             // First clean storage from groups that does not exist in this frame and are not already considered as formed.
-            List<uint> unstableGroups = new List<uint>();
-            foreach (var group in instantGroups)
-                if (!GroupDateTime.ContainsKey(group.Key) && !FormedEntryGroups.ContainsKey(group.Key))
-                    unstableGroups.Add(group.Key);
-
             // Check if groups exists and if it's stable enough set it as formed
-            foreach (uint groupToRemove in unstableGroups)
+            foreach (var group in instantGroups)
             {
-                foreach (var group in instantGroups)
+                if (GroupDateTime.ContainsKey(group.Key))
                 {
-                    if (GroupDateTime.ContainsKey(group.Key))
+                    if (!FormedEntryGroups.ContainsKey(group.Key) && (FixedBodies.Intersect(group.Value).Count() == 0) && ((envelope.OriginatingTime - GroupDateTime[group.Key]) > Configuration.GroupFormationDelay))
                     {
-                        if (!FormedEntryGroups.ContainsKey(group.Key) && (FixedBodies.Intersect(group.Value).Count() == 0) && ((envelope.OriginatingTime - GroupDateTime[group.Key]) > Configuration.GroupFormationDelay))
-                        {
-                            foreach (var body in group.Value)
-                                FixedBodies.Add(body);
-                            FormedEntryGroups.Add(group.Key, group.Value.DeepClone());
-                        }
-                    }
-                    else
-                    {
-                        // Checking collision with formed groups?
-                        bool noCollision = true;
-                        foreach (uint body in group.Value)
-                        {
-                            if (FixedBodies.Contains(body))
-                            {
-                                noCollision = false;
-                                break;
-                            }
-                        }
-                        if (noCollision)
-                            GroupDateTime.Add(group.Key, envelope.OriginatingTime);
+                        foreach (var body in group.Value)
+                            FixedBodies.Add(body);
+                        FormedEntryGroups.Add(group.Key, group.Value.DeepClone());
                     }
                 }
+                else
+                {
+                    // Checking collision with formed groups?
+                    bool noCollision = true;
+                    foreach (uint body in group.Value)
+                    {
+                        if (FixedBodies.Contains(body))
+                        {
+                            noCollision = false;
+                            break;
+                        }
+                    }
+                    if (noCollision)
+                        GroupDateTime.Add(group.Key, envelope.OriginatingTime);
+                }
             }
+            
             OutFormedEntryGroups.Post(FormedEntryGroups, envelope.OriginatingTime);
         }
         private void ProcessBodiesRemoving(List<uint> idsToRemove, Envelope envelope)
