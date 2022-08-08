@@ -8,7 +8,7 @@
         Title="DebugWindow" Height="920" Width="2160">
     <UserControl Loaded="UserControl_Loaded">
         <Grid>
-            <!--Configuration for calibration-->
+            <!--Configuration for CARISM-->
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -19,8 +19,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" Grid.Column="0" Content="{Binding Path=Visu0.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
-            <Label Grid.Row="0" Grid.Column="1" Content="{Binding Path=Visu1.SkeletonCount}" FontSize="48" FontWeight="Bold"/>
+            <Label Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Path=Truth.GroupDesc}" FontSize="48" FontWeight="Bold"/>
             <Image Grid.Row="1" Grid.Column="0" Source="{Binding Path=Visu0.Image}"/>
             <Image Grid.Row="1" Grid.Column="1" Source="{Binding Path=Visu1.Image}"/>
             <Image Grid.Row="2" Grid.Column="0" Source="{Binding Path=Visu2.Image}"/>

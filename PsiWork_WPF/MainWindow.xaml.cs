@@ -2,6 +2,7 @@
 using CalibrationByBodies;
 using Groups;
 using GroupsVisualizer;
+using GroundTruthGroups;
 using Microsoft.Psi;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Calibration;
@@ -74,6 +75,8 @@ namespace PsiWork_WPF
         public GroupsVisualizer.GroupsVisualizer IntegratedVisu { get; private set; }
         public PosturesVisualizer.PosturesVisualizer PosturesVisu { get; private set; }
 
+        public TruthCentralizer Truth { get; private set; }
+
         private string status = "";
         public string Status
         {
@@ -93,7 +96,7 @@ namespace PsiWork_WPF
             if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
                 calibration = null;
             // Enabling diagnotstics !!!
-            pipeline = Pipeline.Create(enableDiagnostics: true);
+            pipeline = Pipeline.Create("WpfPipeline",enableDiagnostics: true);
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             StoreDisplayAndProcess(calibration);
@@ -105,9 +108,16 @@ namespace PsiWork_WPF
         {
             var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\2-2-1_5");
             var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
-            var calib0 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies0");
             var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
+
+            var calib0 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies0");
             var calib1 = store.OpenStream<IDepthDeviceCalibrationInfo>("CalibBodies1");
+
+            var group1 = store.OpenStream<uint>("Group1");
+            var group2 = store.OpenStream<uint>("Group2");
+            var group3 = store.OpenStream<uint>("Group3");
+            var group4 = store.OpenStream<uint>("Group4");
+            var group5 = store.OpenStream<uint>("Group5");
 
             //pipeline = store;
             /*** BODIES CONVERTERS ***/
@@ -172,6 +182,11 @@ namespace PsiWork_WPF
             AzureKinectGroupsVisualizer azureKinectEntryGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
             Visu4 = azureKinectEntryGroupsVisualizer;
 
+            /*** GROUND TRUTH GROUPS ***/
+            Truth = new TruthCentralizer(pipeline);
+            GroundTruthGroups.GroundTruthGroups groundTruthGroups = new GroundTruthGroups.GroundTruthGroups(pipeline);
+
+
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
@@ -214,6 +229,15 @@ namespace PsiWork_WPF
             entryGroups.OutFormedEntryGroups.PipeTo(azureKinectEntryGroupsVisualizer.InGroups);
             bodiesSelection.OutBodiesCalibrated.PipeTo(azureKinectEntryGroupsVisualizer.InBodies);
             calib0.PipeTo(azureKinectEntryGroupsVisualizer.InCalibration);
+
+            group1.PipeTo(Truth.InGroup1);
+            group2.PipeTo(Truth.InGroup2);
+            group3.PipeTo(Truth.InGroup3);
+            group4.PipeTo(Truth.InGroup4);
+            group5.PipeTo(Truth.InGroup5);
+
+            Truth.OutTruth.PipeTo(groundTruthGroups.InGroundTruth);
+            instantGroups.OutInstantGroups.PipeTo(groundTruthGroups.InGroups);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
