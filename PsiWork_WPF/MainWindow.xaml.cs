@@ -106,7 +106,7 @@ namespace PsiWork_WPF
 
         private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
         {
-            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\2-2-1_5");
+            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\4-1.2");
             var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
             var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
 
@@ -184,8 +184,6 @@ namespace PsiWork_WPF
 
             /*** GROUND TRUTH GROUPS ***/
             Truth = new TruthCentralizer(pipeline);
-            GroundTruthGroups.GroundTruthGroups groundTruthGroups = new GroundTruthGroups.GroundTruthGroups(pipeline);
-
 
             /*** Linkage ***/
             bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
@@ -235,9 +233,6 @@ namespace PsiWork_WPF
             group3.PipeTo(Truth.InGroup3);
             group4.PipeTo(Truth.InGroup4);
             group5.PipeTo(Truth.InGroup5);
-
-            Truth.OutTruth.PipeTo(groundTruthGroups.InGroundTruth);
-            instantGroups.OutInstantGroups.PipeTo(groundTruthGroups.InGroups);
         }
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)

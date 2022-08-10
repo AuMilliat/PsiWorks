@@ -183,20 +183,23 @@ namespace Groups
                 foreach (uint id in idsToRemove)
                 {
                     BodyDateTime.Remove(id);
-                    foreach (var pair in BodyToWeightedGroups[id])
+                    if (BodyToWeightedGroups.ContainsKey(id))
                     {
-                        List<uint> bodiesInGroup = new List<uint>();
-                        foreach (var body in BodyToWeightedGroups)
+                        foreach (var pair in BodyToWeightedGroups[id])
                         {
-                            if (body.Key == id)
-                                continue;
-                            if (body.Value.ContainsKey(pair.Key))
-                                bodiesInGroup.Add(body.Key);
+                            List<uint> bodiesInGroup = new List<uint>();
+                            foreach (var body in BodyToWeightedGroups)
+                            {
+                                if (body.Key == id)
+                                    continue;
+                                if (body.Value.ContainsKey(pair.Key))
+                                    bodiesInGroup.Add(body.Key);
+                            }
+                            if (bodiesInGroup.Count == 1)
+                                BodyToWeightedGroups[bodiesInGroup.ElementAt(0)].Remove(pair.Key);
+                            if (bodiesInGroup.Count != 0)
+                                GroupsParameters.Remove(pair.Key);
                         }
-                        if (bodiesInGroup.Count == 1)
-                            BodyToWeightedGroups[bodiesInGroup.ElementAt(0)].Remove(pair.Key);
-                        if(bodiesInGroup.Count != 0)
-                            GroupsParameters.Remove(pair.Key);
                     }
                     BodyToWeightedGroups.Remove(id);
                     BodyRemoved.Add(id);

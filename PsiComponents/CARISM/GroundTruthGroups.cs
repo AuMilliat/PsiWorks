@@ -67,11 +67,14 @@ namespace GroundTruthGroups
 
         protected void Process((uint, uint) data, Envelope envelope)
         {
-            Truth[data.Item1] = data.Item2;
-            OutTruth.Post(data, envelope.OriginatingTime);
-            GroupDesc = "";
-            foreach (var iterator in Truth)
-                GroupDesc += iterator.Key.ToString() + "-" + iterator.Value.ToString() + "|";
+            lock (this)
+            {
+                Truth[data.Item1] = data.Item2;
+                //OutTruth.Post(data, envelope.OriginatingTime);
+                GroupDesc = "";
+                foreach (var iterator in Truth)
+                    GroupDesc += iterator.Key.ToString() + "-" + iterator.Value.ToString() + "|";
+            }
             
         }
         protected void Process1(uint data, Envelope envelope)
@@ -93,69 +96,6 @@ namespace GroundTruthGroups
         protected void Process5(uint data, Envelope envelope)
         {
             Process((5, data), envelope);
-        }
-    }
-
-    public class GroundTruthGroups : Subpipeline
-    {
-        /// <summary>
-        /// Gets the connector of lists of groups.
-        /// </summary>
-        private Connector<Dictionary<uint, List<uint>>> InGroupsConnector;
-
-        /// <summary>
-        /// Receiver that encapsulates the input list of groups
-        /// </summary>
-        public Receiver<Dictionary<uint, List<uint>>> InGroups => InGroupsConnector.In;
-
-        /// <summary>
-        /// Gets the connector of lists of groups.
-        /// </summary>
-        private Connector<(uint, uint)> InGroundTruthConnector;
-
-        /// <summary>
-        /// Receiver that encapsulates the input list of groups
-        /// </summary>
-        public Receiver<(uint, uint)> InGroundTruth => InGroundTruthConnector.In;
-
-        private Dictionary<uint, List<uint>> lastGroups;
-
-        public GroundTruthGroups(Pipeline parent, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
-            : base(parent, name, defaultDeliveryPolicy)
-        {
-            lastGroups = new Dictionary<uint, List<uint>>();
-
-            InGroupsConnector = CreateInputConnectorFrom<Dictionary<uint, List<uint>>>(parent, nameof(InGroupsConnector));
-            InGroundTruthConnector = CreateInputConnectorFrom<(uint, uint)>(parent, nameof(InGroundTruthConnector));
-
-            InGroupsConnector.Out.Do(Process);
-            InGroundTruthConnector.Do(ProcessTruth);
-        }
-
-        private void Process(Dictionary<uint, List<uint>> groups, Envelope envelope)
-        {
-            if (CheckIfSame(groups))
-                return;
-            lastGroups = groups;
-        }
-
-        private void ProcessTruth((uint, uint) thruth, Envelope envelope)
-        {
-            Console.WriteLine(thruth.ToString());
-        }
-
-        private bool CheckIfSame(Dictionary<uint, List<uint>> groups)
-        { 
-            foreach(var group in groups)
-            {
-                if (lastGroups.ContainsKey(group.Key))
-                    foreach(uint id in group.Value)
-                        if (!lastGroups[group.Key].Contains(id))
-                            return false;
-                else
-                    return false;
-            }
-            return true;
         }
     }
 }
