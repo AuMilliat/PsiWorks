@@ -47,27 +47,30 @@ namespace Groups
             {
                 for (int iterator2 = iterator1 + 1; iterator2 < skeletons.Count; iterator2++)
                 {
+                    uint idBody1 = skeletons.ElementAt(iterator1).Key;
+                    uint idBody2 = skeletons.ElementAt(iterator2).Key;
                     double distance = MathNet.Numerics.Distance.Euclidean(skeletons.ElementAt(iterator1).Value.ToVector(), skeletons.ElementAt(iterator2).Value.ToVector());
                     if (distance > Configuration.DistanceThreshold)
                         continue;
 
-                    uint idBody1 = skeletons.ElementAt(iterator1).Key;
-                    uint idBody2 = skeletons.ElementAt(iterator2).Key; 
-                    if (rawGroups.ContainsKey(idBody1) && rawGroups.ContainsKey(idBody2))
-                    {
-                        rawGroups[idBody1].AddRange(rawGroups[idBody2]);
-                        rawGroups.Remove(idBody2);
-                    }
-                    else if (rawGroups.ContainsKey(idBody1))
+                    if (rawGroups.ContainsKey(idBody1))
                         rawGroups[idBody1].Add(idBody2);
-                    else if (rawGroups.ContainsKey(idBody2))
+                    else
+                    {
+                        List<uint> group = new List<uint>();
+                        group.Add(idBody1);
+                        group.Add(idBody2);
+                        rawGroups.Add(idBody1, group);
+                    }
+
+                    if (rawGroups.ContainsKey(idBody2))
                         rawGroups[idBody2].Add(idBody1);
                     else 
                     {
                         List<uint> group = new List<uint>();
                         group.Add(idBody1);
                         group.Add(idBody2);
-                        rawGroups.Add(idBody1, group); 
+                        rawGroups.Add(idBody2, group); 
                     }
                 }
             }
@@ -87,22 +90,26 @@ namespace Groups
 
         protected void ReduceGroups(ref Dictionary<uint, List<uint>> groups)
         {
-            bool call = false;
-            foreach (var group in groups)
-            {
-                foreach (var id in group.Value)
+            //bool call = true;
+            //while (call)
+            //{
+                bool call = false;
+                foreach (var group in groups)
                 {
-                    if (groups.ContainsKey(id) && group.Key != id)
+                    foreach (var id in group.Value)
                     {
-                        groups[group.Key].AddRange(groups[id]);
-                        groups.Remove(id);
-                        call = true;
-                        break;
+                        if (groups.ContainsKey(id) && group.Key != id)
+                        {
+                            groups[group.Key].AddRange(groups[id]);
+                            groups.Remove(id);
+                            call = true;
+                            break;
+                        }
                     }
+                    if (call)
+                        break;
                 }
-                if (call)
-                    break;
-            }
+            //}
             if (call)
                 ReduceGroups(ref groups);
         }

@@ -131,7 +131,7 @@ namespace Groups
                             if (BodyToWeightedGroups[body].ContainsKey(group.Key))
                                 BodyToWeightedGroups[body][group.Key] += Math.Pow(span.TotalMilliseconds, Configuration.IncreaseWeightFactor);
                             else
-                                BodyToWeightedGroups[body].Add(group.Key, Math.Pow(span.TotalMilliseconds, Configuration.IncreaseWeightFactor * BodyToWeightedGroups[body].Count == 0 ? 10.0 : 1.0));
+                                BodyToWeightedGroups[body].Add(group.Key, Math.Pow(span.TotalMilliseconds, Configuration.IncreaseWeightFactor /** BodyToWeightedGroups[body].Count == 0 ? 10.0 :1.0 */));
                             if(GroupPairing.ContainsKey(group.Key) && BodyToWeightedGroups[body].ContainsKey(GroupPairing[group.Key]))
                                 BodyToWeightedGroups[body][GroupPairing[group.Key]] += Math.Pow(span.TotalMilliseconds, Configuration.IncreaseWeightFactor);
                             for (uint iterator = 0; iterator < BodyToWeightedGroups[body].Count; iterator++)

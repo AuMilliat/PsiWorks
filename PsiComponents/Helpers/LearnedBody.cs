@@ -19,11 +19,11 @@ namespace Helpers
             return ProcessDifference(b) < maxDeviation;
         }
 
-        public bool SeemsTheSame(SimplifiedBody b, double maxDeviation)
+        public bool SeemsTheSame(SimplifiedBody b, double maxDeviation, JointConfidenceLevel jointConfidenceLevel)
         {
             List<double> dists = new List<double>();
             foreach (var bones in LearnedBones)
-                if (bones.Value > 0.0)
+                if (bones.Value > 0.0 && b.Joints[bones.Key.ParentJoint].Item1 >= jointConfidenceLevel && b.Joints[bones.Key.ChildJoint].Item1 >= jointConfidenceLevel)
                     dists.Add(Math.Abs(MathNet.Numerics.Distance.Euclidean(b.Joints[bones.Key.ParentJoint].Item2.ToVector(), b.Joints[bones.Key.ChildJoint].Item2.ToVector()) - bones.Value));
             return Statistics.MeanStandardDeviation(dists).Item2 < maxDeviation;
         }

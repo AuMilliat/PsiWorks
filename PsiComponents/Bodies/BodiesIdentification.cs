@@ -10,6 +10,11 @@ namespace Bodies
     public class BodiesIdentificationConfiguration
     {
         /// <summary>
+        /// Get or set minium acceptable confidence for calculation.
+        /// </summary>
+        public JointConfidenceLevel MinimumConfidenceLevelForLearning { get; set; } = JointConfidenceLevel.Low;
+
+        /// <summary>
         /// Gets or sets the bone list used.
         /// </summary>
         public List<(JointId ChildJoint, JointId ParentJoint)> BonesUsedForCorrespondence { get; set; } = new List<(JointId, JointId)>
@@ -50,7 +55,7 @@ namespace Bodies
         /// <summary>
         /// Gets or sets maximum acceptable duration for correpondance in millisecond
         /// </summary>
-        public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0, 0, 1);
+        public TimeSpan MaximumIdentificationTime { get; set; } = new TimeSpan(0, 0, 0, 0, 500);
 
         /// <summary>
         /// Gets or sets minimum time for trying the correspondance below that time we trust the Kinect identification algo
@@ -66,6 +71,11 @@ namespace Bodies
         /// Gets or sets maximum acceptable deviation for correpondance in meter
         /// </summary>
         public double MaximumDeviationAllowed { get; set; } = 0.0025;
+
+        /// <summary>
+        /// Gets or sets maximum acceptable deviation for correpondance in meter
+        /// </summary>
+        public uint MinimumBonesForIdentification { get; set; } = 5;
     }
     public class BodiesIdentification : Subpipeline
     {
@@ -118,10 +128,12 @@ namespace Bodies
             List<SimplifiedBody> identifiedBodies = new List<SimplifiedBody>();
             List<uint> foundBodies = new List<uint>();
             List<uint> idsBodies = new List<uint>();
+            List<uint> idsBodiesforCollision = new List<uint>();
             List<uint> idsToRemove = new List<uint>();
             RemoveOldIds(envelope.OriginatingTime, ref idsToRemove);
             foreach (var body in bodies)
             {
+                idsBodiesforCollision.Add(body.Id);
                 if (CorrespondanceMap.ContainsKey(body.Id))
                 {
                     idsBodies.Add(CorrespondanceMap[body.Id]);
@@ -135,7 +147,7 @@ namespace Bodies
                 }
                 else if (LearnedBodies.ContainsKey(body.Id))
                 {
-                    if (envelope.OriginatingTime - LearnedBodies[body.Id].LastSeen < Configuration.MaximumLostTime || LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed))
+                    if (envelope.OriginatingTime - LearnedBodies[body.Id].LastSeen < Configuration.MaximumLostTime || LearnedBodies[body.Id].SeemsTheSame(body, Configuration.MaximumDeviationAllowed, Configuration.MinimumConfidenceLevelForLearning))
                     {
                         LearnedBodies[body.Id].LastSeen = envelope.OriginatingTime;
                         LearnedBodies[body.Id].LastPosition = body.Joints[JointId.Pelvis].Item2;
@@ -160,7 +172,17 @@ namespace Bodies
                 OutLearnedBodies.Post(NewLearnedBodies, envelope.OriginatingTime);
                 NewLearnedBodies.Clear();
             }
+            CheckCorrespondanceCollision(ref idsBodiesforCollision);
             OutBodiesIdentified.Post(identifiedBodies, envelope.OriginatingTime);
+        }
+
+        private void CheckCorrespondanceCollision(ref List<uint> idsBodies)
+        {
+            var intersection = idsBodies.Intersect(CorrespondanceMap.Keys);
+            if(intersection.Count() > 0 )
+                foreach(var body in intersection)
+                    if (idsBodies.Contains(CorrespondanceMap[body]))
+                        CorrespondanceMap.Remove(body);
         }
 
         private bool ProcessLearningBody(SimplifiedBody body, DateTime timestamp, List<uint> idsBodies)
@@ -169,9 +191,8 @@ namespace Bodies
             if (!LearningBodies.ContainsKey(body.Id))
                 LearningBodies.Add(body.Id, new LearningBody(body.Id, timestamp, Configuration.BonesUsedForCorrespondence));
 
-            if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime))
-                foreach (var bone in Configuration.BonesUsedForCorrespondence)
-                    LearningBodies[body.Id].LearningBones[bone].Add(MathNet.Numerics.Distance.Euclidean(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
+            if (LearningBodies[body.Id].StillLearning(timestamp, Configuration.MaximumIdentificationTime, Configuration.MinimumBonesForIdentification))
+                ProcessLearning(ref body, LearningBodies[body.Id]);
             else
             {
                 List<LearnedBody> learnedBodiesNotVisible = new List<LearnedBody>();
@@ -180,7 +201,7 @@ namespace Bodies
                     if (idsBodies.Contains(learnedBody.Key))
                         continue;
                     //if (timestamp - learnedBody.Value.LastSeen > Configuration.MinimumIdentificationTime)
-                        learnedBodiesNotVisible.Add(learnedBody.Value);
+                    learnedBodiesNotVisible.Add(learnedBody.Value);
                 }
                 LearnedBody newLearnedBody = LearningBodies[body.Id].GeneratorLearnedBody(Configuration.MaximumDeviationAllowed);
                 NewLearnedBodies.Add(newLearnedBody);
@@ -188,9 +209,9 @@ namespace Bodies
                 newLearnedBody.LastPosition = body.Joints[JointId.Pelvis].Item2;
                 LearningBodies.Remove(body.Id);
                 uint correspondanceId = 0;
-                if(learnedBodiesNotVisible.Count > 0)
+                if (learnedBodiesNotVisible.Count > 0)
                     correspondanceId = newLearnedBody.FindClosest(learnedBodiesNotVisible, Configuration.MaximumDeviationAllowed);
-                if(correspondanceId > 0)
+                if (correspondanceId > 0)
                     CorrespondanceMap[body.Id] = correspondanceId;
                 else
                 {
@@ -200,6 +221,15 @@ namespace Bodies
                 return false;
             }
             return true;
+        }
+
+        private void ProcessLearning(ref SimplifiedBody body, LearningBody learningBody)
+        {
+            foreach (var bone in Configuration.BonesUsedForCorrespondence)
+            {
+                if(body.Joints[bone.ParentJoint].Item1 >= Configuration.MinimumConfidenceLevelForLearning && body.Joints[bone.ChildJoint].Item1 >= Configuration.MinimumConfidenceLevelForLearning)
+                    learningBody.LearningBones[bone].Add(MathNet.Numerics.Distance.Euclidean(body.Joints[bone.ParentJoint].Item2.ToVector(), body.Joints[bone.ChildJoint].Item2.ToVector()));
+            }
         }
 
         private void RemoveOldIds(DateTime current, ref List<uint> idsToRemove)

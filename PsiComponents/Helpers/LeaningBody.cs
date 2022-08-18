@@ -17,10 +17,17 @@ namespace Helpers
             foreach (var bone in bones)
                 LearningBones.Add(bone, new List<double>());
         }
-        public bool StillLearning(DateTime time, TimeSpan duration)
+
+        public bool StillLearning(DateTime time, TimeSpan duration, uint MinimumBonesForIdentification)
         {
-            return (time - CreationTime) < duration;
+            uint count = 0;
+            foreach (var bone in LearningBones)
+                if(bone.Value.Count >= MinimumBonesForIdentification)
+                    count++;
+
+            return ((time - CreationTime) < duration) || MinimumBonesForIdentification >= count;
         }
+
         public LearnedBody GeneratorLearnedBody(double maxStdDev)
         {
             Dictionary<(JointId ChildJoint, JointId ParentJoint), double> learnedBones = new Dictionary<(JointId ChildJoint, JointId ParentJoint), double>();

@@ -5,6 +5,8 @@ using Microsoft.Psi.Components;
 using Helpers;
 using Microsoft.Azure.Kinect.BodyTracking;
 using MathNet.Numerics.Statistics;
+using Emgu.CV.DepthAI;
+using System.Linq;
 
 namespace Bodies
 {
@@ -24,6 +26,11 @@ namespace Bodies
         /// Gets or sets maximum acceptable distance for correpondance in millimeter
         /// </summary>
         public double MaxDistance { get; set; } = 0.8;
+
+        /// <summary>
+        /// Gets or sets minimum distance removing pair form possibility
+        /// </summary>
+        public double NotPairableDistanceThreshold { get; set; } = 8;
 
     }
     public class BodiesSelection : Subpipeline
@@ -111,6 +118,7 @@ namespace Bodies
         private BodiesSelectionConfiguration Configuration { get; }
 
         private Dictionary<(uint, uint), uint> GeneratedIdsMap = new Dictionary<(uint, uint), uint>();
+        Dictionary<(uint, uint), List<uint>> NotPairable = new Dictionary<(uint, uint), List<uint>>();
 
         private Dictionary<uint, LearnedBody> Camera1LearnedBodies = new Dictionary<uint, LearnedBody>();
         private Dictionary<uint, LearnedBody> Camera2LearnedBodies = new Dictionary<uint, LearnedBody>();
@@ -313,13 +321,14 @@ namespace Bodies
 
             // Bruteforce ftm, might simplify to check directly the max allowed distance.
             Dictionary<uint, List<Tuple<double, uint>>> distances = new Dictionary<uint, List<Tuple<double, uint>>>();
-           
+
             foreach (SimplifiedBody bodyC1 in camera1)
             {
                 d1[bodyC1.Id] = bodyC1;
                 distances[bodyC1.Id] = new List<Tuple<double, uint>>();
                 foreach (SimplifiedBody bodyC2 in camera2)
-                    distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.Euclidean(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
+                    if(!NotPairable.ContainsKey((bodyC1.Id,0)) || !NotPairable[(bodyC1.Id, 0)].Contains(bodyC2.Id))
+                        distances[bodyC1.Id].Add(new Tuple<double, uint>(MathNet.Numerics.Distance.Euclidean(bodyC1.Joints[Configuration.JointUsedForCorrespondence].Item2.ToVector(), Helpers.Helpers.CalculateTransform(bodyC2.Joints[Configuration.JointUsedForCorrespondence].Item2, Configuration.Camera2ToCamera1Transformation).ToVector()), bodyC2.Id));
             }
 
             List<(uint, uint)> correspondanceMap = new List<(uint, uint)>();
@@ -328,10 +337,25 @@ namespace Bodies
             { 
                 iterator.Value.Sort(new TupleDoubleUintComparer());
                 //to check if sort is good
-                if (iterator.Value.Count > 1 && iterator.Value.First().Item1 < Configuration.MaxDistance)
+                if (iterator.Value.Count > 1)
                 {
-                    correspondanceMap.Add((iterator.Key, iterator.Value.First().Item2));
-                    notMissingC2.Add(iterator.Value.First().Item2);
+                    if (iterator.Value.First().Item1 < Configuration.MaxDistance)
+                    {
+                        correspondanceMap.Add((iterator.Key, iterator.Value.First().Item2));
+                        notMissingC2.Add(iterator.Value.First().Item2);
+                    }
+                    foreach (var pair in iterator.Value)
+                    {
+                        if (iterator.Value.First().Item1 > Configuration.NotPairableDistanceThreshold)
+                        {
+                            if (!NotPairable.ContainsKey((iterator.Key, 0)))
+                                NotPairable.Add((iterator.Key, 0), new List<uint>());
+                            NotPairable[(iterator.Key, 0)].Add(pair.Item2);
+                            if (!NotPairable.ContainsKey((0, pair.Item2)))
+                                NotPairable.Add((0, pair.Item2), new List<uint>());
+                            NotPairable[(0, pair.Item2)].Add(iterator.Key);
+                        }
+                    }
                 }
                 else
                     correspondanceMap.Add((iterator.Key, 0));

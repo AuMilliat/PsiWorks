@@ -106,7 +106,7 @@ namespace PsiWork_WPF
 
         private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
         {
-            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\4-1.2");
+            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\2-2-1");
             var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
             var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
 
@@ -126,8 +126,9 @@ namespace PsiWork_WPF
 
             /*** BODIES IDENTIFICATION ***/
             BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
-            BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
-            BodiesIdentification bodiesIdentification1 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration);
+            //bodiesIdentificationConfiguration.PostLearnedOnly = true;
+            BodiesIdentification bodiesIdentification0 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration, "0");
+            BodiesIdentification bodiesIdentification1 = new BodiesIdentification(pipeline, bodiesIdentificationConfiguration, "1");
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
@@ -141,17 +142,18 @@ namespace PsiWork_WPF
 
             /*** BODIES DISPLAY ***/
             BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, visualizerConfiguration);
-            Visu0 = bodyVisualizer0;
+            //Visu0 = bodyVisualizer0;
             BodyVisualizer.AzureKinectBodyVisualizer bodyVisualizer1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, visualizerConfiguration);
-            Visu1 = bodyVisualizer1;
+            //Visu1 = bodyVisualizer1;
 
             /*** CALIBRATION VISUALIZER ***/
             BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, visualizerConfiguration, false);
             calib.Calibration = calibration;
-            Visu2 = calib;
+            //Visu2 = calib;
 
             /*** SELECTION VISUALIZER ***/
             BodyVisualizer.AzureKinectBodyVisualizer selectionVisualizer = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, visualizerConfiguration);
+            Visu2 = selectionVisualizer;
             //Visu3 = selectionVisualizer;
 
             /*** POSITION EXTRACTOR ***/
@@ -164,6 +166,7 @@ namespace PsiWork_WPF
 
             /* INSTANT GROUPS VISUALIZER */
             AzureKinectGroupsVisualizer azureKinectInstantGroupsVisualizer = new AzureKinectGroupsVisualizer(pipeline, visualizerConfiguration);
+            //Visu4 = azureKinectInstantGroupsVisualizer;
             Visu3 = azureKinectInstantGroupsVisualizer;
 
             /*** INTEGRATED GROUPS ***/
@@ -200,10 +203,10 @@ namespace PsiWork_WPF
             bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesSelection.InCamera2LearnedBodies);
             bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
-            //bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
             calib0.PipeTo(bodyVisualizer0.InCalibration);
             calib0.PipeTo(calib.InCalibrationMaster);
-            //bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
             calib1.PipeTo(bodyVisualizer1.InCalibration);
 
             bodiesSelection.OutBodiesCalibrated.PipeTo(selectionVisualizer.InBodies);
