@@ -1,6 +1,7 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MathNet.Numerics.LinearAlgebra;
 using System.IO;
+using Microsoft.Psi.Imaging;
 
 namespace Helpers
 {
@@ -112,6 +113,20 @@ namespace Helpers
                 return System.Drawing.Color.FromArgb(255, t, p, v);
             else
                 return System.Drawing.Color.FromArgb(255, v, p, q);
+        }
+
+        public static PixelFormat BitToPixelFormat(int bitsPerPixel)
+        {
+            switch(bitsPerPixel)
+            {
+                case 8:
+                    return PixelFormat.Gray_8bpp;
+                case 16:
+                    return PixelFormat.Gray_16bpp;
+                case 32:
+                    return PixelFormat.BGRA_32bpp;
+            }
+            return PixelFormat.Undefined;
         }
     }
 }

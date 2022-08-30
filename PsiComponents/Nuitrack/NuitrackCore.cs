@@ -63,37 +63,37 @@ namespace NuitrackComponent
         }
 
         /// <summary>
-        /// Gets the current image from the color camera.
+        /// Emitter of the current image from the color camera.
         /// </summary>
         public Emitter<Shared<Image>> ColorImage { get; private set; }
 
         /// <summary>
-        /// Gets the current depth image.
+        /// Emitter of the current depth image.
         /// </summary>
         public Emitter<Shared<DepthImage>> DepthImage { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of lists of currently tracked bodies.
+        /// Emitter of lists of currently tracked bodies.
         /// </summary>
         public Emitter<List<Skeleton>> Bodies { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of lists of currently tracked hands.
+        /// Emitter of lists of currently tracked hands.
         /// </summary>
         public Emitter<List<UserHands>> Hands { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of lists of currently tracked users.
+        /// Emitter of lists of currently tracked users.
         /// </summary>
         public Emitter<List<User>> Users { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of lists of currently tracked users.
+        /// Emitter of lists of currently tracked users.
         /// </summary>
         public Emitter<List<UserGesturesState>> Gestures { get; private set; }
 
         /// <summary>
-        /// Gets the current frames-per-second actually achieved.
+        /// Emitter of the current frames-per-second actually achieved.
         /// </summary>
         public Emitter<double> FrameRate { get; private set; }
 
@@ -210,6 +210,8 @@ namespace NuitrackComponent
             {
                 Nuitrack.Init("");
                 List<NuitrackDevice> devices = Nuitrack.GetDeviceList();
+                if(devices.Count < Configuration.DeviceIndex)
+                    throw new ArgumentException("Failed to retrieve device!");
                 Device = devices[Configuration.DeviceIndex];
                 Nuitrack.SetDevice(Device);
             }
