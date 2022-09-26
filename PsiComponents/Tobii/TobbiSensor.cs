@@ -10,7 +10,7 @@ using static Microsoft.Psi.DeviceManagement.CameraDeviceInfo;
 
 namespace Tobii
 {
-    public class TobbiSensor
+    public class TobiiSensor
     {
 
         private static List<CameraDeviceInfo>? allDevices = null;
@@ -89,7 +89,7 @@ namespace Tobii
         /// </summary>
         /// <param name="pipeline">The pipeline to add the component to.</param>
         /// <param name="config">Configuration to use for the device.</param>
-        public TobbiSensor(Pipeline pipeline, TobiiCoreConfiguration? config = null)
+        public TobiiSensor(Pipeline pipeline, TobiiCoreConfiguration? config = null)
         {
             Core = new TobiiCore(pipeline, config);
 
@@ -124,7 +124,9 @@ namespace Tobii
                     {
                         CameraDeviceInfo di = new CameraDeviceInfo();
                         di.SerialNumber = tobbiDi.SerialNumber;
-                        di.FriendlyName = tobbiDi.DeviceName + " - " + di.SerialNumber;
+                        di.DeviceName = tobbiDi.DeviceName;
+                        di.DeviceType = tobbiDi.Model;
+                        di.FriendlyName = tobbiDi.Model + " - " + di.SerialNumber;
                         di.DeviceType = "Tobbi - " + tobbiDi.DeviceCapabilities;
                         di.Sensors = null;
                         di.DeviceId = numDevices++;

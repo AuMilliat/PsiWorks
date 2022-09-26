@@ -23,7 +23,7 @@
     <PackageReference Include="DotNetty.Codecs.Mqtt-signed" Version="0.3.2" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.5.4823" />
     <PackageReference Include="Microsoft.Psi.Audio" Version="0.17.52.1-beta" />
-    <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.16.92.1-beta" />
+    <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.DeviceManagement" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Imaging" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Interop" Version="0.17.52.1-beta" />

@@ -8,6 +8,8 @@ using Postures;
 using NatNetComponent;
 using LabJackComponent;
 using LabJack.LabJackUD;
+using Tobii;
+using System.Xml.Linq;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -315,18 +317,18 @@ class Program
         // 
         // configKinect.ColorFormat = Microsoft.Azure.Kinect.Sensor.ImageFormat.ColorMJPG;  
 
-        configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
-        AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
+        //configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+        //AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
 
-        Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
-        configuration.OptimizeForSpeech = true;
-        Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
+        //Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
+        //configuration.OptimizeForSpeech = true;
+        //Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
 
-        var store = PsiStore.Create(p, "KinectAudioStoring", "F:\\Stores");
-        store.Write(sensor.ColorImage, "Image");
-        store.Write(sensor.DepthDeviceCalibrationInfo, "DepthCalibration");
-        store.Write(sensor.Bodies, "Bodies");
-        store.Write(audioCapture.Out, "Audio");
+        //var store = PsiStore.Create(p, "KinectAudioStoring", "F:\\Stores");
+        //store.Write(sensor.ColorImage, "Image");
+        //store.Write(sensor.DepthDeviceCalibrationInfo, "DepthCalibration");
+        //store.Write(sensor.Bodies, "Bodies");
+        //store.Write(audioCapture.Out, "Audio");
     }
 
 
@@ -342,15 +344,15 @@ class Program
         //configuration.OptimizeForSpeech = true;
         //Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
         
-        //Microsoft.Psi.Media.MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
+        ////Microsoft.Psi.Media.MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
 
-        Microsoft.Psi.Media.MediaCapture capture = new Microsoft.Psi.Media.MediaCapture(p);
+        //Microsoft.Psi.Media.MediaCapture capture = new Microsoft.Psi.Media.MediaCapture(p);
 
 
-        var store = PsiStore.Create(p, "HTCStoring", "D:\\Stores");
+        //var store = PsiStore.Create(p, "HTCStoring", "D:\\Stores");
 
-        store.Write(capture.Audio, "Audio");
-        store.Write(capture.Video, "Video");
+        //store.Write(capture.Audio, "Audio");
+        //store.Write(capture.Video, "Video");
     }
 
     static void KinectPostures(Pipeline p)
@@ -372,6 +374,11 @@ class Program
         bodiesConverter.OutBodies.PipeTo(statistics.InBodies);
     }
 
+    static void testTobii(Pipeline p)
+    {
+        TobiiSensor sensor = new TobiiSensor(p);
+
+    }
 
     static void Main(string[] args)
     {
@@ -390,7 +397,8 @@ class Program
 
         /*** Record Groups ***/
         //GroupsRecording(p);
-        GroupSinleIdentificationTesting(p);
+        testTobii(p);
+        //GroupSinleIdentificationTesting(p);
         //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
