@@ -6,9 +6,6 @@ using System.Linq;
 using Tobii.Research;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
-using nuitrack;
-using NuitrackComponent;
-using static Microsoft.Psi.DeviceManagement.CameraDeviceInfo;
 
 namespace Tobii
 {
@@ -19,7 +16,7 @@ namespace Tobii
         private IEyeTracker? Device = null;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NuitrackCore"/> class.
+        /// Initializes a new instance of the <see cref="TobiiCore"/> class.
         /// </summary>
         /// <param name="pipeline">The pipeline to add the component to.</param>
         /// <param name="config">Configuration to use for the device.</param>
@@ -108,7 +105,6 @@ namespace Tobii
         /// </summary>
         public Emitter<DisplayArea> DisplayArea { get; private set; }
         
-
 
         /// <inheritdoc/>
         public void Start(Action<DateTime> notifyCompletionTime)

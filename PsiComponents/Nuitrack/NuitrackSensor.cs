@@ -10,12 +10,7 @@ namespace NuitrackComponent
     public class NuitrackSensor : Subpipeline
     {
 
-        /// <summary>
-        /// Gets the sensor configuration.
-        /// </summary>
-        public NuitrackCoreConfiguration? Configuration { get; } = null;
-
-        private static List<CameraDeviceInfo>? allDevices = null;
+       private static List<CameraDeviceInfo>? allDevices = null;
 
         /* Begin in/out puts*/
 
@@ -58,21 +53,19 @@ namespace NuitrackComponent
         /* End in/out puts */
         // Constructor
         private NuitrackCore Core;
+
         public NuitrackSensor(Pipeline pipeline, NuitrackCoreConfiguration? config = null, DeliveryPolicy? defaultDeliveryPolicy = null, DeliveryPolicy? bodyTrackerDeliveryPolicy = null)
          : base(pipeline, nameof(NuitrackSensor), defaultDeliveryPolicy ?? DeliveryPolicy.LatestMessage)
         {
+            Core = new NuitrackCore(this, config ?? new NuitrackCoreConfiguration());
 
-            this.Configuration = config ?? new NuitrackCoreConfiguration();
-
-            Core = new NuitrackCore(this, this.Configuration);
-
-            this.ColorImage = Core.ColorImage.BridgeTo(pipeline, nameof(this.ColorImage)).Out;
-            this.DepthImage = Core.DepthImage.BridgeTo(pipeline, nameof(this.DepthImage)).Out;
-            this.Bodies = Core.Bodies.BridgeTo(pipeline, nameof(this.Bodies)).Out;
-            this.Hands = Core.Hands.BridgeTo(pipeline, nameof(this.Hands)).Out;
-            this.Users = Core.Users.BridgeTo(pipeline, nameof(this.Users)).Out;
-            this.Gestures = Core.Gestures.BridgeTo(pipeline, nameof(this.Gestures)).Out;
-            this.FrameRate = Core.FrameRate.BridgeTo(pipeline, nameof(this.FrameRate)).Out;
+            ColorImage = Core.ColorImage.BridgeTo(pipeline, nameof(ColorImage)).Out;
+            DepthImage = Core.DepthImage.BridgeTo(pipeline, nameof(DepthImage)).Out;
+            Bodies = Core.Bodies.BridgeTo(pipeline, nameof(Bodies)).Out;
+            Hands = Core.Hands.BridgeTo(pipeline, nameof(Hands)).Out;
+            Users = Core.Users.BridgeTo(pipeline, nameof(Users)).Out;
+            Gestures = Core.Gestures.BridgeTo(pipeline, nameof(Gestures)).Out;
+            FrameRate = Core.FrameRate.BridgeTo(pipeline, nameof(FrameRate)).Out;
         }
 
         public MathNet.Spatial.Euclidean.Point2D getProjCoordinates(MathNet.Spatial.Euclidean.Vector3D position)
@@ -128,6 +121,7 @@ namespace NuitrackComponent
                             foreach (var videoMode in videoModes)
                                 sensor.Modes.Add(videoMode);
                         }
+                        di.Sensors.Add(sensor);
                         allDevices.Add(di);
                     }
                     Nuitrack.Release();
