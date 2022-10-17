@@ -9,8 +9,8 @@
 	  <PlatformTarget>x64</PlatformTarget>
 	  <Platforms>x64</Platforms>
 	  <UseWPF>true</UseWPF>
-	  <BaseOutputPath>$(SolutionDir)\bin\</BaseOutputPath>
-	  <BaseIntermediateOutputPath>$(SolutionDir)\obj\</BaseIntermediateOutputPath>
+	  <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
+	  <BaseIntermediateOutputPath>$(SolutionDir)obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
