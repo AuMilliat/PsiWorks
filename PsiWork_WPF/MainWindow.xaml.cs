@@ -106,7 +106,7 @@ namespace PsiWork_WPF
 
         private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
         {
-            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\free");
+            var store = PsiStore.Open(pipeline, "GroupsStoring", "F:\\Stores\\2-2-1");
             var bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
             var bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
 

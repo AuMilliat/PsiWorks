@@ -12,7 +12,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <UserSecretsId>571d8540-35e1-4d1b-a937-cbf837683ded</UserSecretsId>
-    <BaseOutputPath>$(SolutionDir)\bin\</BaseOutputPath>
+    <BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(SolutionDir)\obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

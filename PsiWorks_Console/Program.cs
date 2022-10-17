@@ -1,6 +1,6 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Remoting;
-using Microsoft.Psi.AzureKinect;
+//using Microsoft.Psi.AzureKinect;
 using NuitrackComponent;
 using Groups;
 using Bodies;
@@ -106,160 +106,160 @@ class Program
         //store.Write(frameGroups.OutInstantGroups, "InstantGroups");
         //store.Write(intgratedGroups.OutIntegratedGroups, "IntegratedGroups");
     }
-    static void GroupsAzureTesting(Pipeline p)
-    {
-        /*** KINECT SENSORS ***/
-        // Only need Skeleton for the moment.
-        AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
-        configKinect0.DeviceIndex = 0;
-        configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
-        AzureKinectSensor sensor0 = new AzureKinectSensor(p, configKinect0);
+    //static void GroupsAzureTesting(Pipeline p)
+    //{
+    //    /*** KINECT SENSORS ***/
+    //    // Only need Skeleton for the moment.
+    //    AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
+    //    configKinect0.DeviceIndex = 0;
+    //    configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+    //    AzureKinectSensor sensor0 = new AzureKinectSensor(p, configKinect0);
 
-        AzureKinectSensorConfiguration configKinect1 = new AzureKinectSensorConfiguration();
-        configKinect1.DeviceIndex = 1;
-        configKinect1.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
-        AzureKinectSensor sensor1 = new AzureKinectSensor(p, configKinect1);
+    //    AzureKinectSensorConfiguration configKinect1 = new AzureKinectSensorConfiguration();
+    //    configKinect1.DeviceIndex = 1;
+    //    configKinect1.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+    //    AzureKinectSensor sensor1 = new AzureKinectSensor(p, configKinect1);
 
-        /*** BODIES CONVERTERS ***/
-        BodiesConverter bodiesConverter0 = new BodiesConverter(p, "kinectecConverter0");
-        BodiesConverter bodiesConverter1 = new BodiesConverter(p, "kinectecConverter1");
+    //    /*** BODIES CONVERTERS ***/
+    //    BodiesConverter bodiesConverter0 = new BodiesConverter(p, "kinectecConverter0");
+    //    BodiesConverter bodiesConverter1 = new BodiesConverter(p, "kinectecConverter1");
 
-        /*** BODIES DETECTION ***/
-        // Basic configuration for the moment.
-        BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-        BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
+    //    /*** BODIES DETECTION ***/
+    //    // Basic configuration for the moment.
+    //    BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
+    //    BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
 
-        /*** POSITION SELECTER ***/
-        // Basic configuration for the moment.
-        SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-        SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(p, bodiesSelectionConfiguration);
+    //    /*** POSITION SELECTER ***/
+    //    // Basic configuration for the moment.
+    //    SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
+    //    SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(p, bodiesSelectionConfiguration);
 
-        /*** INSTANT GROUPS ***/
-        // Basic configuration for the moment.
-        InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
-        InstantGroups frameGroups = new InstantGroups(p, instantGroupsConfiguration);
+    //    /*** INSTANT GROUPS ***/
+    //    // Basic configuration for the moment.
+    //    InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
+    //    InstantGroups frameGroups = new InstantGroups(p, instantGroupsConfiguration);
 
-        /*** INTEGRATED GROUPS ***/
-        // Basic configuration for the moment.
-        IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
-        IntegratedGroups intgratedGroups = new IntegratedGroups(p, integratedGroupsConfiguration);
+    //    /*** INTEGRATED GROUPS ***/
+    //    // Basic configuration for the moment.
+    //    IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
+    //    IntegratedGroups intgratedGroups = new IntegratedGroups(p, integratedGroupsConfiguration);
 
-        /*** MORE TO COME ! ***/
-
-
-        /*** LINKAGE ***/
-        sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
-        sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
-        bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
-        bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
-        bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
-        positionExtraction.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
-        frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
-
-    }
-
-    static void SingleKinectSkeletonsRecording(Pipeline p)
-    {
-        /*** KINECT SENSOR ***/
-        // Only need Skeleton for the moment.
-        AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
-        configKinect0.DeviceIndex = 0;
-        configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
-        AzureKinectSensor sensor0 = new AzureKinectSensor(p, configKinect0);
-
-        /*** DATA STORING FOR PSI STUDIO ***/
-        var store = PsiStore.Create(p, "SingleKinectSkeletonsRecording", "F:\\Stores");
-        //store.Write(sensor0.ColorImage, "Color0");
-        store.Write(sensor0.DepthDeviceCalibrationInfo, "DepthCalibration");
-        store.Write(sensor0.Bodies, "Bodies");
-    }
-
-    static void GroupSinleIdentificationTesting(Pipeline p)
-    {
-        var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
-        var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
-
-        /*** BODIES CONVERTERS ***/
-        BodiesConverter bodiesConverter0 = new BodiesConverter(p, "converter0");
-
-        /*** BODIES IDENTIFICATION ***/
-        BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
-        BodiesIdentification bodiesIdentification0 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
-
-        /*** BODIES DETECTION ***/
-        // Basic configuration for the moment.
-        BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-
-        BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
-
-        /*** Linkage ***/
-        Bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
-
-        bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
-
-        bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
-        bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
-
-    }
-
-    static void GroupsUsingRecords(Pipeline p)
-    {
-        MathNet.Numerics.LinearAlgebra.Matrix<double>? calibration;
-        if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
-            calibration = null;
-
-        var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
-        var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
-        var Bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
-
-        /*** BODIES CONVERTERS ***/
-        BodiesConverter bodiesConverter0 = new BodiesConverter(p, "converter0");
-        BodiesConverter bodiesConverter1 = new BodiesConverter(p, "converter1");
-
-        /*** BODIES IDENTIFICATION ***/
-        BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
-        BodiesIdentification bodiesIdentification0 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
-        BodiesIdentification bodiesIdentification1 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
-
-        /*** BODIES DETECTION ***/
-        // Basic configuration for the moment.
-        BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-        bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-        BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
-
-        /*** POSITION SELECTER ***/
-        // Basic configuration for the moment.
-        SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-        SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(p, bodiesSelectionConfiguration);
-
-        /*** INSTANT GROUPS ***/
-        // Basic configuration for the moment.
-        InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
-        InstantGroups instantGroups = new InstantGroups(p, instantGroupsConfiguration);
-
-        /*** MORE TO COME ! ***/
+    //    /*** MORE TO COME ! ***/
 
 
-        /*** Linkage ***/
-        Bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
-        Bodies1.PipeTo(bodiesConverter1.InBodiesAzure);
+    //    /*** LINKAGE ***/
+    //    sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesAzure);
+    //    sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
+    //    bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
+    //    bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+    //    bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+    //    positionExtraction.OutBodiesPositions.PipeTo(frameGroups.InBodiesPosition);
+    //    frameGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
 
-        bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
-        bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
+    //}
 
-        bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
-        bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera2Bodies);
-        bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
-        bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesDetection.InCamera2LearnedBodies);
+    //static void SingleKinectSkeletonsRecording(Pipeline p)
+    //{
+    //    /*** KINECT SENSOR ***/
+    //    // Only need Skeleton for the moment.
+    //    AzureKinectSensorConfiguration configKinect0 = new AzureKinectSensorConfiguration();
+    //    configKinect0.DeviceIndex = 0;
+    //    configKinect0.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+    //    AzureKinectSensor sensor0 = new AzureKinectSensor(p, configKinect0);
 
-        bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
-        positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
-    }
+    //    /*** DATA STORING FOR PSI STUDIO ***/
+    //    var store = PsiStore.Create(p, "SingleKinectSkeletonsRecording", "F:\\Stores");
+    //    //store.Write(sensor0.ColorImage, "Color0");
+    //    store.Write(sensor0.DepthDeviceCalibrationInfo, "DepthCalibration");
+    //    store.Write(sensor0.Bodies, "Bodies");
+    //}
+
+    //static void GroupSinleIdentificationTesting(Pipeline p)
+    //{
+    //    var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
+    //    var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
+
+    //    /*** BODIES CONVERTERS ***/
+    //    BodiesConverter bodiesConverter0 = new BodiesConverter(p, "converter0");
+
+    //    /*** BODIES IDENTIFICATION ***/
+    //    BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
+    //    BodiesIdentification bodiesIdentification0 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
+
+    //    /*** BODIES DETECTION ***/
+    //    // Basic configuration for the moment.
+    //    BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
+
+    //    BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
+
+    //    /*** Linkage ***/
+    //    Bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
+
+    //    bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+
+    //    bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
+    //    bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
+
+    //}
+
+    //static void GroupsUsingRecords(Pipeline p)
+    //{
+    //    MathNet.Numerics.LinearAlgebra.Matrix<double>? calibration;
+    //    if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
+    //        calibration = null;
+
+    //    var store = PsiStore.Open(p, "GroupsStoring", "F:\\Stores\\Free2");
+    //    var Bodies0 = store.OpenStream<List<AzureKinectBody>>("Bodies0");
+    //    var Bodies1 = store.OpenStream<List<AzureKinectBody>>("Bodies1");
+
+    //    /*** BODIES CONVERTERS ***/
+    //    BodiesConverter bodiesConverter0 = new BodiesConverter(p, "converter0");
+    //    BodiesConverter bodiesConverter1 = new BodiesConverter(p, "converter1");
+
+    //    /*** BODIES IDENTIFICATION ***/
+    //    BodiesIdentificationConfiguration bodiesIdentificationConfiguration = new BodiesIdentificationConfiguration();
+    //    BodiesIdentification bodiesIdentification0 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
+    //    BodiesIdentification bodiesIdentification1 = new BodiesIdentification(p, bodiesIdentificationConfiguration);
+
+    //    /*** BODIES DETECTION ***/
+    //    // Basic configuration for the moment.
+    //    BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
+    //    bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
+    //    BodiesSelection bodiesDetection = new BodiesSelection(p, bodiesDetectionConfiguration);
+
+    //    /*** POSITION SELECTER ***/
+    //    // Basic configuration for the moment.
+    //    SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
+    //    SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(p, bodiesSelectionConfiguration);
+
+    //    /*** INSTANT GROUPS ***/
+    //    // Basic configuration for the moment.
+    //    InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
+    //    InstantGroups instantGroups = new InstantGroups(p, instantGroupsConfiguration);
+
+    //    /*** MORE TO COME ! ***/
+
+
+    //    /*** Linkage ***/
+    //    Bodies0.PipeTo(bodiesConverter0.InBodiesAzure);
+    //    Bodies1.PipeTo(bodiesConverter1.InBodiesAzure);
+
+    //    bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
+    //    bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
+
+    //    bodiesIdentification0.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera1Bodies);
+    //    bodiesIdentification1.OutBodiesIdentified.PipeTo(bodiesDetection.InCamera2Bodies);
+    //    bodiesIdentification0.OutLearnedBodies.PipeTo(bodiesDetection.InCamera1LearnedBodies);
+    //    bodiesIdentification1.OutLearnedBodies.PipeTo(bodiesDetection.InCamera2LearnedBodies);
+
+    //    bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
+    //    positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
+    //}
 
     static void HololensImporter(Pipeline p)
     {
         /*** REMOTE IMPORTER ! ***/
-        RemoteImporter importer = new RemoteImporter(p, ReplayDescriptor.ReplayAll.Interval, "10.44.193.153");
+        RemoteImporter importer = new RemoteImporter(p, ReplayDescriptor.ReplayAll.Interval, "10.44.193.26");
         Console.WriteLine("connecting");
         if (!importer.Connected.WaitOne(-1))
         {
@@ -310,10 +310,10 @@ class Program
 
     static void KinectVideoSoundTesting(Pipeline p)
     {
-        AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
-        configKinect.DeviceIndex = 0;
-        configKinect.ColorResolution = Microsoft.Azure.Kinect.Sensor.ColorResolution.R720p;
-        configKinect.CameraFPS = Microsoft.Azure.Kinect.Sensor.FPS.FPS30;
+        //AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+        //configKinect.DeviceIndex = 0;
+        //configKinect.ColorResolution = Microsoft.Azure.Kinect.Sensor.ColorResolution.R720p;
+        //configKinect.CameraFPS = Microsoft.Azure.Kinect.Sensor.FPS.FPS30;
         // 
         // configKinect.ColorFormat = Microsoft.Azure.Kinect.Sensor.ImageFormat.ColorMJPG;  
 
@@ -357,21 +357,21 @@ class Program
 
     static void KinectPostures(Pipeline p)
     {
-        AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
-        configKinect.DeviceIndex = 0;
-        configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
-        AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
+        //AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+        //configKinect.DeviceIndex = 0;
+        //configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+        //AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
 
-        BodiesConverter bodiesConverter = new BodiesConverter(p);
+        //BodiesConverter bodiesConverter = new BodiesConverter(p);
 
-        //SimplePostuesConfiguration configuration = new SimplePostuesConfiguration();
-        //SimplePostures postures = new SimplePostures(p, configuration);
+        ////SimplePostuesConfiguration configuration = new SimplePostuesConfiguration();
+        ////SimplePostures postures = new SimplePostures(p, configuration);
 
-        BodiesStatisticsConfiguration bsConfguration = new BodiesStatisticsConfiguration();
-        BodiesStatistics statistics = new BodiesStatistics(p, bsConfguration);
+        //BodiesStatisticsConfiguration bsConfguration = new BodiesStatisticsConfiguration();
+        //BodiesStatistics statistics = new BodiesStatistics(p, bsConfguration);
 
-        sensor.Bodies.PipeTo(bodiesConverter.InBodiesAzure);
-        bodiesConverter.OutBodies.PipeTo(statistics.InBodies);
+        //sensor.Bodies.PipeTo(bodiesConverter.InBodiesAzure);
+        //bodiesConverter.OutBodies.PipeTo(statistics.InBodies);
     }
 
     static void testTobii(Pipeline p)
@@ -397,7 +397,7 @@ class Program
 
         /*** Record Groups ***/
         //GroupsRecording(p);
-        testTobii(p);
+        HololensImporter(p);
         //GroupSinleIdentificationTesting(p);
         //GroupsUsingRecords(p);
 

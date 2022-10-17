@@ -8,6 +8,7 @@
 	  <LangVersion>Preview</LangVersion>
     <UseWPF>true</UseWPF>
     <Platforms>x64</Platforms>
+    <PackageOutputPath>$(SolutionDir)bin\</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
