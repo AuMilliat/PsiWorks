@@ -45,6 +45,9 @@
     <Reference Include="nuitrack.net">
       <HintPath>Nuitrack\nuitrack.net.dll</HintPath>
     </Reference>
+    <Reference Include="OpenFaceInterop">
+      <HintPath>..\OpenFaceInterop\bin\x64\Release\OpenFaceInterop.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

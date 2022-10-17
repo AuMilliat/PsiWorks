@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Psi;
 using Microsoft.Psi.Imaging;
 using OpenFaceInterop;
+using Helpers;
 
 namespace OpenSense.Component.OpenFace {
     public sealed class OpenFace : IConsumer<Shared<Image>>, IProducer<PoseAndEyeAndFace>, INotifyPropertyChanged {
@@ -106,13 +107,6 @@ namespace OpenSense.Component.OpenFace {
         public float CameraCalibCy {
             get => cameraCalibCy;
             set => SetProperty(ref cameraCalibCy, value);
-        }
-
-        private IDataWriter<PoseAndEyeAndFace> dataWriter;
-
-        public IDataWriter<PoseAndEyeAndFace> DataWriter {
-            get => dataWriter;
-            set => SetProperty(ref dataWriter, value);
         }
 
         /// <summary>
@@ -236,7 +230,6 @@ namespace OpenSense.Component.OpenFace {
 
                             //All
                             var headPoseAndGaze = new PoseAndEyeAndFace(headPose.DeepClone(), gaze.DeepClone(), face.DeepClone());
-                            DataWriter?.Write(headPoseAndGaze, envelope);
                             Out.Post(headPoseAndGaze, envelope.OriginatingTime);
                         }
                     }
