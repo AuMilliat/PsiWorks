@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Psi;
+﻿using Microsoft.Psi;
 using Microsoft.Psi.Components;
 
 namespace Helpers
