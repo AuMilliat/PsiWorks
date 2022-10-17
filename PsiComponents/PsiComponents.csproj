@@ -52,5 +52,6 @@
 
   <ItemGroup>
     <Folder Include="OpenFace\" />
+    <Folder Include="Visualizers\Openface\" />
   </ItemGroup>
 </Project>

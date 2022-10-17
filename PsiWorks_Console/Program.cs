@@ -10,6 +10,9 @@ using LabJackComponent;
 using LabJack.LabJackUD;
 using Tobii;
 using System.Xml.Linq;
+using OpenFaceComponents;
+using Microsoft.Psi.AzureKinect;
+using Microsoft.Psi.Audio;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -380,6 +383,24 @@ class Program
 
     }
 
+    static void testAudioWriter(Pipeline p)
+    {
+        WaveFileWriter writer = new WaveFileWriter(p, "test.wave");
+
+    }
+
+    static void testOpenFace(Pipeline p)
+    {
+        AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+        configKinect.DeviceIndex = 0;
+        configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
+        AzureKinectSensor sensor = new AzureKinectSensor(p, configKinect);
+        OpenFace face = new OpenFace(p);
+
+        sensor.ColorImage.PipeTo(face.In);
+
+    }
+
     static void Main(string[] args)
     {
         // Enabling diagnotstics !!!
@@ -397,13 +418,13 @@ class Program
 
         /*** Record Groups ***/
         //GroupsRecording(p);
-        HololensImporter(p);
+        //HololensImporter(p);
         //GroupSinleIdentificationTesting(p);
         //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
         //HololensImporter(p);
-
+        testOpenFace(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);
         // Wainting for an out key

@@ -11,8 +11,8 @@ using Microsoft.Psi.Imaging;
 using OpenFaceInterop;
 using Helpers;
 
-namespace OpenSense.Component.OpenFace {
-    public sealed class OpenFace : IConsumer<Shared<Image>>, IProducer<PoseAndEyeAndFace>, INotifyPropertyChanged {
+namespace OpenFaceComponents {
+    public class OpenFace : IConsumer<Shared<Image>>, IProducer<PoseAndEyeAndFace>, INotifyPropertyChanged {
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
