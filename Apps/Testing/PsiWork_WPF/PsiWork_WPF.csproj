@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+	  <TargetFramework>net48</TargetFramework>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <LangVersion>Preview</LangVersion>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+	  <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
+	  <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2021.4.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)PsiComponents\PsiComponents.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NatNetML">
+      <HintPath>$(SolutionDir)PsiComponents\NatNet\NatNetML.dll</HintPath>
+    </Reference>
+    <Reference Include="nuitrack.net">
+      <HintPath>$(SolutionDir)PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

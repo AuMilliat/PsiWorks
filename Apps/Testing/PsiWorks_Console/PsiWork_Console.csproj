@@ -12,8 +12,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <UserSecretsId>571d8540-35e1-4d1b-a937-cbf837683ded</UserSecretsId>
-    <BaseOutputPath>$(SolutionDir)\bin\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(SolutionDir)\obj\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -36,21 +36,21 @@
   </PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\PsiComponents\PsiComponents.csproj" />
+	  <ProjectReference Include="$(SolutionDir)PsiComponents\PsiComponents.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Reference Include="LJUDDotNet">
-	    <HintPath>..\PsiComponents\LabJack\LJUDDotNet.dll</HintPath>
+	    <HintPath>$(SolutionDir)PsiComponents\LabJack\LJUDDotNet.dll</HintPath>
 	  </Reference>
 	  <Reference Include="NatNetML">
-	    <HintPath>..\PsiComponents\NatNet\NatNetML.dll</HintPath>
+	    <HintPath>$(SolutionDir)PsiComponents\NatNet\NatNetML.dll</HintPath>
 	  </Reference>
 	  <Reference Include="nuitrack.net">
-	    <HintPath>..\PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+	    <HintPath>$(SolutionDir)PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
 	  </Reference>
 	  <Reference Include="OpenFaceInterop">
-	    <HintPath>..\OpenFaceInterop\bin\x64\Release\OpenFaceInterop.dll</HintPath>
+	    <HintPath>$(SolutionDir)Dependencies\OpenFaceInterop\bin\x64\Release\OpenFaceInterop.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 
