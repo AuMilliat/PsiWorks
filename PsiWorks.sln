@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32929.385
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32929.386
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PsiComponents", "PsiComponents\PsiComponents.csproj", "{F2A9EE65-0FF5-4286-9FBE-733ED716A577}"
 EndProject
@@ -68,8 +68,8 @@ Global
 		{F72DF1DD-9415-4F35-99AB-D40C18590788}.Release|Any CPU.ActiveCfg = Release|x64
 		{F72DF1DD-9415-4F35-99AB-D40C18590788}.Release|x64.ActiveCfg = Release|x64
 		{F72DF1DD-9415-4F35-99AB-D40C18590788}.Release|x64.Build.0 = Release|x64
-		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|Any CPU.Build.0 = Debug|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|x64.ActiveCfg = Debug|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|x64.Build.0 = Debug|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|Any CPU.ActiveCfg = Release|Any CPU

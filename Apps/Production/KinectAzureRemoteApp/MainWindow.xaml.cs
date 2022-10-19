@@ -2,6 +2,7 @@
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.Audio;
+using Microsoft.Psi.Imaging;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -24,7 +25,7 @@ namespace KinectAzureRemoteApp
 
         private void SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
-           // if (!EqualityComparer<T>.Default.Equals(field, value))
+            if (!System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
             {
                 field = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -69,9 +70,6 @@ namespace KinectAzureRemoteApp
         public MainWindow()
         {
             DataContext = this;
-            MathNet.Numerics.LinearAlgebra.Matrix<double> calibration;
-            if (!Helpers.Helpers.ReadCalibrationFromFile("calib.csv", out calibration))
-                calibration = null;
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create("WpfPipeline",enableDiagnostics: true);
 
@@ -106,21 +104,21 @@ namespace KinectAzureRemoteApp
             if (RGB.IsChecked == true)
             {
                 RemoteExporter imageExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
-                imageExporter.Exporter.Write(sensor.ColorImage, "Kinect_" + KinectIndex.ToString() + "_RGB");
+                imageExporter.Exporter.Write(sensor.ColorImage.EncodeJpeg(), "Kinect_" + KinectIndex.ToString() + "_RGB");
             }
-            if (Sound.IsChecked == true)
+            if (Depth.IsChecked == true)
             {
                 RemoteExporter depthExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
-                depthExporter.Exporter.Write(sensor.DepthImage, "Kinect_" + KinectIndex.ToString() + "_Depth");
+                depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
             }
             pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
-            state = "Running";
+            State = "Running";
         }
 
         private void BtnQuitClick(object sender, RoutedEventArgs e)
         {
             // Stop correctly the pipeline.
-            state = "Stopping";
+            State = "Stopping";
             pipeline.Dispose();
             Close();
         }

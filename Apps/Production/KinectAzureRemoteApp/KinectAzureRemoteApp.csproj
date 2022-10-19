@@ -14,12 +14,11 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Psi.Audio.Windows" Version="0.16.92.1-beta" />
+    <PackageReference Include="Microsoft.Psi.Audio.Windows" Version="0.17.52.1-beta" />
+    <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.17.52.1-beta" />
+    <PackageReference Include="Microsoft.Psi.Imaging.Windows" Version="0.17.52.1-beta" />
+    <PackageReference Include="Microsoft.Psi.Runtime" Version="0.17.52.1-beta" />
     <PackageReference Include="VL.Core" Version="2021.4.10" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)PsiComponents\PsiComponents.csproj" />
   </ItemGroup>
 
 </Project>
