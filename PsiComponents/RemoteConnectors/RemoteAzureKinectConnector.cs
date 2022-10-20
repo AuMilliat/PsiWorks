@@ -23,7 +23,7 @@ namespace RemoteConnectors
         /// <summary>
         /// Gets or sets port number where the iteration begin.
         /// </summary>
-        public uint StartPort { get; set; } = 14411;
+        public uint StartPort { get; set; } = 11411;
 
         /// <summary>
         /// Gets or sets the ip of the remote exporter.

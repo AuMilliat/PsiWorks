@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 
 
 namespace KinectAzureRemoteApp
@@ -119,6 +120,7 @@ namespace KinectAzureRemoteApp
             // Stop correctly the pipeline.
             State = "Stopping";
             pipeline.Dispose();
+            pipeline.WaitAll();
             Close();
         }
 

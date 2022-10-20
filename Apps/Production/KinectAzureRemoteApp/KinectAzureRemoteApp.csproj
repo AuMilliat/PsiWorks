@@ -14,6 +14,8 @@
 
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Kinect.BodyTracking" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Azure.Kinect.Sensor" Version="1.4.1" />
     <PackageReference Include="Microsoft.Psi.Audio.Windows" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.AzureKinect.x64" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Imaging.Windows" Version="0.17.52.1-beta" />
