@@ -18,7 +18,6 @@ namespace KinectAzureRemoteApp
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-  
 
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
@@ -44,24 +43,24 @@ namespace KinectAzureRemoteApp
             State = status;
         }
 
-        private int kinectIndex = 0;
-        public int KinectIndex
+        private uint kinectIndex = 0;
+        public uint KinectIndex
         {
             get => kinectIndex;
             set => SetProperty(ref kinectIndex, value);
         }
-        public void DelegateMethodKinect(int index)
+        public void DelegateMethodKinect(uint index)
         {
             KinectIndex = index;
         }
 
-        private int remotePort = 11411;
-        public int RemotePort
+        private uint remotePort = 11411;
+        public uint RemotePort
         {
             get => remotePort;
             set => SetProperty(ref remotePort, value);
         }
-        public void DelegateMethodRemote(int port)
+        public void DelegateMethodRemote(uint port)
         {
             RemotePort = port;
         }
@@ -83,7 +82,7 @@ namespace KinectAzureRemoteApp
             /*** KINECT SENSORS ***/
            // Only need Skeleton for the moment.
            AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
-           configKinect.DeviceIndex = KinectIndex;
+           configKinect.DeviceIndex = (int)KinectIndex;
            if(Skeleton.IsChecked == true )
                 configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
             AzureKinectSensor sensor = new AzureKinectSensor(pipeline, configKinect);
@@ -92,23 +91,23 @@ namespace KinectAzureRemoteApp
             AudioCapture audioCapture = new AudioCapture(pipeline, configuration);
             if (Sound.IsChecked == true)
             {
-                RemoteExporter soundExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
+                RemoteExporter soundExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, TransportKind.Tcp);
                 soundExporter.Exporter.Write(audioCapture.Out, "Kinect_"+ KinectIndex.ToString()+ "_Sound");
             }
             if (Skeleton.IsChecked == true)
             {
-                RemoteExporter skeletonExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
+                RemoteExporter skeletonExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, TransportKind.Tcp);
                 skeletonExporter.Exporter.Write(sensor.Bodies, "Kinect_" + KinectIndex.ToString() + "_Bodies"); 
                 skeletonExporter.Exporter.Write(sensor.DepthDeviceCalibrationInfo, "Kinect_" + KinectIndex.ToString() + "_Calibration");
             }
             if (RGB.IsChecked == true)
             {
-                RemoteExporter imageExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
+                RemoteExporter imageExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, TransportKind.Tcp);
                 imageExporter.Exporter.Write(sensor.ColorImage.EncodeJpeg(), "Kinect_" + KinectIndex.ToString() + "_RGB");
             }
             if (Depth.IsChecked == true)
             {
-                RemoteExporter depthExporter = new RemoteExporter(pipeline, RemotePort + portCount++, TransportKind.Tcp);
+                RemoteExporter depthExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, TransportKind.Tcp);
                 depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
             }
             pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
