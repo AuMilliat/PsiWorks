@@ -36,12 +36,12 @@ namespace RemoteConnectors
         /// <summary>
         /// Gets the emitter of groups detected.
         /// </summary>
-        public Emitter<Shared<Image>>? OutColorImage { get; private set; }
+        public Emitter<Shared<EncodedImage>>? OutColorImage { get; private set; }
 
         /// <summary>
         /// Gets the emitter of groups detected.
         /// </summary>
-        public Emitter<Shared<DepthImage>>? OutDepthImage { get; private set; }
+        public Emitter<Shared<EncodedDepthImage>>? OutDepthImage { get; private set; }
 
         /// <summary>
         /// Gets the emitter of new learned bodies.
@@ -104,12 +104,14 @@ namespace RemoteConnectors
                     }
                     if (streamName.Contains("RGB"))
                     {
-                        OutColorImage = importer.Importer.OpenStream<Shared<Image>>(streamName).Out;
+                        Console.WriteLine(stream.TypeName);
+                        OutColorImage = importer.Importer.OpenStream< Shared<EncodedImage>>(streamName).Out;
                         break;
                     }
                     if (streamName.Contains("Depth"))
                     {
-                        OutDepthImage = importer.Importer.OpenStream<Shared<DepthImage>>(streamName).Out;
+                        Console.WriteLine(stream.TypeName);
+                        OutDepthImage = importer.Importer.OpenStream<Shared<EncodedDepthImage>>(streamName).Out;
                         break;
                     }
                 }

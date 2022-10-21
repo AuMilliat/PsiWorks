@@ -10,7 +10,8 @@
 	  <LangVersion>Preview</LangVersion>
 	  <PlatformTarget>x64</PlatformTarget>
 	  <Platforms>x64</Platforms>
-	  <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
+	  <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+	  <BaseOutputPath>$(SolutionDir)build\bin\CARISM</BaseOutputPath>
 	  <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 

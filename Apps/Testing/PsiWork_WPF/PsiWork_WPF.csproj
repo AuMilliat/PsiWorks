@@ -10,6 +10,7 @@
     <Platforms>x64</Platforms>
 	  <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
 	  <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
+	  <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
   </PropertyGroup>
 
   <ItemGroup>

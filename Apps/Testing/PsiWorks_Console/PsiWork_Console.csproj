@@ -14,6 +14,7 @@
     <UserSecretsId>571d8540-35e1-4d1b-a937-cbf837683ded</UserSecretsId>
     <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
+	  <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
