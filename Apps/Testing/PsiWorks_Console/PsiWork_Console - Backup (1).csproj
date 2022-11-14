@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<LangVersion>latest</LangVersion>
+	<LangVersion>Preview</LangVersion>
+    <Platforms>AnyCPU;x64</Platforms>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <UserSecretsId>571d8540-35e1-4d1b-a937-cbf837683ded</UserSecretsId>
+    <BaseOutputPath>$(SolutionDir)build\bin\$(AssemblyName)</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(SolutionDir)build\obj\$(AssemblyName)</BaseIntermediateOutputPath>
+	  <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsAsErrors />
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+	</PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>2</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="$(SolutionDir)PsiComponents\PsiComponents.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="LJUDDotNet">
+	    <HintPath>$(SolutionDir)PsiComponents\LabJack\LJUDDotNet.dll</HintPath>
+	  </Reference>
+	  <Reference Include="NatNetML">
+	    <HintPath>$(SolutionDir)PsiComponents\NatNet\NatNetML.dll</HintPath>
+	  </Reference>
+	  <Reference Include="nuitrack.net">
+	    <HintPath>$(SolutionDir)PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+	  </Reference>
+	  <Reference Include="OpenFaceInterop">
+	    <HintPath>$(SolutionDir)Dependencies\OpenFaceInterop\bin\x64\Release\OpenFaceInterop.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+</Project>

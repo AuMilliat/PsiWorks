@@ -22,6 +22,7 @@ namespace Bodies
         /// </summary>
         public string StoringPath { get; set; } = "./Stats.csv";
     }
+
     public class BodiesStatistics : Subpipeline
     {
         protected Connector<List<SimplifiedBody>> InBodiesConnector;
@@ -47,7 +48,6 @@ namespace Bodies
                 foreach (var bone in body.Value.BonesValues)
                 {
                     var std = Statistics.MeanStandardDeviation(bone.Value);
-                    //var five = Statistics.FiveNumberSummary(Data[body.Id].BonesValues[(bone.ParentJoint, bone.ChildJoint)]);
                     var variance = Statistics.MeanVariance(bone.Value);
                     string statis = body.Key.ToString() +";" + bone.Key.Item1.ToString() +"-"+ bone.Key.Item2.ToString() + ";" + bone.Value.Count.ToString() + ";" + std.Item1.ToString() + ";" + std.Item2.ToString() + ";" + variance.Item2.ToString();
                     StatsCount += statis + "\n";

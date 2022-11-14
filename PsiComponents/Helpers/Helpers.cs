@@ -1,7 +1,9 @@
 ﻿using MathNet.Spatial.Euclidean;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.Statistics;
 using System.IO;
 using Microsoft.Psi.Imaging;
+using SharpDX;
 
 namespace Helpers
 {
@@ -37,6 +39,7 @@ namespace Helpers
                 return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.Medium;
             return Microsoft.Azure.Kinect.BodyTracking.JointConfidenceLevel.High;
         }
+
         static public Vector3D CalculateTransform(Vector3D origin, Matrix<double> transformationMatrix)
         {
             Vector<double> v4Origin = Vector<double>.Build.Dense(4);
@@ -46,6 +49,40 @@ namespace Helpers
             v4Origin[3] = 1.0f;
             var result = v4Origin * transformationMatrix;
             return new Vector3D(result[0], result[1], result[2]);
+        }
+
+        static public void PushToList(Vector3D origin, Matrix<double> transformationMatrix, ref Tuple<List<double>, List<double>> list)
+        {
+            PushToList(origin, CalculateTransform(origin, transformationMatrix), ref list);
+        }
+
+        static public void PushToList(Vector3D origin, Vector3D transformed, ref Tuple<List<double>, List<double>> list)
+        {
+            for(int iterator = 0; iterator < 3; iterator++)
+            {
+                list.Item1.Add(origin.ToVector()[iterator]);
+                list.Item2.Add(transformed.ToVector()[iterator]);
+            }
+        }
+
+        static public double CalculateRMSE(ref Tuple<List<double>, List<double>> list)
+        {
+            //From https://github.com/mathnet/mathnet-numerics/issues/673
+            var offsetAndSlope = MathNet.Numerics.LinearRegression.SimpleRegression.Fit(list.Item1.ToArray(), list.Item2.ToArray());
+            var offset = offsetAndSlope.Item1;
+            var slope = offsetAndSlope.Item2;
+
+            var yBest = list.Item1.Select(p => offset + p * slope).ToArray(); // Best fitted y values
+
+            var RSS = MathNet.Numerics.Distance.SSD(list.Item2.ToArray(), yBest);
+            var degreeOfFreedom = list.Item1.Count - 2;
+            return Math.Sqrt(RSS / degreeOfFreedom);
+        }
+
+        static public void StoreCalibrationMatrix(string filepath, Matrix<double> matrix)
+        {
+            if (filepath.Length > 4)
+                File.WriteAllText(filepath, matrix.ToMatrixString());
         }
 
         static public bool ReadCalibrationFromFile(string filepath, out Matrix<double> matrix)

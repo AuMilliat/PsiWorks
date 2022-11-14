@@ -6,6 +6,7 @@ using Microsoft.Psi.Components;
 using Microsoft.Azure.Kinect.BodyTracking;
 using System.IO;
 using Helpers;
+using System;
 
 namespace CalibrationByBodies
 {
@@ -27,14 +28,14 @@ namespace CalibrationByBodies
         public JointConfidenceLevel ConfidenceLevelForCalibration { get; set; } = JointConfidenceLevel.High;
 
         /// <summary>
-        /// Test the transformation matrix with some frames & AllowedMaxStdDeviation.
+        /// Test the transformation matrix with some frames & RMSE.
         /// </summary>
         public bool TestMatrixBeforeSending { get; set; } = true;
 
         /// <summary>
         /// .
         /// </summary>
-        public double AllowedMaxStdDeviation { get; set; } = 0.1;
+        public double AllowedMaxRMSE { get; set; } = 0.1;
 
         /// <summary>
         /// Connect Synch event receiver
@@ -42,7 +43,7 @@ namespace CalibrationByBodies
         public bool SynchedCalibration { get; set; } = true;
 
         /// <summary>
-        /// Pouet Status.
+        /// Delegate to display status.
         /// </summary>
         public delegate void DelegateStatus(string status);
         public DelegateStatus? SetStatus = null;
@@ -92,7 +93,7 @@ namespace CalibrationByBodies
         private enum ECalibrationState { Idle, Running, Testing };
         private ECalibrationState CalibrationState = ECalibrationState.Running;
         Matrix<double> TransformationMatrix = Matrix<double>.Build.Dense(1,1);
-        private double[] TestingArray;
+        private Tuple<List<double>, List<double>> TestingArray;
 
         public CalibrationByBodies(Pipeline parent, CalibrationByBodiesConfiguration? configuration = null, string? name = null, DeliveryPolicy? defaultDeliveryPolicy = null)
           : base(parent, name, defaultDeliveryPolicy)
@@ -111,7 +112,7 @@ namespace CalibrationByBodies
             Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
             Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
             CalibrationJoints = new Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]>(camera1, camera2);
-            TestingArray = new double[Configuration.NumberOfJointForTesting];
+            TestingArray = new Tuple<List<double>, List<double>>(new List<double>(), new List<double>());
             SetStatus("Collecting data...");
         }
 
@@ -119,6 +120,7 @@ namespace CalibrationByBodies
         {
             Process((bodies.Item2, bodies.Item3), envelope);
         }
+
         private void Process((List<SimplifiedBody>, List<SimplifiedBody>) bodies, Envelope envelope)
         {
             switch(CalibrationState)
@@ -191,7 +193,7 @@ namespace CalibrationByBodies
                 {
                     OutCalibration.Post(TransformationMatrix, time);
                     SetStatus("Calibration Done");
-                    StoreCalibrationMatrix();
+                    Helpers.Helpers.StoreCalibrationMatrix(Configuration.StoringPath, TransformationMatrix);
                     return ECalibrationState.Idle;
                 }
             }
@@ -213,25 +215,26 @@ namespace CalibrationByBodies
                 {
                     if (JointAddedCount >= Configuration.NumberOfJointForTesting)
                         break;
-                    TestingArray[JointAddedCount++] = MathNet.Numerics.Distance.SSD(camera1.Joints[iterator].Item2.ToVector(), Helpers.Helpers.CalculateTransform(camera2.Joints[iterator].Item2, TransformationMatrix).ToVector());
+                    Helpers.Helpers.PushToList(camera2.Joints[iterator].Item2, TransformationMatrix, ref TestingArray);
+                    JointAddedCount++;
                 }
             }
             SetStatus("Checking: " + JointAddedCount.ToString() + "/" + Configuration.NumberOfJointForTesting.ToString());
 
             if (JointAddedCount >= Configuration.NumberOfJointForTesting)
             {
-                var statistics = Statistics.MeanStandardDeviation(TestingArray);
+                double RMSE = Helpers.Helpers.CalculateRMSE(ref TestingArray);
                 CleanIteratorsAndCounters();
-                if (statistics.Item2 < Configuration.AllowedMaxStdDeviation)
+                if (RMSE < Configuration.AllowedMaxRMSE)
                 {
-                    SetStatus("Calibration done! StdDev: " + statistics.Item2.ToString());
+                    SetStatus("Calibration done! RMSE: " + RMSE.ToString());
                     OutCalibration.Post(TransformationMatrix, time);
-                    StoreCalibrationMatrix();
+                    Helpers.Helpers.StoreCalibrationMatrix(Configuration.StoringPath, TransformationMatrix);
                     return ECalibrationState.Idle;
                 }
                 else
                 {
-                    SetStatus("Test fail StdDev: " + statistics.Item2.ToString() + "/" + Configuration.AllowedMaxStdDeviation.ToString() + ", back to calibration");
+                    SetStatus("Test fail RMSE: " + RMSE.ToString() + "/" + Configuration.AllowedMaxRMSE.ToString() + ", back to calibration");
                     return ECalibrationState.Running;
                 }
             }
@@ -248,12 +251,8 @@ namespace CalibrationByBodies
         {
             CalibrationTime = null;
             JointAddedCount = 0;
-        }
-
-        private void StoreCalibrationMatrix()
-        {
-            if(Configuration.StoringPath.Length > 4)
-                File.WriteAllText(Configuration.StoringPath, TransformationMatrix.ToMatrixString());
+            TestingArray.Item1.Clear();
+            TestingArray.Item2.Clear();
         }
 
         private void SetStatus(string message)
