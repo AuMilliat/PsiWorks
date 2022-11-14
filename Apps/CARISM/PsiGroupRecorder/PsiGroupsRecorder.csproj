@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+	<TargetFramework>net48</TargetFramework>
+    <Nullable>enable</Nullable>
+	 <ImplicitUsings>enable</ImplicitUsings>
+	 <LangVersion>latest</LangVersion>
+	  <LangVersion>Preview</LangVersion>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+    <BaseOutputPath>$(SolutionDir)build\bin\CARISM\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="VL.Core" Version="2021.4.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)\PsiComponents\PsiComponents.csproj" />
+  </ItemGroup>
+
+</Project>

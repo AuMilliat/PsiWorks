@@ -10,6 +10,7 @@ using LabJackComponent;
 using LabJack.LabJackUD;
 using Tobii;
 using System.Xml.Linq;
+using RemoteConnectors;
 using OpenFaceComponents;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Audio;
@@ -383,9 +384,12 @@ class Program
 
     }
 
-    static void testAudioWriter(Pipeline p)
+    static void TestConnectorAzureKinect(Pipeline p)
     {
-        WaveFileWriter writer = new WaveFileWriter(p, "test.wave");
+        KinectAzureRemoteConnectorConfiguration config = new KinectAzureRemoteConnectorConfiguration();
+        config.ActiveStreamNumber = 2;
+        KinectAzureRemoteConnector connector = new KinectAzureRemoteConnector(p, config);
+        Console.WriteLine(connector.Name);
 
     }
 
@@ -424,7 +428,8 @@ class Program
 
         /*** HOLOLENS ***/
         //HololensImporter(p);
-        testOpenFace(p);
+        TestConnectorAzureKinect(p);
+        //TestOpenFace(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);
         // Wainting for an out key

@@ -8,7 +8,9 @@
 	  <LangVersion>Preview</LangVersion>
     <UseWPF>true</UseWPF>
     <Platforms>x64</Platforms>
-    <PackageOutputPath>$(SolutionDir)bin\</PackageOutputPath>
+	  <BaseOutputPath>$(SolutionDir)build\bin\</BaseOutputPath>
+	  <BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>
+	  <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,15 +18,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PsiComponents\PsiComponents.csproj" />
+    <ProjectReference Include="$(SolutionDir)PsiComponents\PsiComponents.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="NatNetML">
-      <HintPath>..\PsiComponents\NatNet\NatNetML.dll</HintPath>
+      <HintPath>$(SolutionDir)PsiComponents\NatNet\NatNetML.dll</HintPath>
     </Reference>
     <Reference Include="nuitrack.net">
-      <HintPath>..\PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
+      <HintPath>$(SolutionDir)PsiComponents\Nuitrack\nuitrack.net.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
