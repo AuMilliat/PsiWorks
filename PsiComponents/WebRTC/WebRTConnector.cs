@@ -65,7 +65,7 @@ namespace WebRTC
         {
             log("Starting web socket server...");
             var webSocketServer = new WebSocketServer(Configuration.WebsocketAddress, (int)Configuration.WebsocketPort);
-            webSocketServer.AddWebSocketService<WebRTCWebSocketPeer>("/", (peer) => peer.CreatePeerConnection = CreatePeerConnection);
+           // webSocketServer.AddWebSocketService<WebRTCWebSocketPeer>("/", (peer) => peer.CreatePeerConnection = CreatePeerConnection);
             webSocketServer.Start();
             log($"Waiting for web socket connections on {webSocketServer.Address}:{webSocketServer.Port}...");
         }

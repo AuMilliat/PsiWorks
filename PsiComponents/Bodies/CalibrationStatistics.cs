@@ -9,7 +9,6 @@ using Helpers;
 using System;
 using Bodies;
 using Microsoft.Psi.AzureKinect;
-using static vpxmd.VpxCodecCxPkt;
 
 namespace CalibrationByBodies
 {

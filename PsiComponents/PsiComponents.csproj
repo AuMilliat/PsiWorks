@@ -25,8 +25,14 @@
     <PackageReference Include="Microsoft.Psi.Interop" Version="0.17.52.1-beta" />
     <PackageReference Include="Microsoft.Psi.Runtime" Version="0.17.52.1-beta" />
     <PackageReference Include="MQTTnet" Version="4.0.2.221" />
+    <PackageReference Include="SIPSorcery" Version="6.0.11" />
+    <PackageReference Include="SIPSorcery.WebSocketSharp" Version="0.0.1" />
+    <PackageReference Include="SIPSorceryMedia" Version="4.0.67-pre" />
+    <PackageReference Include="SIPSorceryMedia.Encoders" Version="0.0.10-pre" />
+    <PackageReference Include="SIPSorceryMedia.FFmpeg" Version="1.2.1" />
     <PackageReference Include="Tobii.Research.x64" Version="1.10.1.1282" />
     <PackageReference Include="VL.IO.NDI" Version="0.3.0-alpha" />
+    <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
   </ItemGroup>
 
   <ItemGroup>
