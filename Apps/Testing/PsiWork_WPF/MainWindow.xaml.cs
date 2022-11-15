@@ -112,7 +112,7 @@ namespace PsiWork_WPF
 
             //StoreDisplayAndProcess(calibration);
             NuitrackPipline(calibration);
-            InitializeComponent();
+            //InitializeComponent();
 
         }
 

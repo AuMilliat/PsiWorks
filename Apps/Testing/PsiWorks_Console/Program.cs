@@ -14,6 +14,8 @@ using RemoteConnectors;
 using OpenFaceComponents;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Audio;
+using SharpDX;
+using WebRTC;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -405,6 +407,17 @@ class Program
 
     }
 
+
+    static void WebRTC(Pipeline p)
+    {
+        WebRTCVideoStreamConfiguration config = new WebRTCVideoStreamConfiguration();
+        config.WebsocketAddress = System.Net.IPAddress.Loopback;
+        WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
+        var store = PsiStore.Create(p, "WebRTC", "D:\\Stores");
+
+        store.Write(stream.OutImage, "Image");
+    }
+
     static void Main(string[] args)
     {
         // Enabling diagnotstics !!!
@@ -428,7 +441,8 @@ class Program
 
         /*** HOLOLENS ***/
         //HololensImporter(p);
-        TestConnectorAzureKinect(p);
+        //TestConnectorAzureKinect(p);
+        WebRTC(p);
         //TestOpenFace(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);

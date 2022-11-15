@@ -1,15 +1,7 @@
 ﻿using Microsoft.Psi;
-using SIPSorcery.Media;
 using SIPSorcery.Net;
-using SIPSorceryMedia.Encoders;
-using Microsoft.Psi.Imaging;
-using Microsoft.Psi.Audio;
-using WebSocketSharp.Server;
 using System.Net;
-using SIPSorceryMedia.Abstractions;
-using DirectShowLib;
 using Microsoft.Psi.Components;
-using System.Xml.Linq;
 
 namespace WebRTC
 {
@@ -17,13 +9,13 @@ namespace WebRTC
     {
         public uint WebsocketPort { get; set; } = 80;
         public IPAddress WebsocketAddress { get; set; } = IPAddress.Any;
-        public List<RTCIceServer> IceServers = new List<RTCIceServer> { new RTCIceServer { urls = "" } };
     }
 
     public class WebRTConnector : ISourceComponent
     {
         protected RTCPeerConnection PeerConnection;
-        protected WebRTConnectorConfiguration Configuration;
+        protected WebRTCWebSocketClient WebRTClient; 
+        protected CancellationToken CToken;
 
         public string Name { get; set; }
 
@@ -36,12 +28,13 @@ namespace WebRTC
         {
             Name = name;
             OutLog = parent.CreateEmitter<string>(this, nameof(OutLog));
-            Configuration  = configuration;
+            CToken = new CancellationToken();
+            WebRTClient = new WebRTCWebSocketClient("ws://" + configuration.WebsocketAddress.ToString() + ':' + configuration.WebsocketPort.ToString(), this.CreatePeerConnection);
         }
 
         public void Start(Action<DateTime> notifyCompletionTime)
         {
-            StartWebsockectHandleShake();
+            WebRTClient.Start(CToken);
             notifyCompletionTime(DateTime.MaxValue);
         }
 
@@ -58,27 +51,19 @@ namespace WebRTC
         private void log(string message)
         {
             Console.WriteLine(message);
-            OutLog.Post(message, DateTime.Now);
-        }
-
-        private void StartWebsockectHandleShake()
-        {
-            log("Starting web socket server...");
-            var webSocketServer = new WebSocketServer(Configuration.WebsocketAddress, (int)Configuration.WebsocketPort);
-           // webSocketServer.AddWebSocketService<WebRTCWebSocketPeer>("/", (peer) => peer.CreatePeerConnection = CreatePeerConnection);
-            webSocketServer.Start();
-            log($"Waiting for web socket connections on {webSocketServer.Address}:{webSocketServer.Port}...");
+            try
+            {
+                OutLog.Post(message, DateTime.Now);
+            }
+            catch(Exception ex) 
+            {
+                //do nothing
+            }
         }
 
         private Task<RTCPeerConnection> CreatePeerConnection()
         {
-            RTCConfiguration config = new RTCConfiguration
-            {
-                iceServers = Configuration.IceServers,
-                X_UseRtpFeedbackProfile = true
-            };
-            PeerConnection = new RTCPeerConnection(config);
-
+            PeerConnection = new RTCPeerConnection(null);
 
             PrepareActions(); 
             PeerConnection.onconnectionstatechange += async (state) =>

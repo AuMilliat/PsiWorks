@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PsiWork_WPF"
         mc:Ignorable="d"
         Title="DebugWindow" Height="920" Width="2160">
-    <UserControl Loaded="UserControl_Loaded">
+    <UserControl>
         <Grid>
             <!--Configuration for CARISM-->
             <Grid.ColumnDefinitions>

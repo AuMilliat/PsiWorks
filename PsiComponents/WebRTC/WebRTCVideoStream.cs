@@ -5,6 +5,9 @@ using SIPSorceryMedia.Encoders;
 using SIPSorceryMedia.FFmpeg;
 using SIPSorcery.Net;
 using static DirectShowLib.MediaSubType;
+using SharpDX;
+using SharpDX.Direct3D11;
+using System.Windows.Media.Media3D;
 
 namespace WebRTC
 {
@@ -12,13 +15,13 @@ namespace WebRTC
     public class WebRTCVideoStreamConfiguration : WebRTConnectorConfiguration
     {
         public string? FFMPEGFullPath { get; set; } = null;// @"C:\Program Files\Tobii\Tobii Pro Lab\Bin";
-
-        public VideoCodecsEnum VideoCodecsEnum { get; set; } = VideoCodecsEnum.H264;
     }
 
     public class WebRTCVideoStream : WebRTConnector
     {
         private FFmpegVideoEndPoint VideoDecoder;
+        private WebRTCVideoStreamConfiguration Configuration;
+        private SIPSorceryMedia.Encoders.VideoEncoderEndPoint VideoEncoderEndPoint;
 
         /// <summary>
         /// Gets the emitter of groups detected.
@@ -28,43 +31,60 @@ namespace WebRTC
         public WebRTCVideoStream(Pipeline parent, WebRTCVideoStreamConfiguration configuration, string name = nameof(WebRTCVideoStream), DeliveryPolicy? defaultDeliveryPolicy = null)
             : base(parent, configuration, name, defaultDeliveryPolicy)
         {
+            Configuration = configuration;
             OutImage = parent.CreateEmitter<Shared<Image>>(this, nameof(OutImage));
             FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_VERBOSE, configuration.FFMPEGFullPath);
             VideoDecoder = new FFmpegVideoEndPoint();
-            VideoDecoder.RestrictFormats(format => format.Codec == configuration.VideoCodecsEnum);
-           
+            VideoDecoder.OnVideoSinkDecodedSampleFaster += VideoDecoder_OnVideoSinkDecodedSampleFaster;
         }
 
         protected override void PrepareActions()
         {
+            var format = VideoDecoder.GetVideoSinkFormats();
             MediaStreamTrack videoTrack = new MediaStreamTrack(VideoDecoder.GetVideoSinkFormats(), MediaStreamStatusEnum.RecvOnly);
             PeerConnection.addTrack(videoTrack);
-            PeerConnection.OnVideoFrameReceived += VideoDecoder.GotVideoFrame;
+            PeerConnection.OnVideoFrameReceived += PeerConnection_OnVideoFrameReceived;
             VideoDecoder.OnVideoSinkDecodedSample += VideoEncoder_OnVideoSinkDecodedSample;
+        }
+
+        private void PeerConnection_OnVideoFrameReceived(System.Net.IPEndPoint arg1, uint arg2, byte[] arg3, VideoFormat arg4)
+        {
+            VideoDecoder.SetVideoSourceFormat(arg4);
+            VideoDecoder.GotVideoFrame(arg1, arg2, arg3, arg4);
         }
 
         private void VideoEncoder_OnVideoSinkDecodedSample(byte[] sample, uint width, uint height, int stride, SIPSorceryMedia.Abstractions.VideoPixelFormatsEnum pixelFormat)
         {
-            PixelFormat format = PixelFormat.BGRA_32bpp;
+            PixelFormat format = GetPixelFormat(pixelFormat);
+            Shared<Image> imageEnc = ImagePool.GetOrCreate((int)width, (int)height, format);
+            imageEnc.Resource.CopyFrom(sample);
+            OutImage.Post(imageEnc, DateTime.UtcNow);
+        }
+
+        private void VideoDecoder_OnVideoSinkDecodedSampleFaster(RawImage rawImage)
+        {
+            PixelFormat format = GetPixelFormat(rawImage.PixelFormat);
+            Image image = new Image(rawImage.Sample, (int)rawImage.Width, (int)rawImage.Height, (int)rawImage.Stride, format);
+            Shared<Image> imageS = ImagePool.GetOrCreate((int)rawImage.Width, (int)rawImage.Height, PixelFormat.BGR_24bpp);
+            image.CopyTo(imageS.Resource);
+            OutImage.Post(imageS, DateTime.UtcNow);
+        }
+
+        private PixelFormat GetPixelFormat(VideoPixelFormatsEnum pixelFormat)
+        {         
             switch (pixelFormat)
             {
                 case VideoPixelFormatsEnum.Bgra:
-                    //already done
-                    break;
+                    return PixelFormat.BGRA_32bpp;
                 case VideoPixelFormatsEnum.Bgr:
-                    format = PixelFormat.BGR_24bpp;
-                    break;
+                    return PixelFormat.BGR_24bpp;
                 case VideoPixelFormatsEnum.Rgb:
-                    format = PixelFormat.RGB_24bpp;
-                    break;
+                    return PixelFormat.RGB_24bpp;
+                default:
                 case VideoPixelFormatsEnum.NV12:
                 case VideoPixelFormatsEnum.I420:
-                    Console.WriteLine("PixelFormat: " + pixelFormat.ToString() + " not supported.");
-                    return;
-            }
-            Shared<Image> imageEnc = ImagePool.GetOrCreate((int)width, (int)height, format);
-            imageEnc.Resource.CopyFrom(sample);
-            OutImage.Post(imageEnc, DateTime.Now);
+                    throw new Exception("PixelFormat: " + pixelFormat.ToString() + " not supported.");
+            } 
         }
     }
 }
