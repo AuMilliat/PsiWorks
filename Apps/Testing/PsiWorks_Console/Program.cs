@@ -77,7 +77,7 @@ class Program
     {
         /*** NUITRACK SENSOR ***/
         // Only need Skeleton for the moment.
-        NuitrackCoreConfiguration configNuitrack = new NuitrackCoreConfiguration();
+        NuitrackSensorConfiguration configNuitrack = new NuitrackSensorConfiguration();
         configNuitrack.ActivationKey = "license:34821:ZvAVGW03StUh056F";
         //configNuitrack.OutputColor = false;
         //configNuitrack.OutputDepth = false;

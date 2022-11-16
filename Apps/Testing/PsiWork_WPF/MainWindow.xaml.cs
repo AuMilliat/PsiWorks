@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Input;
 using Visualizer;
 using System.Windows.Documents;
+using nuitrack;
 
 
 namespace PsiWork_WPF
@@ -400,22 +401,25 @@ namespace PsiWork_WPF
 
         private void NuitrackPipline(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
         {
+
             /*** NUITRACK SENSOR ***/
-            NuitrackCoreConfiguration configNui0 = new NuitrackCoreConfiguration();
-            configNui0.DeviceIndex = 0;
+            NuitrackSensorConfiguration configNui0 = new NuitrackSensorConfiguration();
+            configNui0.DeviceSerialNumber = "825312072744";
+            configNui0.OutputSkeletonTracking = true;
             configNui0.ActivationKey = "license:6612:V8X39p8018x11uTZ";
             NuitrackSensor sensor0 = new NuitrackSensor(pipeline, configNui0);
 
-            NuitrackCoreConfiguration configNui1 = new NuitrackCoreConfiguration();
-            configNui1.DeviceIndex = 1;
+            NuitrackSensorConfiguration configNui1 = new NuitrackSensorConfiguration();
+            configNui1.DeviceSerialNumber = "944122073962";
+            configNui1.OutputSkeletonTracking = true;
             configNui1.ActivationKey = "license:34821:ZvAVGW03StUh056F";
             NuitrackSensor sensor1 = new NuitrackSensor(pipeline, configNui1);
 
             /*** BODIES VISUALIZERS ***/
             BodyVisualizer.NuitrackBodyVisualizer visu0 = new BodyVisualizer.NuitrackBodyVisualizer(pipeline, sensor0, null);
-            Visu0 = Visu0;
+            Visu0 = visu0;
             BodyVisualizer.NuitrackBodyVisualizer visu1 = new BodyVisualizer.NuitrackBodyVisualizer(pipeline, sensor1, null);
-            Visu1 = Visu1;
+            Visu1 = visu1;
 
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "nuitrackConverter0");
@@ -438,9 +442,9 @@ namespace PsiWork_WPF
 
             /*** BODIES DETECTION ***/
             // Basic configuration for the moment.
-            BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-            bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-            BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
+           // BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
+           // bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
+           // BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
 
             ///*** POSITION SELECTER ***/
             //// Basic configuration for the moment.
@@ -467,8 +471,8 @@ namespace PsiWork_WPF
 
             //converter0
             sensor0.Bodies.PipeTo(bodiesConverter0.InBodiesNuitrack);
-            //identificator0
 
+            //identificator0
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
             //visu0
             sensor0.ColorImage.PipeTo(visu0.InColorImage);
@@ -486,8 +490,8 @@ namespace PsiWork_WPF
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera1Bodies);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
+           // bodiesIdentification0.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera1Bodies);
+            //bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
 
             //detector
             //calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
@@ -497,8 +501,8 @@ namespace PsiWork_WPF
             //visucalib
             sensor0.ColorImage.PipeTo(calib.InColorImage);
             calibrationByBodies.OutCalibration.PipeTo(calib.InCalibrationSlave);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
+           // bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
+           // bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
             ////extractor
             //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
@@ -508,6 +512,7 @@ namespace PsiWork_WPF
             //
             ////integrated
             //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
+
         }
 
         protected override void OnClosing(CancelEventArgs e)

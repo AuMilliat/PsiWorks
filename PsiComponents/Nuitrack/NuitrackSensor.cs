@@ -1,16 +1,13 @@
 using nuitrack;
 using Microsoft.Psi;
-using Microsoft.Psi.DeviceManagement;
 using DepthImage = Microsoft.Psi.Imaging.DepthImage;
 using Image = Microsoft.Psi.Imaging.Image;
-using NuitrackDevice = nuitrack.device.NuitrackDevice;
+using Microsoft.Psi.Components;
 
 namespace NuitrackComponent
 {
-    public class NuitrackSensor : Subpipeline
+    public class NuitrackSensor : ISourceComponent
     {
-
-       private static List<CameraDeviceInfo>? allDevices = null;
 
         /* Begin in/out puts*/
 
@@ -52,82 +49,123 @@ namespace NuitrackComponent
 
         /* End in/out puts */
         // Constructor
+        private NuitrackSensorConfiguration Configuration;
         private NuitrackCore Core;
+        private long ColorTimestamp = 0;
+        private long DepthTimestamp = 0;
+        private long SkeletonTimestamp = 0;
+        private long HandTimestamp = 0;
+        private long UserTimestamp = 0;
+        private long GestureTimestamp = 0;
 
-        public NuitrackSensor(Pipeline pipeline, NuitrackCoreConfiguration? config = null, DeliveryPolicy? defaultDeliveryPolicy = null, DeliveryPolicy? bodyTrackerDeliveryPolicy = null)
-         : base(pipeline, nameof(NuitrackSensor), defaultDeliveryPolicy ?? DeliveryPolicy.LatestMessage)
+        public NuitrackSensor(Pipeline pipeline, NuitrackSensorConfiguration config, DeliveryPolicy? defaultDeliveryPolicy = null, DeliveryPolicy? bodyTrackerDeliveryPolicy = null)
         {
-            Core = new NuitrackCore(this, config ?? new NuitrackCoreConfiguration());
+            Configuration = config;
+            Core = NuitrackCore.GetNuitrackCore();
+            Core.RegisterSensor(config, this);
 
-            ColorImage = Core.ColorImage.BridgeTo(pipeline, nameof(ColorImage)).Out;
-            DepthImage = Core.DepthImage.BridgeTo(pipeline, nameof(DepthImage)).Out;
-            Bodies = Core.Bodies.BridgeTo(pipeline, nameof(Bodies)).Out;
-            Hands = Core.Hands.BridgeTo(pipeline, nameof(Hands)).Out;
-            Users = Core.Users.BridgeTo(pipeline, nameof(Users)).Out;
-            Gestures = Core.Gestures.BridgeTo(pipeline, nameof(Gestures)).Out;
-            FrameRate = Core.FrameRate.BridgeTo(pipeline, nameof(FrameRate)).Out;
+            DepthImage = pipeline.CreateEmitter<Shared<DepthImage>>(this, nameof(DepthImage));
+            ColorImage = pipeline.CreateEmitter<Shared<Image>>(this, nameof(ColorImage));
+            Bodies = pipeline.CreateEmitter<List<Skeleton>>(this, nameof(Bodies));
+            Hands = pipeline.CreateEmitter<List<UserHands>>(this, nameof(Hands));
+            Users = pipeline.CreateEmitter<List<User>>(this, nameof(Users));
+            Gestures = pipeline.CreateEmitter<List<UserGesturesState>>(this, nameof(Gestures));
+            FrameRate = pipeline.CreateEmitter<double>(this, nameof(FrameRate));
+        }
+
+        public new void Start(Action<DateTime> notifyCompletionTime)
+        {
+            if(Core.Start(notifyCompletionTime) == false)
+                notifyCompletionTime(DateTime.MaxValue);
+        }
+
+        public new void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
+        {
+           if(Core.Stop(finalOriginatingTime, notifyCompleted) == false)
+                notifyCompleted();
+        }
+
+        internal void onDepthSensorUpdate(DepthFrame depthFrame)
+        {
+            if (depthFrame != null && DepthTimestamp != (long)depthFrame.Timestamp)
+            {
+                Shared<DepthImage> image = Microsoft.Psi.Imaging.DepthImagePool.GetOrCreate(depthFrame.Cols, depthFrame.Rows);
+                DepthTimestamp = (long)depthFrame.Timestamp;
+                image.Resource.CopyFrom(depthFrame.Data);
+                DepthImage.Post(image, DateTime.UtcNow);
+                depthFrame.Dispose();
+            }
+        }
+
+        internal void onColorSensorUpdate(ColorFrame colorFrame)
+        {
+            if (colorFrame != null && ColorTimestamp != (long)colorFrame.Timestamp)
+            {
+                Shared<Image> image = Microsoft.Psi.Imaging.ImagePool.GetOrCreate(colorFrame.Cols, colorFrame.Rows, Microsoft.Psi.Imaging.PixelFormat.BGR_24bpp);
+                ColorTimestamp = (long)colorFrame.Timestamp;
+                image.Resource.CopyFrom(colorFrame.Data);
+                ColorImage.Post(image, DateTime.UtcNow);
+                colorFrame.Dispose();
+            }
+        }
+
+        internal void onSkeletonUpdate(SkeletonData skeletonData)
+        {
+            if (skeletonData != null && skeletonData.NumUsers > 0 && SkeletonTimestamp != (long)skeletonData.Timestamp)
+            {
+                List<Skeleton> output = new List<Skeleton>();
+                foreach (Skeleton body in skeletonData.Skeletons)
+                    output.Add(body);
+                SkeletonTimestamp = (long)skeletonData.Timestamp;
+                Bodies.Post(output, DateTime.UtcNow);
+                skeletonData.Dispose();
+            }
+        }
+
+        internal void onHandUpdate(HandTrackerData handData)
+        {
+            if (handData != null && handData.NumUsers > 1 && HandTimestamp != (long)handData.Timestamp)
+            {
+                List<UserHands> output = new List<UserHands>();
+                foreach (UserHands hand in handData.UsersHands)
+                    output.Add(hand);
+                HandTimestamp = (long)handData.Timestamp;
+                Hands.Post(output, DateTime.UtcNow);
+                handData.Dispose();
+            }
+        }
+
+        internal void onUserUpdate(UserFrame userFrame)
+        {
+            if (userFrame != null && userFrame.NumUsers > 0 && UserTimestamp != (long)userFrame.Timestamp)
+            {
+                List<User> output = new List<User>();
+                foreach (User user in userFrame.Users)
+                    output.Add(user);
+                UserTimestamp = (long)userFrame.Timestamp;
+                Users.Post(output, DateTime.UtcNow);
+                userFrame.Dispose();
+            }
+        }
+
+        internal void onGestureUpdate(UserGesturesStateData gestureData)
+        {
+            if (gestureData != null && gestureData.NumUsersGesturesStates > 0 && GestureTimestamp != (long)gestureData.Timestamp)
+            {
+                List<UserGesturesState> output = new List<UserGesturesState>();
+                foreach (UserGesturesState gesture in gestureData.UserGesturesStates)
+                    output.Add(gesture);
+                GestureTimestamp = (long)gestureData.Timestamp;
+                Gestures.Post(output, DateTime.UtcNow);
+                gestureData.Dispose();
+            }
         }
 
         public MathNet.Spatial.Euclidean.Point2D getProjCoordinates(MathNet.Spatial.Euclidean.Vector3D position)
         {
             Vector3 point = new Vector3((float)position.X, (float)position.Y, (float)position.Z);
-            Vector3 proj = Core.toProj(point);
+            Vector3 proj = Core.toProj(point, Configuration.DeviceSerialNumber);
             return new MathNet.Spatial.Euclidean.Point2D(proj.X, proj.Y);
-        }
-
-        private static List<CameraDeviceInfo.Sensor.ModeInfo> getVideoModes(List<nuitrack.device.VideoMode> videoModes) 
-        {
-            List<CameraDeviceInfo.Sensor.ModeInfo> modes = new List<CameraDeviceInfo.Sensor.ModeInfo>();
-            foreach (var videoMode in videoModes)
-            {
-                modes.Add(new CameraDeviceInfo.Sensor.ModeInfo
-                {
-                    Format = Microsoft.Psi.Imaging.PixelFormat.BGRA_32bpp,
-                    FrameRateNumerator = (uint)videoMode.fps,
-                    FrameRateDenominator = 1,
-                    ResolutionWidth = (uint)videoMode.width,
-                    ResolutionHeight = (uint)videoMode.height,
-                });
-            }
-            return modes;
-        }
-
-        /// <summary>
-        /// Gets a list of all available capture devices.
-        /// </summary>
-        public static IEnumerable<CameraDeviceInfo> AllDevices
-        {
-            get
-            {
-                if (allDevices == null)
-                {
-                    Nuitrack.Init("");
-                    allDevices = new List<CameraDeviceInfo>();
-                    List<NuitrackDevice> listing = Nuitrack.GetDeviceList();
-                    int numDevices = 0;
-                    foreach (NuitrackDevice nuiDi in listing)
-                    {
-                        CameraDeviceInfo di = new CameraDeviceInfo();
-                        di.SerialNumber = nuiDi.GetInfo(nuitrack.device.DeviceInfoType.SERIAL_NUMBER);
-                        di.FriendlyName = nuiDi.GetInfo(nuitrack.device.DeviceInfoType.DEVICE_NAME) + " - " + di.SerialNumber;
-                        di.Sensors = new List<CameraDeviceInfo.Sensor>();
-                        di.DeviceId = numDevices++;
-                        CameraDeviceInfo.Sensor sensor = new CameraDeviceInfo.Sensor();
-                        sensor.Modes = new List<CameraDeviceInfo.Sensor.ModeInfo>();
-
-                        for (int k = 0; k < (int)nuitrack.device.StreamType.Count; k++)
-                        {
-                            var videoModes = getVideoModes(nuiDi.GetAvailableVideoModes((nuitrack.device.StreamType)k));
-                            foreach (var videoMode in videoModes)
-                                sensor.Modes.Add(videoMode);
-                        }
-                        di.Sensors.Add(sensor);
-                        allDevices.Add(di);
-                    }
-                    Nuitrack.Release();
-                }
-                return allDevices;
-            }
         }
     }
 }

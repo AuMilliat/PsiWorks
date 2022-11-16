@@ -9,304 +9,276 @@ using Microsoft.Psi;
 using Microsoft.Psi.Components;
 using DepthImage = Microsoft.Psi.Imaging.DepthImage;
 using Image = Microsoft.Psi.Imaging.Image;
+using Microsoft.Psi.DeviceManagement;
 
 namespace NuitrackComponent
 {
-    internal sealed class NuitrackCore : ISourceComponent, IDisposable
+    internal sealed class NuitrackCore : IDisposable
     {
+        static private NuitrackCore Instance = null;
+
+        private static List<CameraDeviceInfo>? allDevices = null;
+
+        private bool NuitrackInit = false;
+        private bool NuitrackRelease = false;
         private Thread? CaptureThread = null;
-        private readonly NuitrackCoreConfiguration Configuration;
 
-        private ColorSensor? ColorSensor = null;
-        private DepthSensor? DepthSensor = null;
-        private SkeletonTracker? SkeletonTracker = null;
-        private HandTracker? HandTracker = null;
-        private UserTracker? UserTracker = null;
-        private GestureRecognizer? GestureRecognizer = null;
-        private object? WaitingObject = null;
+        private Dictionary<string, ColorSensor> ColorSensors = new Dictionary<string, ColorSensor>();
+        private Dictionary<string, DepthSensor> DepthSensors = new Dictionary<string, DepthSensor>();
+        private Dictionary<string, SkeletonTracker> SkeletonTrackers = new Dictionary<string, SkeletonTracker>();
+        private Dictionary<string, HandTracker> HandTrackers = new Dictionary<string, HandTracker>();
+        private Dictionary<string, UserTracker> UserTrackers = new Dictionary<string, UserTracker>();
+        private Dictionary<string, GestureRecognizer> GestureRecognizers = new Dictionary<string, GestureRecognizer>();
+        private List<NuitrackDevice> Devices = new List<NuitrackDevice>();
+        private List<Tuple<NuitrackSensorConfiguration, NuitrackSensor>> Configurations = new List<Tuple<NuitrackSensorConfiguration, NuitrackSensor>>();
+        private List<Module> waitingModule = new List<Module>();
 
+
+        private bool IsStarted = false;
         private bool Shutdown = false;
 
         /// <summary>
         /// The underlying Nuitrack device.
         /// </summary>
         /// 
-        private static readonly object CameraOpenLock = new object();
-        private NuitrackDevice? Device = null;
+        private readonly object CameraOpenLock = new object();
 
-        private long ColorTimestamp = 0;
-        private long DepthTimestamp = 0;
-        private long SkeletonTimestamp = 0;
-        private long HandTimestamp = 0;
-        private long UserTimestamp = 0;
-        private long GestureTimestamp = 0;
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NuitrackCore"/> class.
-        /// </summary>
-        /// <param name="pipeline">The pipeline to add the component to.</param>
-        /// <param name="config">Configuration to use for the device.</param>
-        public NuitrackCore(Pipeline pipeline, NuitrackCoreConfiguration? config = null)
+        static public ref NuitrackCore GetNuitrackCore()
         {
-            Configuration = config ?? new NuitrackCoreConfiguration();
-
-           
-            DepthImage = pipeline.CreateEmitter<Shared<DepthImage>>(this, nameof(DepthImage));
-            ColorImage = pipeline.CreateEmitter<Shared<Image>>(this, nameof(ColorImage));
-            Bodies = pipeline.CreateEmitter<List<Skeleton>>(this, nameof(Bodies));
-            Hands = pipeline.CreateEmitter<List<UserHands>>(this, nameof(Hands));
-            Users = pipeline.CreateEmitter<List<User>>(this, nameof(Users));
-            Gestures = pipeline.CreateEmitter<List<UserGesturesState>>(this, nameof(Gestures));
-            FrameRate = pipeline.CreateEmitter<double>(this, nameof(FrameRate));
-
+            if(Instance == null)
+                Instance = new NuitrackCore();
+            return ref Instance;
         }
 
-        /// <summary>
-        /// Emitter of the current image from the color camera.
-        /// </summary>
-        public Emitter<Shared<Image>> ColorImage { get; private set; }
+        private NuitrackCore()
+        {     
+        }
 
-        /// <summary>
-        /// Emitter of the current depth image.
-        /// </summary>
-        public Emitter<Shared<DepthImage>> DepthImage { get; private set; }
-
-        /// <summary>
-        /// Emitter of lists of currently tracked bodies.
-        /// </summary>
-        public Emitter<List<Skeleton>> Bodies { get; private set; }
-
-        /// <summary>
-        /// Emitter of lists of currently tracked hands.
-        /// </summary>
-        public Emitter<List<UserHands>> Hands { get; private set; }
-
-        /// <summary>
-        /// Emitter of lists of currently tracked users.
-        /// </summary>
-        public Emitter<List<User>> Users { get; private set; }
-
-        /// <summary>
-        /// Emitter of lists of currently tracked users.
-        /// </summary>
-        public Emitter<List<UserGesturesState>> Gestures { get; private set; }
-
-        /// <summary>
-        /// Emitter of the current frames-per-second actually achieved.
-        /// </summary>
-        public Emitter<double> FrameRate { get; private set; }
+        public void RegisterSensor(NuitrackSensorConfiguration configuration, NuitrackSensor sensor)
+        {
+            Configurations.Add(new Tuple<NuitrackSensorConfiguration, NuitrackSensor>(configuration, sensor));
+        }
 
         /// <summary>
         /// Returns the number of Kinect for Azure devices available on the system.
         /// </summary>
         /// <returns>Number of available devices.</returns>
-        public static int GetInstalledCount()
+        public int GetInstalledCount()
         {
-            return 0;// Device.GetInstalledCount();
+            return Devices.Count;
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (Device != null)
+            if (Devices.Count > 0)
             {
-                Nuitrack.Release();
-                Device = null;
+                Release();
+                Devices.Clear();
             }
         }
 
-        public Vector3 toProj(Vector3 point)
+        public Vector3 toProj(Vector3 point, string sensor)
         {
-            if(DepthSensor != null)
-                return DepthSensor.ConvertRealToProjCoords(point);
+            if (DepthSensors.ContainsKey(sensor))
+                return DepthSensors[sensor].ConvertRealToProjCoords(point);
             return point;
         }
-        private void onDepthSensorUpdate(DepthFrame depthFrame)
-        {
-            if (depthFrame != null && DepthTimestamp != (long)depthFrame.Timestamp)
-            {
-                Shared<DepthImage> image = Microsoft.Psi.Imaging.DepthImagePool.GetOrCreate(depthFrame.Cols, depthFrame.Rows);
-                DepthTimestamp = (long)depthFrame.Timestamp;
-                image.Resource.CopyFrom(depthFrame.Data);
-                DepthImage.Post(image, DateTime.UtcNow);
-                depthFrame.Dispose();
-            }
-        }
-
-        private void onColorSensorUpdate(ColorFrame colorFrame)
-        {
-            if (colorFrame != null && ColorTimestamp != (long)colorFrame.Timestamp)
-            {
-                Shared<Image> image = Microsoft.Psi.Imaging.ImagePool.GetOrCreate(colorFrame.Cols, colorFrame.Rows, Microsoft.Psi.Imaging.PixelFormat.BGR_24bpp);
-                ColorTimestamp = (long)colorFrame.Timestamp;
-                image.Resource.CopyFrom(colorFrame.Data);
-                ColorImage.Post(image, DateTime.UtcNow);
-                colorFrame.Dispose();
-            }
-        }
-
-        private void onSkeletonUpdate(SkeletonData skeletonData)
-        {
-            if (skeletonData != null && skeletonData.NumUsers > 0 && SkeletonTimestamp != (long)skeletonData.Timestamp)
-            {
-                List<Skeleton> output = new List<Skeleton>();
-                foreach(Skeleton body in skeletonData.Skeletons)
-                    output.Add(body);
-                SkeletonTimestamp = (long)skeletonData.Timestamp;
-                Bodies.Post(output, DateTime.UtcNow);
-                skeletonData.Dispose();
-            }
-        }
-
-        private void onHandUpdate(HandTrackerData handData)
-        {
-            if (handData != null && handData.NumUsers > 1 && HandTimestamp != (long)handData.Timestamp)
-            {
-                List<UserHands> output = new List<UserHands>();
-                foreach (UserHands hand in handData.UsersHands)
-                    output.Add(hand);
-                HandTimestamp = (long)handData.Timestamp;
-                Hands.Post(output, DateTime.UtcNow);
-                handData.Dispose();
-            }
-        }
-
-        private void onUserUpdate(UserFrame userFrame)
-        {
-            if (userFrame != null && userFrame.NumUsers > 0 && UserTimestamp != (long)userFrame.Timestamp)
-            {
-                List<User> output = new List<User>();
-                foreach (User user in userFrame.Users)
-                    output.Add(user);
-                UserTimestamp = (long)userFrame.Timestamp;
-                Users.Post(output, DateTime.UtcNow);
-                userFrame.Dispose();
-            }
-        }
-
-        private void onGestureUpdate(UserGesturesStateData gestureData)
-        {
-            if (gestureData != null && gestureData.NumUsersGesturesStates > 0 && GestureTimestamp != (long)gestureData.Timestamp)
-            {
-                List<UserGesturesState> output = new List<UserGesturesState>();
-                foreach (UserGesturesState gesture in gestureData.UserGesturesStates)
-                    output.Add(gesture);
-                GestureTimestamp = (long)gestureData.Timestamp;
-                Gestures.Post(output, DateTime.UtcNow);
-                gestureData.Dispose();
-            }
-        }
-
 
         /// <inheritdoc/>
-        public void Start(Action<DateTime> notifyCompletionTime)
+        public bool Start(Action<DateTime> notifyCompletionTime)
         {
             // notify that this is an infinite source component
             notifyCompletionTime(DateTime.MaxValue);
+            if (IsStarted)
+                return false;
+            IsStarted = true;
 
             // Prevent device open race condition.
             lock (CameraOpenLock)
             {
-                Nuitrack.Init("");
+                Initialize();
                 List<NuitrackDevice> devices = Nuitrack.GetDeviceList();
-                if(devices.Count < Configuration.DeviceIndex)
-                    throw new ArgumentException("Failed to retrieve device!");
-                Device = devices[Configuration.DeviceIndex];
-                Nuitrack.SetDevice(Device);
-            }
-            try
-            {
-                // activate selected device
-                bool isActivated = Convert.ToBoolean(Device.GetActivationStatus());
-                if (!isActivated)
+                foreach(var pair in Configurations)
                 {
-                    Device.Activate(Configuration.ActivationKey);
-                    if(!Convert.ToBoolean(Device.GetActivationStatus()))
-                        throw new ArgumentException("Invalid activation key!");
-                }
+                    NuitrackDevice found = null;
+                    foreach (NuitrackDevice device in devices)
+                    {
+                        if (pair.Item1.DeviceSerialNumber != device.GetInfo(DeviceInfoType.SERIAL_NUMBER))
+                            continue;
+                        found = device;
+                        break;
+                    }
+                    if(found == null)
+                        throw new ArgumentException("Failed to retrieve device: "+ pair.Item1.DeviceSerialNumber + "!");
+                    Nuitrack.SetDevice(found);
+                    Devices.Add(found);
+                    try
+                    {
+                        Module? WaitingObject = null;
+                        // activate selected device
+                        bool isActivated = Convert.ToBoolean(found.GetActivationStatus());
+                        if (!isActivated)
+                        {
+                            found.Activate(pair.Item1.ActivationKey);
+                            if (!Convert.ToBoolean(found.GetActivationStatus()))
+                                throw new ArgumentException("Invalid activation key: " + pair.Item1.DeviceSerialNumber);
+                        }
 
-                if(Configuration.OutputColor)
-                {
-                    ColorSensor = ColorSensor.Create();
-                    ColorSensor.OnUpdateEvent += onColorSensorUpdate;
-                    WaitingObject = ColorSensor;
-                }
+                        if (pair.Item1.OutputColor)
+                        {
+                            var colorSensor = ColorSensor.Create();
+                            colorSensor.OnUpdateEvent += pair.Item2.onColorSensorUpdate;
+                            ColorSensors.Add(pair.Item1.DeviceSerialNumber, colorSensor);
+                            WaitingObject = colorSensor;
+                        }
 
-                if (Configuration.OutputDepth)
-                {
-                    DepthSensor = DepthSensor.Create();
-                    DepthSensor.OnUpdateEvent += onDepthSensorUpdate;
-                    WaitingObject = DepthSensor;
-                }
+                        if (pair.Item1.OutputDepth)
+                        {
+                            var depthSensor = DepthSensor.Create();
+                            depthSensor.OnUpdateEvent += pair.Item2.onDepthSensorUpdate;
+                            DepthSensors.Add(pair.Item1.DeviceSerialNumber, depthSensor);
+                            WaitingObject = depthSensor;
+                        }
 
-                if (Configuration.OutputSkeletonTracking)
-                {
-                    SkeletonTracker = SkeletonTracker.Create();
-                    SkeletonTracker.SetAutoTracking(true);
-                    SkeletonTracker.OnSkeletonUpdateEvent += onSkeletonUpdate;
-                    WaitingObject = SkeletonTracker;
-                }
+                        if (pair.Item1.OutputSkeletonTracking)
+                        {
+                            var skeletonTracker = SkeletonTracker.Create();
+                            skeletonTracker.SetAutoTracking(true);
+                            skeletonTracker.OnSkeletonUpdateEvent += pair.Item2.onSkeletonUpdate;
+                            SkeletonTrackers.Add(pair.Item1.DeviceSerialNumber, skeletonTracker);
+                            WaitingObject = skeletonTracker;
+                        }
 
-                if (Configuration.OutputHandTracking)
-                {
-                    HandTracker = HandTracker.Create();
-                    HandTracker.OnUpdateEvent += onHandUpdate;
-                }
+                        if (pair.Item1.OutputHandTracking)
+                        {
+                            var handTracker = HandTracker.Create();
+                            handTracker.OnUpdateEvent += pair.Item2.onHandUpdate;
+                            HandTrackers.Add(pair.Item1.DeviceSerialNumber, handTracker);
+                        }
 
-                if (Configuration.OutputUserTracking)
-                {
-                    UserTracker = UserTracker.Create();
-                    UserTracker.OnUpdateEvent += onUserUpdate;
-                }
+                        if (pair.Item1.OutputUserTracking)
+                        {
+                            var userTracker = UserTracker.Create();
+                            userTracker.OnUpdateEvent += pair.Item2.onUserUpdate;
+                            UserTrackers.Add(pair.Item1.DeviceSerialNumber, userTracker);
+                        }
 
-                if (Configuration.OutputGestureRecognizer)
-                {
-                    GestureRecognizer = GestureRecognizer.Create();
-                    GestureRecognizer.OnUpdateEvent += onGestureUpdate;
+                        if (pair.Item1.OutputGestureRecognizer)
+                        {
+                            var gestureRecognizer = GestureRecognizer.Create();
+                            gestureRecognizer.OnUpdateEvent += pair.Item2.onGestureUpdate;
+                            GestureRecognizers.Add(pair.Item1.DeviceSerialNumber, gestureRecognizer);
+                        }
+                        if (WaitingObject != null)
+                            waitingModule.Add(WaitingObject);
+                    }
+                    catch (nuitrack.Exception exception)
+                    {
+                        throw new ArgumentException("Invalid operation: " + exception.ToString());
+                    }
                 }
-
                 Nuitrack.Run();
                 CaptureThread = new Thread(new ThreadStart(CaptureThreadProc));
                 CaptureThread.Start();
             }
-            catch (nuitrack.Exception exception)
-            {
-                throw new ArgumentException("Invalid operation: " + exception.ToString());
-            }
+            return true;
         }
 
         /// <inheritdoc/>
-        public void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
+        public bool Stop(DateTime finalOriginatingTime, Action notifyCompleted)
         {
+            if (Shutdown)
+                return false;
             Shutdown = true;
-            Nuitrack.Release();
+            Release();
             TimeSpan waitTime = TimeSpan.FromSeconds(1);
             if (CaptureThread != null && CaptureThread.Join(waitTime) != true)
                 CaptureThread.Abort();
             notifyCompleted();
+            return true;
         }
 
         private void CaptureThreadProc()
         {
-            nuitrack.Module? WaitingObject = null;
-            if (SkeletonTracker != null)
-                WaitingObject = SkeletonTracker;
-            else if (HandTracker != null)
-                WaitingObject = HandTracker;
-            if (UserTracker != null)
-                WaitingObject = UserTracker;
-            if (GestureRecognizer != null)
-                WaitingObject = GestureRecognizer;
-            else if(ColorSensor != null)
-                WaitingObject= ColorSensor;
-            else if (DepthSensor != null)
-                WaitingObject = DepthSensor;
-            if(WaitingObject == null)
+            if(waitingModule.Count == 0)
                 throw new ArgumentException("No tracker available");
-            while (Device != null && !Shutdown)
-                Nuitrack.WaitUpdate(WaitingObject);
+            while (!Shutdown)
+            {
+                foreach(var waitingObject in waitingModule)
+                    Nuitrack.WaitUpdate(waitingObject);
+            }
         }
 
+        private void Initialize()
+        {
+            if (NuitrackInit)
+                return;
+            NuitrackInit = true;
+            Nuitrack.Init();
+        }
+
+        private void Release()
+        {
+            if (NuitrackRelease)
+                return;
+            NuitrackRelease = true;
+            Nuitrack.Release();
+        }
+
+        private static List<CameraDeviceInfo.Sensor.ModeInfo> getVideoModes(List<nuitrack.device.VideoMode> videoModes)
+        {
+            List<CameraDeviceInfo.Sensor.ModeInfo> modes = new List<CameraDeviceInfo.Sensor.ModeInfo>();
+            foreach (var videoMode in videoModes)
+            {
+                modes.Add(new CameraDeviceInfo.Sensor.ModeInfo
+                {
+                    Format = Microsoft.Psi.Imaging.PixelFormat.BGRA_32bpp,
+                    FrameRateNumerator = (uint)videoMode.fps,
+                    FrameRateDenominator = 1,
+                    ResolutionWidth = (uint)videoMode.width,
+                    ResolutionHeight = (uint)videoMode.height,
+                });
+            }
+            return modes;
+        }
+
+        /// <summary>
+        /// Gets a list of all available capture devices.
+        /// </summary>
+        public static IEnumerable<CameraDeviceInfo> AllDevices
+        {
+            get
+            {
+                if (allDevices == null)
+                {
+                    Nuitrack.Init("");
+                    allDevices = new List<CameraDeviceInfo>();
+                    List<NuitrackDevice> listing = Nuitrack.GetDeviceList();
+                    int numDevices = 0;
+                    foreach (NuitrackDevice nuiDi in listing)
+                    {
+                        CameraDeviceInfo di = new CameraDeviceInfo();
+                        di.SerialNumber = nuiDi.GetInfo(nuitrack.device.DeviceInfoType.SERIAL_NUMBER);
+                        di.FriendlyName = nuiDi.GetInfo(nuitrack.device.DeviceInfoType.DEVICE_NAME) + " - " + di.SerialNumber;
+                        di.Sensors = new List<CameraDeviceInfo.Sensor>();
+                        di.DeviceId = numDevices++;
+                        CameraDeviceInfo.Sensor sensor = new CameraDeviceInfo.Sensor();
+                        sensor.Modes = new List<CameraDeviceInfo.Sensor.ModeInfo>();
+
+                        for (int k = 0; k < (int)nuitrack.device.StreamType.Count; k++)
+                        {
+                            var videoModes = getVideoModes(nuiDi.GetAvailableVideoModes((nuitrack.device.StreamType)k));
+                            foreach (var videoMode in videoModes)
+                                sensor.Modes.Add(videoMode);
+                        }
+                        di.Sensors.Add(sensor);
+                        allDevices.Add(di);
+                    }
+                    Nuitrack.Release();
+                }
+                return allDevices;
+            }
+        }
     }
 }

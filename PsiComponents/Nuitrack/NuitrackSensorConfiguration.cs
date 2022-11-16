@@ -2,12 +2,12 @@
 
 namespace NuitrackComponent
 {
-    public class NuitrackCoreConfiguration
+    public class NuitrackSensorConfiguration
     {
         /// <summary>
-        /// Gets or sets the index of the device to open.
+        /// Gets or sets the serialNumber of the device to open.
         /// </summary>
-        public int DeviceIndex { get; set; } = 0;
+        public string  DeviceSerialNumber { get; set; } = "";
 
         /// <summary>
         /// Gets or sets the nuitrack licence key of the device to open.
