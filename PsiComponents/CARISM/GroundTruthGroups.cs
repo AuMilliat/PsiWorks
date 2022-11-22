@@ -96,8 +96,16 @@ namespace GroundTruthGroups
         public override void Dispose()
         {
             string StatsCount = "Ok;Ko;\n";
-            StatsCount += ResultsOk.ToString() + ";" + ResultsKo.ToString() + "\n\n";
+            StatsCount += ResultsOk.ToString() + ";" + ResultsKo.ToString() + ";\n\n";
             StatsCount += (ResultsOk / (ResultsKo + ResultsOk)).ToString();
+
+            string groupDesc = "Count;Start;End;\n";
+            foreach (var iterator in TruthProcess)
+            {
+                groupDesc += iterator.Key.ToString() + ";" + iterator.Value.Count.ToString() + ";"
+                            + ";" + iterator.Value.Start.ToString() + ";"
+                            + ";" + iterator.Value.End.ToString() + ";\n";
+            }
 
             File.WriteAllText("TruthCentralizer.csv", StatsCount);
             base.Dispose();
