@@ -122,7 +122,6 @@ namespace KinectAzureRemoteApp
             // Stop correctly the pipeline.
             State = "Stopping";
             pipeline.Dispose();
-            pipeline.WaitAll();
         }
 
         protected override void OnClosing(CancelEventArgs e)

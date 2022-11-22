@@ -35,7 +35,7 @@ namespace CalibrationByBodies
         /// <summary>
         /// .
         /// </summary>
-        public double AllowedMaxRMSE { get; set; } = 0.1;
+        public double AllowedMaxRMSE { get; set; } = 0.5;
 
         /// <summary>
         /// Connect Synch event receiver
@@ -109,8 +109,8 @@ namespace CalibrationByBodies
             else
                 InCamera1BodiesConnector.Pair(InCamera2BodiesConnector).Do(Process);
 
-            Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
-            Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForTesting];
+            Emgu.CV.Structure.MCvPoint3D32f[] camera1 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForCalibration];
+            Emgu.CV.Structure.MCvPoint3D32f[] camera2 = new Emgu.CV.Structure.MCvPoint3D32f[(int)Configuration.NumberOfJointForCalibration];
             CalibrationJoints = new Tuple<Emgu.CV.Structure.MCvPoint3D32f[], Emgu.CV.Structure.MCvPoint3D32f[]>(camera1, camera2);
             TestingArray = new Tuple<List<double>, List<double>>(new List<double>(), new List<double>());
             SetStatus("Collecting data...");

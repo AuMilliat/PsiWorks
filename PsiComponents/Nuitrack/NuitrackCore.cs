@@ -15,7 +15,7 @@ namespace NuitrackComponent
 {
     internal sealed class NuitrackCore : IDisposable
     {
-        static private NuitrackCore Instance = null;
+        static private NuitrackCore? Instance = null;
 
         private static List<CameraDeviceInfo>? allDevices = null;
 
@@ -101,7 +101,7 @@ namespace NuitrackComponent
                 List<NuitrackDevice> devices = Nuitrack.GetDeviceList();
                 foreach(var pair in Configurations)
                 {
-                    NuitrackDevice found = null;
+                    NuitrackDevice? found = null;
                     foreach (NuitrackDevice device in devices)
                     {
                         if (pair.Item1.DeviceSerialNumber != device.GetInfo(DeviceInfoType.SERIAL_NUMBER))

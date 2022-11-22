@@ -13,7 +13,7 @@ namespace WebRTC
 
     public class WebRTConnector : ISourceComponent
     {
-        protected RTCPeerConnection PeerConnection;
+        protected RTCPeerConnection? PeerConnection = null;
         protected WebRTCWebSocketClient WebRTClient; 
         protected CancellationToken CToken;
 
@@ -66,7 +66,7 @@ namespace WebRTC
             PeerConnection = new RTCPeerConnection(null);
 
             PrepareActions(); 
-            PeerConnection.onconnectionstatechange += async (state) =>
+            PeerConnection.onconnectionstatechange += (state) =>
             {
                 log($"Peer connection state change to {state}.");
                 if (state == RTCPeerConnectionState.connected)

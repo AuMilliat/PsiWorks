@@ -73,13 +73,13 @@ namespace NuitrackComponent
             FrameRate = pipeline.CreateEmitter<double>(this, nameof(FrameRate));
         }
 
-        public new void Start(Action<DateTime> notifyCompletionTime)
+        public void Start(Action<DateTime> notifyCompletionTime)
         {
             if(Core.Start(notifyCompletionTime) == false)
                 notifyCompletionTime(DateTime.MaxValue);
         }
 
-        public new void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
+        public void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
         {
            if(Core.Stop(finalOriginatingTime, notifyCompleted) == false)
                 notifyCompleted();

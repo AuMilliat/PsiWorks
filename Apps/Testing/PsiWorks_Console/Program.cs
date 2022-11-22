@@ -14,7 +14,6 @@ using RemoteConnectors;
 using OpenFaceComponents;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Audio;
-using SharpDX;
 using WebRTC;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>

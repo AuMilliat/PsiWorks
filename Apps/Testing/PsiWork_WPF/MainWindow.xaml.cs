@@ -12,8 +12,6 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using Visualizer;
-using System.Windows.Documents;
-using nuitrack;
 
 
 namespace PsiWork_WPF
@@ -112,8 +110,9 @@ namespace PsiWork_WPF
             Out = pipeline.CreateEmitter<bool>(this, nameof(this.Out));
 
             //StoreDisplayAndProcess(calibration);
-            NuitrackPipline(calibration);
-            //InitializeComponent();
+            KinectPipline(calibration);
+            //NuitrackPipline(calibration);
+            InitializeComponent();
 
         }
 
@@ -129,13 +128,6 @@ namespace PsiWork_WPF
             configKinect1.DeviceIndex = 1;
             configKinect1.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
             AzureKinectSensor sensor1 = new AzureKinectSensor(pipeline, configKinect1);
-
-            /*** BODIES VISUALIZERS ***/
-            BodyVisualizer.AzureKinectBodyVisualizer visu0 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
-            Visu0 = visu0;
-            BodyVisualizer.AzureKinectBodyVisualizer visu1 = new BodyVisualizer.AzureKinectBodyVisualizer(pipeline, null);
-            Visu1 = visu1;
-            // Linkage
 
             /*** BODIES CONVERTERS ***/
             BodiesConverter bodiesConverter0 = new BodiesConverter(pipeline, "kinectecConverter0");
@@ -164,11 +156,14 @@ namespace PsiWork_WPF
 
             /*** CALIBRATION VISUALIZER ***/
             BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.AzureKinectBodyCalibrationVisualizer(pipeline, visualizerConfiguration, false);
+            calib.Calibration = calibration;
             Visu2 = calib;
 
             /*** CALIBRATION STATISTICS ***/
             CalibrationStatisticsConfiguration calibconfig = new CalibrationStatisticsConfiguration();
             calibconfig.CalculationType = CalibrationStatisticsConfiguration.TestingType.ByNumberOfFrames;
+            calibconfig.TransformationMatrix = calibration;
+            calibconfig.SetStatus = DelegateMethod;
             calibconfig.TestingCount = 1;
             CalibrationStatistics calibStat = new CalibrationStatistics(pipeline, calibconfig);
 
@@ -184,9 +179,9 @@ namespace PsiWork_WPF
             bodiesConverter0.OutBodies.PipeTo(bodiesIdentification0.InCameraBodies);
 
             //visu0
-            sensor0.ColorImage.PipeTo(visu0.InColorImage);
-            sensor0.DepthDeviceCalibrationInfo.PipeTo(visu0.InCalibration);
-            bodiesIdentification0.OutBodiesIdentified.PipeTo(visu0.InBodies);
+            sensor0.ColorImage.PipeTo(bodyVisualizer0.InColorImage);
+            sensor0.DepthDeviceCalibrationInfo.PipeTo(bodyVisualizer0.InCalibration);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(bodyVisualizer0.InBodies);
 
             //converter1
             sensor1.Bodies.PipeTo(bodiesConverter1.InBodiesAzure);
@@ -195,9 +190,9 @@ namespace PsiWork_WPF
             bodiesConverter1.OutBodies.PipeTo(bodiesIdentification1.InCameraBodies);
 
             //visu1
-            sensor1.ColorImage.PipeTo(visu1.InColorImage);
-            sensor1.DepthDeviceCalibrationInfo.PipeTo(visu1.InCalibration);
-            bodiesIdentification1.OutBodiesIdentified.PipeTo(visu1.InBodies);
+            sensor1.ColorImage.PipeTo(bodyVisualizer1.InColorImage);
+            sensor1.DepthDeviceCalibrationInfo.PipeTo(bodyVisualizer1.InCalibration);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(bodyVisualizer1.InBodies);
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
@@ -222,7 +217,7 @@ namespace PsiWork_WPF
             bodiesIdentification0.OutBodiesIdentified.PipeTo(calibStat.InCamera1Bodies);
             bodiesIdentification1.OutBodiesIdentified.PipeTo(calibStat.InCamera2Bodies);
             calibrationByBodies.OutCalibration.PipeTo(calibStat.InCalibrationMatrix);
-            Out.PipeTo(calibrationByBodies.InSynchEvent);
+            Out.PipeTo(calibStat.InSynchEvent);
 
             ////extractor
             //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
@@ -263,6 +258,14 @@ namespace PsiWork_WPF
             //bodiesConverter0.OutBodies.PipeTo(stat0.InBodies);
             //bodiesConverter1.OutBodies.PipeTo(stat1.InBodies);
             //bodiesDetection.OutBodiesCalibrated.PipeTo(stat.InBodies);
+
+            var store = PsiStore.Create(pipeline, "Calibration", "F:\\Stores");
+            store.Write(sensor0.Bodies, "Bodies0");
+            store.Write(sensor1.Bodies, "Bodies1");
+            store.Write(sensor0.DepthDeviceCalibrationInfo, "CalibBodies0");
+            store.Write(sensor1.DepthDeviceCalibrationInfo, "CalibBodies1");
+            store.Write(calibrationByBodies.OutCalibration, "Calibration");
+            store.Write(Out, "Synch");
         }
 
         private void StoreDisplayAndProcess(MathNet.Numerics.LinearAlgebra.Matrix<double> calibration)
@@ -436,33 +439,17 @@ namespace PsiWork_WPF
             calibrationByBodiesConfiguration.SetStatus = DelegateMethod;
             CalibrationByBodies.CalibrationByBodies calibrationByBodies = new CalibrationByBodies.CalibrationByBodies(pipeline, calibrationByBodiesConfiguration);
 
+            /*** STAT CALIBRATION ***/
+            CalibrationStatisticsConfiguration calibconfig = new CalibrationStatisticsConfiguration();
+            calibconfig.CalculationType = CalibrationStatisticsConfiguration.TestingType.ByNumberOfFrames;
+           // calibconfig.TransformationMatrix = calibration;
+            calibconfig.SetStatus = DelegateMethod;
+            calibconfig.TestingCount = 1;
+            CalibrationStatistics calibStat = new CalibrationStatistics(pipeline, calibconfig);
+
             /*** CALIBRATION VISUALIZER ***/
             BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer calib = new BodyCalibrationVisualizer.NuitrackBodyCalibrationVisualizer(pipeline, sensor0, null);
             Visu2 = calib;
-
-            /*** BODIES DETECTION ***/
-            // Basic configuration for the moment.
-           // BodiesSelectionConfiguration bodiesDetectionConfiguration = new BodiesSelectionConfiguration();
-           // bodiesDetectionConfiguration.Camera2ToCamera1Transformation = calibration;
-           // BodiesSelection bodiesDetection = new BodiesSelection(pipeline, bodiesDetectionConfiguration);
-
-            ///*** POSITION SELECTER ***/
-            //// Basic configuration for the moment.
-            //SimpleBodiesPositionExtractionConfiguration bodiesSelectionConfiguration = new SimpleBodiesPositionExtractionConfiguration();
-            //SimpleBodiesPositionExtraction positionExtraction = new SimpleBodiesPositionExtraction(pipeline, bodiesSelectionConfiguration);
-            //
-            ///*** INSTANT GROUPS ***/
-            //// Basic configuration for the moment.
-            //InstantGroupsConfiguration instantGroupsConfiguration = new InstantGroupsConfiguration();
-            //InstantGroups instantGroups = new InstantGroups(pipeline, instantGroupsConfiguration);
-            //
-            ///*** INTEGRATED GROUPS ***/
-            //// Basic configuration for the moment.
-            //IntegratedGroupsConfiguration integratedGroupsConfiguration = new IntegratedGroupsConfiguration();
-            //IntegratedGroups intgratedGroups = new IntegratedGroups(pipeline, integratedGroupsConfiguration);
-
-            /*** MORE TO COME ! ***/
-
 
             /*** LINKAGE ***/
             // Sensor0 -> Converter0 -> Identificator0 -> Visu0      |  
@@ -490,29 +477,27 @@ namespace PsiWork_WPF
 
             //calib
             Out.PipeTo(calibrationByBodies.InSynchEvent);
-           // bodiesIdentification0.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera1Bodies);
-            //bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
-
-            //detector
-            //calibrationByBodies.OutCalibration.PipeTo(bodiesDetection.InCalibrationMatrix);
-            //bodiesConverter0.OutBodies.PipeTo(bodiesDetection.InCamera1Bodies);
-            //bodiesConverter1.OutBodies.PipeTo(bodiesDetection.InCamera2Bodies);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera1Bodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calibrationByBodies.InCamera2Bodies);
 
             //visucalib
             sensor0.ColorImage.PipeTo(calib.InColorImage);
             calibrationByBodies.OutCalibration.PipeTo(calib.InCalibrationSlave);
-           // bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
-           // bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calib.InBodiesMaster);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calib.InBodiesSlave);
 
-            ////extractor
-            //bodiesDetection.OutBodiesCalibrated.PipeTo(positionExtraction.InBodiesSimplified);
-            //
-            ////Instant
-            //positionExtraction.OutBodiesPositions.PipeTo(instantGroups.InBodiesPosition);
-            //
-            ////integrated
-            //instantGroups.OutInstantGroups.PipeTo(intgratedGroups.InInstantGroups);
+            //calibstat
+            bodiesIdentification0.OutBodiesIdentified.PipeTo(calibStat.InCamera1Bodies);
+            bodiesIdentification1.OutBodiesIdentified.PipeTo(calibStat.InCamera2Bodies);
+            calibrationByBodies.OutCalibration.PipeTo(calibStat.InCalibrationMatrix);
+            Out.PipeTo(calibStat.InSynchEvent);
 
+
+            var store = PsiStore.Create(pipeline, "CalibrationNuitrack", "F:\\Stores");
+            store.Write(sensor0.Bodies, "Bodies0");
+            store.Write(sensor1.Bodies, "Bodies1");
+            store.Write(calibrationByBodies.OutCalibration, "Calibration");
+            store.Write(Out, "Synch");
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -534,6 +519,10 @@ namespace PsiWork_WPF
             if (e.Key == Key.Space)
             {
                 pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime, progress);
+            }
+            else
+            {
+                Out.Post(true, DateTime.UtcNow);
             }
         }
     }

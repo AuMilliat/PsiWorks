@@ -1,13 +1,8 @@
 ﻿using Microsoft.Psi.Imaging;
 using Microsoft.Psi;
 using SIPSorceryMedia.Abstractions;
-using SIPSorceryMedia.Encoders;
 using SIPSorceryMedia.FFmpeg;
 using SIPSorcery.Net;
-using static DirectShowLib.MediaSubType;
-using SharpDX;
-using SharpDX.Direct3D11;
-using System.Windows.Media.Media3D;
 
 namespace WebRTC
 {
@@ -21,7 +16,6 @@ namespace WebRTC
     {
         private FFmpegVideoEndPoint VideoDecoder;
         private WebRTCVideoStreamConfiguration Configuration;
-        private SIPSorceryMedia.Encoders.VideoEncoderEndPoint VideoEncoderEndPoint;
 
         /// <summary>
         /// Gets the emitter of groups detected.

@@ -3,7 +3,6 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Statistics;
 using System.IO;
 using Microsoft.Psi.Imaging;
-using SharpDX;
 
 namespace Helpers
 {

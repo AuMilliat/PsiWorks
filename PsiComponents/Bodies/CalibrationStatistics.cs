@@ -33,7 +33,7 @@ namespace CalibrationByBodies
         /// <summary>
         /// Gets or sets the confidence level used for calibration.
         /// </summary>
-        public JointConfidenceLevel ConfidenceLevelForCalibration { get; set; } = JointConfidenceLevel.High;
+        public JointConfidenceLevel ConfidenceLevelForCalibration { get; set; } = JointConfidenceLevel.Medium;
 
         /// <summary>
         /// Connect Synch event receiver
@@ -145,7 +145,7 @@ namespace CalibrationByBodies
                     if (AddedCount >= Configuration.TestingCount)
                         break;
                     Helpers.Helpers.PushToList(camera2.Joints[iterator].Item2, Configuration.TransformationMatrix, ref TestingArray);
-                   if(Configuration.CalculationType == CalibrationStatisticsConfiguration.TestingType.ByNumberOfJoints)
+                    if(Configuration.CalculationType == CalibrationStatisticsConfiguration.TestingType.ByNumberOfJoints)
                         AddedCount++;
                 }
             }
@@ -156,10 +156,10 @@ namespace CalibrationByBodies
             if (AddedCount >= Configuration.TestingCount)
             {
                 double RMSE = Helpers.Helpers.CalculateRMSE(ref TestingArray);
-                CleanIteratorsAndCounters();
                 SetStatus("RMSE: " + RMSE.ToString());
                 OutCalibrationRMSE.Post(RMSE, DateTime.Now);
-                RMSEList.Add(new Tuple<double, double>(RMSE, TestingArray.Item2.Count));
+                RMSEList.Add(new Tuple<double, double>(RMSE, TestingArray.Item2.Count/3));
+                CleanIteratorsAndCounters();
             }
         }
 
@@ -176,7 +176,7 @@ namespace CalibrationByBodies
                 var std = Statistics.MeanStandardDeviation(rmse);
                 var variance = Statistics.MeanVariance(rmse);
 
-                statsCount += "\n\n Std;" + std.ToString() + "\n Var;" + variance.ToString();
+                statsCount += "\n\n Std;" + std.Item2.ToString() + "\n Var;" + variance.Item1.ToString();
 
                 File.WriteAllText(Configuration.StoringPath, statsCount);
             }

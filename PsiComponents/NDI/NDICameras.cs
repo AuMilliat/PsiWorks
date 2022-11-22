@@ -242,10 +242,16 @@ namespace ORMonitoring
         private static void ConnectNdi()
         {
             Console.WriteLine($"Connecting to '{_source}'...");
-
+            // Note (AurélienM) : to test, correction for compilation!
+            byte[] bytesSource1 = UTF.StringToUtf8(_source).ToArray();
+            byte[] bytesSourceName1 = UTF.StringToUtf8("Channel 1").ToArray();
+            byte[] bytesSource2 = UTF.StringToUtf8(_source2).ToArray();
+            byte[] bytesSourceName2 = UTF.StringToUtf8("Channel 2").ToArray();
+            byte[] bytesSource3 = UTF.StringToUtf8(_source3).ToArray();
+            byte[] bytesSourceName3 = UTF.StringToUtf8("Channel 3").ToArray();
             NDIlib.source_t source_t = new NDIlib.source_t
             {
-                p_ndi_name = UTF.StringToUtf8(_source)
+                p_ndi_name = (IntPtr)bytesSource1[0]
             };
 
             NDIlib.recv_create_v3_t recvDescription = new NDIlib.recv_create_v3_t
@@ -254,7 +260,7 @@ namespace ORMonitoring
                 color_format = NDIlib.recv_color_format_e.recv_color_format_BGRX_BGRA,
                 bandwidth = NDIlib.recv_bandwidth_e.recv_bandwidth_highest,
                 allow_video_fields = false,
-                p_ndi_recv_name = UTF.StringToUtf8("Channel 1")
+                p_ndi_recv_name = (IntPtr)bytesSourceName1[0] 
             };
             _recvInstancePtr = NDIlib.recv_create_v3(ref recvDescription);
 
@@ -262,7 +268,7 @@ namespace ORMonitoring
 
             NDIlib.source_t source_t2 = new NDIlib.source_t
             {
-                p_ndi_name = UTF.StringToUtf8(_source2)
+                p_ndi_name = (IntPtr)bytesSource2[0]
             };
 
             NDIlib.recv_create_v3_t recvDescription2 = new NDIlib.recv_create_v3_t
@@ -271,7 +277,7 @@ namespace ORMonitoring
                 color_format = NDIlib.recv_color_format_e.recv_color_format_BGRX_BGRA,
                 bandwidth = NDIlib.recv_bandwidth_e.recv_bandwidth_highest,
                 allow_video_fields = false,
-                p_ndi_recv_name = UTF.StringToUtf8("Channel 2")
+                p_ndi_recv_name = (IntPtr)bytesSourceName2[0]
             };
             _recvInstancePtr2 = NDIlib.recv_create_v3(ref recvDescription2);
 
@@ -279,7 +285,7 @@ namespace ORMonitoring
 
             NDIlib.source_t source_t3 = new NDIlib.source_t
             {
-                p_ndi_name = UTF.StringToUtf8(_source3)
+                p_ndi_name = (IntPtr)bytesSource3[0]
             };
 
             NDIlib.recv_create_v3_t recvDescription3 = new NDIlib.recv_create_v3_t
@@ -288,7 +294,7 @@ namespace ORMonitoring
                 color_format = NDIlib.recv_color_format_e.recv_color_format_BGRX_BGRA,
                 bandwidth = NDIlib.recv_bandwidth_e.recv_bandwidth_highest,
                 allow_video_fields = false,
-                p_ndi_recv_name = UTF.StringToUtf8("Channel 3")
+                p_ndi_recv_name = (IntPtr)bytesSourceName3[0]
             };
             _recvInstancePtr3 = NDIlib.recv_create_v3(ref recvDescription3);
         }
