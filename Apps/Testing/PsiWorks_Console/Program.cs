@@ -15,6 +15,7 @@ using OpenFaceComponents;
 using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Audio;
 using WebRTC;
+using Microsoft.Psi.Imaging;
 
 internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
 {
@@ -264,13 +265,18 @@ class Program
     static void HololensImporter(Pipeline p)
     {
         /*** REMOTE IMPORTER ! ***/
-        RemoteImporter importer = new RemoteImporter(p, ReplayDescriptor.ReplayAll.Interval, "10.44.193.26");
+        //"10.44.193.26"
+        RemoteImporter importer = new RemoteImporter(p, ReplayDescriptor.ReplayAll.Interval, "localhost");
         Console.WriteLine("connecting");
         if (!importer.Connected.WaitOne(-1))
         {
             throw new Exception("could not connect to server");
         }
         Console.WriteLine("connected");
+        var store = PsiStore.Create(p, "UnityStreaming", "F:\\Stores");
+        var frames = importer.Importer.OpenStream<EncodedImage>("frame");
+        store.Write(frames, "Image");
+        frames.Do(image => Console.WriteLine("Image recieved:" + image.Size.ToString()));
     }
 
     static void LabJackNatNetTesting(Pipeline p)
@@ -439,9 +445,9 @@ class Program
         //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
-        //HololensImporter(p);
+        HololensImporter(p);
         //TestConnectorAzureKinect(p);
-        WebRTC(p);
+        //WebRTC(p);
         //TestOpenFace(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);

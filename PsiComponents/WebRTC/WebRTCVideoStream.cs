@@ -60,7 +60,7 @@ namespace WebRTC
             PixelFormat format = GetPixelFormat(rawImage.PixelFormat);
             Image image = new Image(rawImage.Sample, (int)rawImage.Width, (int)rawImage.Height, (int)rawImage.Stride, format);
             Shared<Image> imageS = ImagePool.GetOrCreate((int)rawImage.Width, (int)rawImage.Height, PixelFormat.BGR_24bpp);
-            image.CopyTo(imageS.Resource);
+            imageS.Resource.CopyFrom(image);
             OutImage.Post(imageS, DateTime.UtcNow);
         }
 
