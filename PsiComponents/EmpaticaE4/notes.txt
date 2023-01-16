@@ -1,0 +1,5 @@
+- brancher dongle usb - bluetooth (se troue dans dans la boîte de l'empatica)
+- set up E4 streaming server: https://developer.empatica.com/windows-streaming-server-usage.html
+- tu peux tester d'update le firmware du dongle pour augmenter le nombre de connexions simultanées
+- tester le composant PSI :)
+(Je crois que j'ai été obligé de faire un buffer car les packets étaient pas reçus de manière ordonnée
