@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KinectAzureRemoteApp"
         mc:Ignorable="d"
-        Title="KinectAzureRemoteApp" Height="180" Width="300">
+        Title="KinectAzureRemoteApp" Height="280" Width="300">
     <UserControl>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -45,13 +45,19 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <CheckBox Grid.Column="0" Name="Sound" Content="Sound"/>
-                    <CheckBox Grid.Column="1" Name="Skeleton" Content="Skeleton"/>
-                    <CheckBox Grid.Column="2" Name="RGB" Content="RGB"/>
-                    <CheckBox Grid.Column="3" Name="Depth" Content="Depth"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <CheckBox Grid.Row="0" Grid.Column="0" Name="Sound" Content="Sound"/>
+                    <CheckBox Grid.Row="1" Grid.Column="0" Name="Skeleton" Content="Skeleton"/>
+                    <CheckBox Grid.Row="2" Grid.Column="0" Name="RGB" Content="RGB"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" Name="ColoRes" ItemsSource="{Binding Path=ResolutionsList}" SelectedItem="{Binding Path=ColorResolution}"/>
+                    <CheckBox Grid.Row="3" Grid.Column="0" Name="Depth" Content="Depth"/>
+                    <!--<ComboBox Grid.Row="3" Grid.Column="1" Name="DepthRes" ItemsSource="{Binding Path=ResolutionsList}" SelectedItem="{Binding Path=DepthResolution}" />-->
                 </Grid>
             </GroupBox>
             <Button Content="Start" Grid.Row="5" Grid.Column="0" Width="50" Click="BtnStartClick"/>

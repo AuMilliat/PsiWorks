@@ -58,10 +58,11 @@ namespace WebRTC
         private void VideoDecoder_OnVideoSinkDecodedSampleFaster(RawImage rawImage)
         {
             PixelFormat format = GetPixelFormat(rawImage.PixelFormat);
-            Image image = new Image(rawImage.Sample, (int)rawImage.Width, (int)rawImage.Height, (int)rawImage.Stride, format);
-            Shared<Image> imageS = ImagePool.GetOrCreate((int)rawImage.Width, (int)rawImage.Height, PixelFormat.BGR_24bpp);
-            imageS.Resource.CopyFrom(image);
+            Image image = new Image(rawImage.Sample, (int)rawImage.Width, (int)rawImage.Height, (int)rawImage.Stride, PixelFormat.BGR_24bpp);
+            Shared<Image> imageS = ImagePool.GetOrCreate((int)rawImage.Width, (int)rawImage.Height, format);
+            imageS.Resource.CopyFrom(image.Flip(FlipMode.AlongHorizontalAxis));
             OutImage.Post(imageS, DateTime.UtcNow);
+            image.Dispose();
         }
 
         private PixelFormat GetPixelFormat(VideoPixelFormatsEnum pixelFormat)

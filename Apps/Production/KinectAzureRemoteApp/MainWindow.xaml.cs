@@ -9,11 +9,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System;
 
 
 namespace KinectAzureRemoteApp
 {
-  
+    //public class Resolution
+    //{
+    //    public enum EResolution { Native, R1920_1080, R1280_800, R800_600 };
+
+    //    public EResolution Id { get; set; } = EResolution.Native;
+    //    public 
+    //    public Resolution() { }
+
+    //}
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -23,7 +33,7 @@ namespace KinectAzureRemoteApp
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        private void SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (!System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
             {
@@ -66,21 +76,59 @@ namespace KinectAzureRemoteApp
             RemotePort = port;
         }
 
+        //ToDo add more resolution definition
+        public enum Resolution{ Native, R1920_1080, R1280_720, R800_600 };
+        private Dictionary<Resolution, Tuple<float, float>> resolutionDictionary;
+        public List<Resolution> ResolutionsList { get; }
+
+
+        private Resolution colorResolution = Resolution.Native;
+        public Resolution ColorResolution
+        {
+            get => colorResolution;
+            set => SetProperty(ref colorResolution, value);
+        }
+        public void DelegateMethodColorResolution(Resolution val)
+        {
+            ColorResolution = val;
+        }
+
+        //private Resolution depthResolution = Resolution.Native;
+        //public Resolution DepthResolution
+        //{
+        //    get => depthResolution;
+        //    set => SetProperty(ref depthResolution, value);
+        //}
+        //public void DelegateMethodDepthResolution(Resolution val)
+        //{
+        //    DepthResolution = val;
+        //}
+
         private Pipeline pipeline;
         public MainWindow()
         {
             DataContext = this;
+            resolutionDictionary = new Dictionary<Resolution, Tuple<float, float>>
+            {
+                 { Resolution.R1920_1080, new Tuple<float, float>(1920.0f, 1080.0f) }
+                ,{ Resolution.R1280_720, new Tuple<float, float>(1280.0f, 720.0f) }
+                ,{ Resolution.R800_600, new Tuple<float, float>(800.0f, 600.0f) }
+            };
+            ResolutionsList = new List<Resolution>();
+            foreach (Resolution name in Enum.GetValues(typeof(Resolution)))
+            {
+                ResolutionsList.Add(name);
+            }
             // Enabling diagnotstics !!!
-            pipeline = Pipeline.Create("WpfPipeline",enableDiagnostics: true);
+            pipeline = Pipeline.Create("WpfPipeline", enableDiagnostics: true);
 
             InitializeComponent();
-
         }
 
         private void PipelineSetup()
         {
-            int portCount = 0;
-            /*** KINECT SENSORS ***/
+           int portCount = 0;
+           /*** KINECT SENSORS ***/
            // Only need Skeleton for the moment.
            AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
            configKinect.DeviceIndex = (int)KinectIndex;
@@ -106,12 +154,25 @@ namespace KinectAzureRemoteApp
             if (RGB.IsChecked == true)
             {
                 RemoteExporter imageExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
-                imageExporter.Exporter.Write(sensor.ColorImage.EncodeJpeg(), "Kinect_" + KinectIndex.ToString() + "_RGB");
+                if (colorResolution != Resolution.Native)
+                {
+                    Tuple<float, float> res = resolutionDictionary[colorResolution];
+                    imageExporter.Exporter.Write(sensor.ColorImage.Resize(res.Item1, res.Item2).EncodeJpeg(), "Kinect_" + KinectIndex.ToString() + "_RGB");
+                }
+                else
+                    imageExporter.Exporter.Write(sensor.ColorImage.EncodeJpeg(), "Kinect_" + KinectIndex.ToString() + "_RGB");
             }
             if (Depth.IsChecked == true)
             {
                 RemoteExporter depthExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
-                depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
+
+                //if (depthResolution != Resolution.Native)
+                //{
+                //    Tuple<float, float> res = resolutionDictionary[colorResolution];
+                //    depthExporter.Exporter.Write(sensor.DepthImage.EncodePng()., "Kinect_" + KinectIndex.ToString() + "_Depth");
+                //}
+                //else
+                    depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
             }
             pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             State = "Running";

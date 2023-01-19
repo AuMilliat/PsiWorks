@@ -346,24 +346,24 @@ class Program
     static void HTCSoundTesting(Pipeline p)
     {
 
-        //Console.WriteLine("audio");
-        //foreach (string name in Microsoft.Psi.Audio.AudioCapture.GetAvailableDevices())
-        //    Console.WriteLine(name);
+        Console.WriteLine("Audio:");
+        foreach (string name in Microsoft.Psi.Audio.AudioCapture.GetAvailableDevices())
+            Console.WriteLine(name);
 
 
-        //Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
-        //configuration.OptimizeForSpeech = true;
-        //Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
-        
-        ////Microsoft.Psi.Media.MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
+        Microsoft.Psi.Audio.AudioCaptureConfiguration configuration = new Microsoft.Psi.Audio.AudioCaptureConfiguration();
+
+        Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
+
+        //Microsoft.Psi.Media.MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
 
         //Microsoft.Psi.Media.MediaCapture capture = new Microsoft.Psi.Media.MediaCapture(p);
 
 
-        //var store = PsiStore.Create(p, "HTCStoring", "D:\\Stores");
+        var store = PsiStore.Create(p, "HTCStoring", "F:\\Stores");
 
-        //store.Write(capture.Audio, "Audio");
-        //store.Write(capture.Video, "Video");
+        store.Write(audioCapture.Out, "Audio");
+
     }
 
     static void KinectPostures(Pipeline p)
@@ -418,7 +418,7 @@ class Program
         WebRTCVideoStreamConfiguration config = new WebRTCVideoStreamConfiguration();
         config.WebsocketAddress = System.Net.IPAddress.Loopback;
         WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
-        var store = PsiStore.Create(p, "WebRTC", "D:\\Stores");
+        var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
 
         store.Write(stream.OutImage, "Image");
     }
@@ -445,9 +445,9 @@ class Program
         //GroupsUsingRecords(p);
 
         /*** HOLOLENS ***/
-        HololensImporter(p);
+        //HololensImporter(p);
         //TestConnectorAzureKinect(p);
-        //WebRTC(p);
+        WebRTC(p);
         //TestOpenFace(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);
