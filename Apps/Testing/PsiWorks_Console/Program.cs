@@ -1,5 +1,6 @@
 ﻿using Microsoft.Psi;
 using Microsoft.Psi.Remoting;
+using Microsoft.Psi.Media;
 //using Microsoft.Psi.AzureKinect;
 using NuitrackComponent;
 using Groups;
@@ -16,61 +17,12 @@ using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Audio;
 using WebRTC;
 using Microsoft.Psi.Imaging;
+using Emgu.CV.PpfMatch3d;
+using System.Windows.Media.Animation;
+using TinyJson;
+using Microsoft.Psi.Data;
+using KeyboardReader;
 
-internal sealed class KeyboardReader : Microsoft.Psi.Components.ISourceComponent, IProducer<string>
-{
-    public Emitter<string> Out { get; private set; }
-    private Thread? captureThread = null;
-    private bool shutdown = false;
-
-    public KeyboardReader(Pipeline pipeline)
-    {
-       //this.Out = pipeline.CreateEmitter<string>(this, ServerDataStream);
-       //PAS BON ->
-       this.Out = pipeline.CreateEmitter<string>(this, nameof(this.Out));
-    }
-
-    public void Start(Action<DateTime> notifyCompletionTime)
-    {
-        // notify that this is an infinite source component
-        notifyCompletionTime(DateTime.MaxValue);
-        this.captureThread = new Thread(new ThreadStart(this.CaptureThreadProc));
-        this.captureThread.Start();
-    }
-
-    public void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
-    {
-        shutdown = true;
-        TimeSpan waitTime = TimeSpan.FromSeconds(1);
-        if (this.captureThread != null && this.captureThread.Join(waitTime) != true)
-        {
-#pragma warning disable SYSLIB0006 // Le type ou le membre est obsolète
-            captureThread.Abort();
-#pragma warning restore SYSLIB0006 // Le type ou le membre est obsolète
-        }
-        notifyCompleted();
-    }
-
-    private void CaptureThreadProc()
-    {
-        while (!this.shutdown)
-        {
-            Console.WriteLine("Ready to send text!");
-            var message = Console.ReadLine();
-            if (message != null)
-            {
-                try
-                {
-                    Out.Post(message, DateTime.UtcNow);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
-                }
-            }
-        }
-    }
-}
 class Program
 {
     static void GroupsNuitrackTesting(Pipeline p)
@@ -355,10 +307,9 @@ class Program
 
         Microsoft.Psi.Audio.AudioCapture audioCapture = new Microsoft.Psi.Audio.AudioCapture(p, configuration);
 
-        //Microsoft.Psi.Media.MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
+        MediaCaptureConfiguration cfg = new Microsoft.Psi.Media.MediaCaptureConfiguration();
 
-        //Microsoft.Psi.Media.MediaCapture capture = new Microsoft.Psi.Media.MediaCapture(p);
-
+        MediaCapture capture = new Microsoft.Psi.Media.MediaCapture(p);
 
         var store = PsiStore.Create(p, "HTCStoring", "F:\\Stores");
 
@@ -387,16 +338,35 @@ class Program
 
     static void testTobii(Pipeline p)
     {
-        TobiiSensor sensor = new TobiiSensor(p);
+        foreach(var sensor in TobiiSensor.AllDevices)
+        {
+            Console.WriteLine(sensor.DeviceName);
+        }
+        TobiiSensor tobii = new TobiiSensor(p);
 
     }
 
     static void TestConnectorAzureKinect(Pipeline p)
     {
         KinectAzureRemoteConnectorConfiguration config = new KinectAzureRemoteConnectorConfiguration();
-        config.ActiveStreamNumber = 2;
+        config.ActiveStreamNumber = 3;
+        config.StartPort = 22822;
         KinectAzureRemoteConnector connector = new KinectAzureRemoteConnector(p, config);
         Console.WriteLine(connector.Name);
+
+        var store = PsiStore.Create(p, "Remote", "F:\\Stores");
+
+        store.Write(connector.OutColorImage, "Image");
+        store.Write(connector.OutAudio, "Audio");
+        store.Write(connector.OutBodies, "Bodies");
+
+
+        //KinectAzureRemoteConnector connector2 = new KinectAzureRemoteConnector(p, config);
+        //var store2 = PsiStore.Create(p, "Remote2", "F:\\Stores");
+
+        //store2.Write(connector2.OutColorImage, "Image");
+        //store2.Write(connector2.OutAudio, "Audio");
+        //store2.Write(connector2.OutBodies, "Bodies");
 
     }
 
@@ -417,10 +387,46 @@ class Program
     {
         WebRTCVideoStreamConfiguration config = new WebRTCVideoStreamConfiguration();
         config.WebsocketAddress = System.Net.IPAddress.Loopback;
+        config.WebsocketPort = 8888;
         WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
         var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
 
         store.Write(stream.OutImage, "Image");
+    }
+
+
+    static void testUnity(Pipeline p)
+    {
+        //RemoteExporter exporter = new RemoteExporter(p, 11412, TransportKind.Tcp);
+        //KeyboardReader.KeyboardReader keyboardReader = new KeyboardReader.KeyboardReader(p);
+        //exporter.Exporter.Write<string>(keyboardReader.Out, "Test");
+
+        //RemoteImporter posImp = new RemoteImporter(p, "localhost");
+        //if (!posImp.Connected.WaitOne(-1))
+        //{
+        //    throw new Exception("could not connect to server");
+        //}
+        //var pos = posImp.Importer.OpenStream<TimeSpan>("Test");
+        //pos.Do(vec => Console.WriteLine("posImp 1: " + vec.ToString()));
+
+        RemoteImporter posImp2 = new RemoteImporter(p, "localhost");
+        if (!posImp2.Connected.WaitOne(-1))
+        {
+            throw new Exception("could not connect to server");
+        }
+        var pos2 = posImp2.Importer.OpenStream<System.Numerics.Vector3>("Position");
+        pos2.Do(vec => Console.WriteLine("posImp 2: " + vec.ToString()));
+    }
+
+    static void testUnreal(Pipeline p)
+    {
+        UnrealRemoteConnectorConfiguration config = new UnrealRemoteConnectorConfiguration();
+        config.Address = "http://127.0.0.1:30010/remote/object/call";
+        
+        UnrealRemoteConnector connector = new UnrealRemoteConnector(p, config);
+        UnrealActionRequest req = new UnrealActionRequest("BP_Vivian_2", "/Game/Levels/UEDPIE_0_MainLevel.MainLevel:PersistentLevel.", "Start Welcome");
+
+        connector.Send(req);
     }
 
     static void Main(string[] args)
@@ -446,15 +452,19 @@ class Program
 
         /*** HOLOLENS ***/
         //HololensImporter(p);
+
         //TestConnectorAzureKinect(p);
-        WebRTC(p);
+        TestConnectorAzureKinect(p);
+        //testUnity(p);
+        //testUnreal(p);
         //TestOpenFace(p);
+        //testTobii(p);
         // RunAsync the pipeline in non-blocking mode.
         p.RunAsync(ReplayDescriptor.ReplayAllRealTime);
         // Wainting for an out key
         Console.WriteLine("Press any key to stop the application.");
         Console.ReadLine();
         // Stop correctly the pipeline.
-        p.Dispose();
+        //p.Dispose();
     }
 }

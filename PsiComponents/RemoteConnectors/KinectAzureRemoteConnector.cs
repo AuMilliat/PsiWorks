@@ -5,7 +5,6 @@ using Microsoft.Psi.Audio;
 using Microsoft.Psi.Imaging;
 using Microsoft.Psi.Components;
 using static RemoteConnectors.KinectAzureRemoteConnectorConfiguration;
-using MQTTnet.Server;
 
 // Enum that define the type of data available.
 // Bodies give the skeletons avec the depth calibration for visualistion.

@@ -28,6 +28,6 @@ namespace Tobii
         /// <summary>
         /// Gets or sets the features licences.
         /// </summary>
-        public LicenseCollection Licenses { get; set; } = new LicenseCollection(null);
+        public LicenseCollection Licenses { get; set; } = new LicenseCollection(new List<LicenseKey>());
     }
 }

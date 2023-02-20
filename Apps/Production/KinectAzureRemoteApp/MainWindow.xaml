@@ -19,10 +19,13 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="State :" FontWeight="Bold"/>
             <Label Grid.Row="0" Grid.Column="1" Content="{Binding Path=State}" FontWeight="Bold"/>
-
+           
+            
             <Label Grid.Row="1" Grid.Column="0" Content="Kinect Index :" FontWeight="Bold"/>
             <TextBox Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=KinectIndex}"/>
 
@@ -52,7 +55,7 @@
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
-                    <CheckBox Grid.Row="0" Grid.Column="0" Name="Sound" Content="Sound"/>
+                    <CheckBox Grid.Row="0" Grid.Column="0" Name="Audio" Content="Audio"/>
                     <CheckBox Grid.Row="1" Grid.Column="0" Name="Skeleton" Content="Skeleton"/>
                     <CheckBox Grid.Row="2" Grid.Column="0" Name="RGB" Content="RGB"/>
                     <ComboBox Grid.Row="2" Grid.Column="1" Name="ColoRes" ItemsSource="{Binding Path=ResolutionsList}" SelectedItem="{Binding Path=ColorResolution}"/>
@@ -62,6 +65,8 @@
             </GroupBox>
             <Button Content="Start" Grid.Row="5" Grid.Column="0" Width="50" Click="BtnStartClick"/>
             <Button Content="Quit" Grid.Row="5" Grid.Column="1" Width="50" Click="BtnQuitClick"/>
+
+            <Label Grid.Row="6" Grid.Column="0" Content="{Binding Path=Log}" Grid.ColumnSpan="2" />
         </Grid>
     </UserControl>
 </Window>

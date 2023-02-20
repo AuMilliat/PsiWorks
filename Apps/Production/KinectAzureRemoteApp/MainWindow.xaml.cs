@@ -76,8 +76,19 @@ namespace KinectAzureRemoteApp
             RemotePort = port;
         }
 
+        private string log = "";
+        public string Log
+        {
+            get => log;
+            set => SetProperty(ref log, value);
+        }
+        public void DelegateMethodLog(string log)
+        {
+            Log = log;
+        }
+
         //ToDo add more resolution definition
-        public enum Resolution{ Native, R1920_1080, R1280_720, R800_600 };
+        public enum Resolution{ Native, R1920_1080, R960_540, R640_360 };
         private Dictionary<Resolution, Tuple<float, float>> resolutionDictionary;
         public List<Resolution> ResolutionsList { get; }
 
@@ -111,8 +122,8 @@ namespace KinectAzureRemoteApp
             resolutionDictionary = new Dictionary<Resolution, Tuple<float, float>>
             {
                  { Resolution.R1920_1080, new Tuple<float, float>(1920.0f, 1080.0f) }
-                ,{ Resolution.R1280_720, new Tuple<float, float>(1280.0f, 720.0f) }
-                ,{ Resolution.R800_600, new Tuple<float, float>(800.0f, 600.0f) }
+                ,{ Resolution.R960_540, new Tuple<float, float>(960.0f, 540.0f) }
+                ,{ Resolution.R640_360, new Tuple<float, float>(640.0f, 360.0f) }
             };
             ResolutionsList = new List<Resolution>();
             foreach (Resolution name in Enum.GetValues(typeof(Resolution)))
@@ -127,28 +138,29 @@ namespace KinectAzureRemoteApp
 
         private void PipelineSetup()
         {
-           int portCount = 0;
-           /*** KINECT SENSORS ***/
-           // Only need Skeleton for the moment.
-           AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
-           configKinect.DeviceIndex = (int)KinectIndex;
-           if(Skeleton.IsChecked == true )
+            /*** KINECT SENSORS ***/
+            int portCount = (int)RemotePort;
+            TransportKind type = UDP.IsChecked == true ? TransportKind.Udp : TransportKind.Tcp;
+
+            // Only need Skeleton for the moment.
+            AzureKinectSensorConfiguration configKinect = new AzureKinectSensorConfiguration();
+            configKinect.DeviceIndex = (int)KinectIndex;
+            if (Skeleton.IsChecked == true)
                 configKinect.BodyTrackerConfiguration = new AzureKinectBodyTrackerConfiguration();
             AzureKinectSensor sensor = new AzureKinectSensor(pipeline, configKinect);
 
-       
-            TransportKind type = UDP.IsChecked == true ? TransportKind.Udp : TransportKind.Tcp;
-            if (Sound.IsChecked == true)
+
+            if (Audio.IsChecked == true)
             {
                 AudioCaptureConfiguration configuration = new AudioCaptureConfiguration();
                 AudioCapture audioCapture = new AudioCapture(pipeline, configuration);
                 RemoteExporter soundExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
-                soundExporter.Exporter.Write(audioCapture.Out, "Kinect_"+ KinectIndex.ToString()+ "_Sound");
+                soundExporter.Exporter.Write(audioCapture.Out, "Kinect_" + KinectIndex.ToString() + "_Audio");
             }
             if (Skeleton.IsChecked == true)
             {
                 RemoteExporter skeletonExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
-                skeletonExporter.Exporter.Write(sensor.Bodies, "Kinect_" + KinectIndex.ToString() + "_Bodies"); 
+                skeletonExporter.Exporter.Write(sensor.Bodies, "Kinect_" + KinectIndex.ToString() + "_Bodies");
                 skeletonExporter.Exporter.Write(sensor.DepthDeviceCalibrationInfo, "Kinect_" + KinectIndex.ToString() + "_Calibration");
             }
             if (RGB.IsChecked == true)
@@ -172,7 +184,7 @@ namespace KinectAzureRemoteApp
                 //    depthExporter.Exporter.Write(sensor.DepthImage.EncodePng()., "Kinect_" + KinectIndex.ToString() + "_Depth");
                 //}
                 //else
-                    depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
+                depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
             }
             pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             State = "Running";
