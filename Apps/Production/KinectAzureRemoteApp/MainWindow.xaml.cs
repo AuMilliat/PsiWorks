@@ -54,6 +54,28 @@ namespace KinectAzureRemoteApp
             State = status;
         }
 
+        private string synchServerIp = "localhost";
+        public string SynchServerIp
+        {
+            get => synchServerIp;
+            set => SetProperty(ref synchServerIp, value);
+        }
+        public void DelegateMethodSynchServerIP(string ip)
+        {
+            SynchServerIp = ip;
+        }
+
+        private uint synchServerPort = 1234;
+        public uint SynchServerPort
+        {
+            get => synchServerPort;
+            set => SetProperty(ref synchServerPort, value);
+        }
+        public void DelegateMethodSynchServerPort(uint port)
+        {
+            SynchServerPort = port;
+        }
+
         private uint kinectIndex = 0;
         public uint KinectIndex
         {
@@ -132,12 +154,15 @@ namespace KinectAzureRemoteApp
             }
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create("WpfPipeline", enableDiagnostics: true);
-
             InitializeComponent();
         }
 
         private void PipelineSetup()
         {
+            State = "Waiting for synch server";
+            var remoteClockImporter = new RemoteClockImporter(pipeline, SynchServerIp, (int)SynchServerPort);
+            remoteClockImporter.Connected.WaitOne();
+
             /*** KINECT SENSORS ***/
             int portCount = (int)RemotePort;
             TransportKind type = UDP.IsChecked == true ? TransportKind.Udp : TransportKind.Tcp;
@@ -161,7 +186,6 @@ namespace KinectAzureRemoteApp
             {
                 RemoteExporter skeletonExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
                 skeletonExporter.Exporter.Write(sensor.Bodies, "Kinect_" + KinectIndex.ToString() + "_Bodies");
-                skeletonExporter.Exporter.Write(sensor.DepthDeviceCalibrationInfo, "Kinect_" + KinectIndex.ToString() + "_Calibration");
             }
             if (RGB.IsChecked == true)
             {
@@ -186,6 +210,17 @@ namespace KinectAzureRemoteApp
                 //else
                 depthExporter.Exporter.Write(sensor.DepthImage.EncodePng(), "Kinect_" + KinectIndex.ToString() + "_Depth");
             }
+            if(DepthCalibration.IsChecked == true)
+            {
+                RemoteExporter depthCalibrationExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
+                depthCalibrationExporter.Exporter.Write(sensor.DepthDeviceCalibrationInfo, "Kinect_" + KinectIndex.ToString() + "_Calibration");
+            }
+            if (IMU.IsChecked == true)
+            {
+                RemoteExporter imuExporter = new RemoteExporter(pipeline, (int)RemotePort + portCount++, type);
+                imuExporter.Exporter.Write(sensor.Imu, "Kinect_" + KinectIndex.ToString() + "_IMU");
+            }
+          
             pipeline.RunAsync(ReplayDescriptor.ReplayAllRealTime);
             State = "Running";
         }
@@ -211,6 +246,7 @@ namespace KinectAzureRemoteApp
 
         private void BtnStartClick(object sender, RoutedEventArgs e)
         {
+            State = "Initializing";
             PipelineSetup();
         }
     }

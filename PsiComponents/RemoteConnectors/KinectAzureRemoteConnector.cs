@@ -3,8 +3,7 @@ using Microsoft.Psi.AzureKinect;
 using Microsoft.Psi.Remoting;
 using Microsoft.Psi.Audio;
 using Microsoft.Psi.Imaging;
-using Microsoft.Psi.Components;
-using static RemoteConnectors.KinectAzureRemoteConnectorConfiguration;
+using Microsoft.Azure.Kinect.Sensor;
 
 // Enum that define the type of data available.
 // Bodies give the skeletons avec the depth calibration for visualistion.
@@ -33,22 +32,22 @@ namespace RemoteConnectors
     public class KinectAzureRemoteConnector : Subpipeline
     {
         /// <summary>
-        /// Gets the emitter of groups detected.
+        /// Gets the emitter of color image.
         /// </summary>
         public Emitter<Shared<EncodedImage>>? OutColorImage { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of groups detected.
+        /// Gets the emitter of depth image.
         /// </summary>
         public Emitter<Shared<EncodedDepthImage>>? OutDepthImage { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of new learned bodies.
+        /// Gets the emitter of bodies.
         /// </summary>
         public Emitter<List<AzureKinectBody>>? OutBodies { get; private set; }
 
         /// <summary>
-        /// Gets the emitter of groups detected.
+        /// Gets the emitter of depth calibration.
         /// </summary>
         public Emitter<Microsoft.Psi.Calibration.IDepthDeviceCalibrationInfo>? OutDepthDeviceCalibrationInfo { get; private set; }
 
@@ -56,6 +55,11 @@ namespace RemoteConnectors
         /// Gets the emitter of audio.
         /// </summary>
         public Emitter<AudioBuffer>? OutAudio{ get; private set; }
+
+        /// <summary>
+        /// Gets the emitter of IMU data.
+        /// </summary>
+        public Emitter<ImuSample>? OutIMU { get; private set; }
 
         private KinectAzureRemoteConnectorConfiguration Configuration { get; }
 
@@ -104,13 +108,19 @@ namespace RemoteConnectors
                     if (streamName.Contains("RGB"))
                     {
                         Console.WriteLine(stream.TypeName);
-                        OutColorImage = importer.Importer.OpenStream< Shared<EncodedImage>>(streamName).Out;
+                        OutColorImage = importer.Importer.OpenStream<Shared<EncodedImage>>(streamName).Out;
                         break;
                     }
                     if (streamName.Contains("Depth"))
                     {
                         Console.WriteLine(stream.TypeName);
                         OutDepthImage = importer.Importer.OpenStream<Shared<EncodedDepthImage>>(streamName).Out;
+                        break;
+                    }
+                    if (streamName.Contains("IMU"))
+                    {
+                        Console.WriteLine(stream.TypeName);
+                        OutIMU = importer.Importer.OpenStream<ImuSample>(streamName).Out;
                         break;
                     }
                 }

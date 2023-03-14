@@ -39,6 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="BiopacInterop">
+      <HintPath>..\Dependencies\BiopacInterop\bin\x64\Release\BiopacInterop.dll</HintPath>
+    </Reference>
     <Reference Include="LJUDDotNet">
       <HintPath>LabJack\LJUDDotNet.dll</HintPath>
     </Reference>

@@ -22,6 +22,7 @@ using System.Windows.Media.Animation;
 using TinyJson;
 using Microsoft.Psi.Data;
 using KeyboardReader;
+using Biopac;
 
 class Program
 {
@@ -414,8 +415,10 @@ class Program
         {
             throw new Exception("could not connect to server");
         }
-        var pos2 = posImp2.Importer.OpenStream<System.Numerics.Vector3>("Position");
-        pos2.Do(vec => Console.WriteLine("posImp 2: " + vec.ToString()));
+        var pos2 = posImp2.Importer.OpenStream<string>("Position");
+        pos2.Do(vec => Console.WriteLine("posImp 2: " + vec));
+        //var pos = posImp2.Importer.OpenStream<System.Numerics.Vector3>("Position2");
+        //pos.Do(vec => Console.WriteLine("posImp : " + vec.ToString()));
     }
 
     static void testUnreal(Pipeline p)
@@ -427,6 +430,15 @@ class Program
         UnrealActionRequest req = new UnrealActionRequest("BP_Vivian_2", "/Game/Levels/UEDPIE_0_MainLevel.MainLevel:PersistentLevel.", "Start Welcome");
 
         connector.Send(req);
+    }
+
+    static void testBipoac(Pipeline p)
+    {
+        Biopac.Biopac biopac = new Biopac.Biopac(p);
+        biopac.Out.Do(data => { Console.WriteLine(data); });
+        var store = PsiStore.Create(p, "Biopac", "F:\\Stores");
+
+        store.Write(biopac.Out, "Biopac");
     }
 
     static void Main(string[] args)
@@ -454,7 +466,7 @@ class Program
         //HololensImporter(p);
 
         //TestConnectorAzureKinect(p);
-        TestConnectorAzureKinect(p);
+        testBipoac(p);
         //testUnity(p);
         //testUnreal(p);
         //TestOpenFace(p);
