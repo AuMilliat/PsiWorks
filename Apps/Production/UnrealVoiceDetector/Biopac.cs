@@ -52,7 +52,7 @@ namespace Biopac {
         protected override DateTime GenerateNext(DateTime previous) {
             int data = communicator.GetData();
             //string s = "Biopac";
-
+            communicator.toggleAcquisition();
             // No more data
             if (data == -1) {
                 return DateTime.MaxValue;

@@ -5,7 +5,6 @@ namespace Helpers
 {
     public class PipeToMessage<T> : Subpipeline
     {
-
         /// <summary>
         /// </summary>
         private Connector<T> InConnector;
@@ -27,7 +26,7 @@ namespace Helpers
 
         private void Process(T data, Envelope envelope)
         {
-            Message<T> message = new Message<T>(data, envelope.OriginatingTime,envelope.CreationTime, envelope.SourceId, envelope.SequenceId);
+            Message<T> message = new Message<T>(data, envelope.OriginatingTime, envelope.CreationTime, envelope.SourceId, envelope.SequenceId);
             delegateDo(message);
         }
     }

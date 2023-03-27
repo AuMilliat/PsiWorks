@@ -23,6 +23,7 @@ using TinyJson;
 using Microsoft.Psi.Data;
 using KeyboardReader;
 using Biopac;
+using SharpDX;
 
 class Program
 {
@@ -388,11 +389,13 @@ class Program
     {
         WebRTCVideoStreamConfiguration config = new WebRTCVideoStreamConfiguration();
         config.WebsocketAddress = System.Net.IPAddress.Loopback;
-        config.WebsocketPort = 8888;
+        config.WebsocketPort = 80;
+        config.AudioStreaming = true;
         WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
         var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
 
         store.Write(stream.OutImage, "Image");
+        store.Write(stream.OutAudio, "Audio");
     }
 
 
@@ -423,19 +426,26 @@ class Program
 
     static void testUnreal(Pipeline p)
     {
+        HttpListenerConfiguration httpListenerConfiguration = new HttpListenerConfiguration();
+        httpListenerConfiguration.Prefixes.Add("http://127.0.0.1:8888/psi/");
+        HttpListener httpListener = new HttpListener(p, httpListenerConfiguration);
+
         UnrealRemoteConnectorConfiguration config = new UnrealRemoteConnectorConfiguration();
         config.Address = "http://127.0.0.1:30010/remote/object/call";
         
         UnrealRemoteConnector connector = new UnrealRemoteConnector(p, config);
-        UnrealActionRequest req = new UnrealActionRequest("BP_Vivian_2", "/Game/Levels/UEDPIE_0_MainLevel.MainLevel:PersistentLevel.", "Start Welcome");
+        //UnrealActionRequest req = new UnrealActionRequest("BP_Vivian_2", "/Game/Levels/UEDPIE_0_MainLevel.MainLevel:PersistentLevel.", "Start Welcome");
 
-        connector.Send(req);
+        //connector.Send(req);
+
+        var store = PsiStore.Create(p, "Unreal", "F:\\Stores");
+
+        store.Write(connector.OutActionRequest, "Biopac");
     }
 
     static void testBipoac(Pipeline p)
     {
         Biopac.Biopac biopac = new Biopac.Biopac(p);
-        biopac.Out.Do(data => { Console.WriteLine(data); });
         var store = PsiStore.Create(p, "Biopac", "F:\\Stores");
 
         store.Write(biopac.Out, "Biopac");
@@ -466,9 +476,11 @@ class Program
         //HololensImporter(p);
 
         //TestConnectorAzureKinect(p);
-        testBipoac(p);
+
+        //WebRTC(p);
+        //testBipoac(p);
         //testUnity(p);
-        //testUnreal(p);
+        testUnreal(p);
         //TestOpenFace(p);
         //testTobii(p);
         // RunAsync the pipeline in non-blocking mode.

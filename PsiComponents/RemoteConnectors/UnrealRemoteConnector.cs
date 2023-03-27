@@ -153,7 +153,7 @@ namespace RemoteConnectors
                     request.Response = Client.GetStringAsync(Configuration.Address + request.Path + request.Object).Result;
                     break;
             }
-            OutActionRequest.Post(request, DateTime.Now);
+            OutActionRequest.Post(request, DateTime.UtcNow);
         }
     }
 }

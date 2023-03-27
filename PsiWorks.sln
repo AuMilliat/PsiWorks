@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GroundTruthGroups", "Apps\C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Psi_Package_Console", "Psi_Package_Console\Psi_Package_Console.csproj", "{563071F0-AF78-4F8E-ABE3-D568D9B8E5DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnrealVoiceDetector", "Apps\Production\UnrealVoiceDetector\UnrealVoiceDetector.csproj", "{9990E185-019F-4663-9A26-BE018BCB0947}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnrealVoiceDetector", "Apps\Production\UnrealVoiceDetector\UnrealVoiceDetector.csproj", "{9990E185-019F-4663-9A26-BE018BCB0947}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,7 +64,6 @@ Global
 		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Debug|x64.ActiveCfg = Debug|x64
 		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Debug|x64.Build.0 = Debug|x64
 		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Release|Any CPU.ActiveCfg = Release|x64
-		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Release|Any CPU.Build.0 = Release|x64
 		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Release|x64.ActiveCfg = Release|x64
 		{01B3E72F-3E20-457C-9FEC-21C335F5FD54}.Release|x64.Build.0 = Release|x64
 		{F72DF1DD-9415-4F35-99AB-D40C18590788}.Debug|Any CPU.ActiveCfg = Debug|x64
@@ -77,8 +76,8 @@ Global
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|Any CPU.Build.0 = Debug|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|x64.ActiveCfg = Debug|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Debug|x64.Build.0 = Debug|x64
-		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|Any CPU.ActiveCfg = Release|x64
+		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|Any CPU.Build.0 = Release|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|x64.ActiveCfg = Release|x64
 		{63E4F596-3813-49AA-A51D-406ED8950D58}.Release|x64.Build.0 = Release|x64
 		{563071F0-AF78-4F8E-ABE3-D568D9B8E5DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -91,12 +90,12 @@ Global
 		{563071F0-AF78-4F8E-ABE3-D568D9B8E5DE}.Release|x64.Build.0 = Release|Any CPU
 		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|x64.Build.0 = Debug|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|x64.ActiveCfg = Release|Any CPU
-		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|x64.Build.0 = Release|Any CPU
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|x64.ActiveCfg = Debug|x64
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Debug|x64.Build.0 = Debug|x64
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|Any CPU.ActiveCfg = Release|x64
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|Any CPU.Build.0 = Release|x64
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|x64.ActiveCfg = Release|x64
+		{9990E185-019F-4663-9A26-BE018BCB0947}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UnrealVoiceDetector"
         mc:Ignorable="d"
-        Title="MainWindow" Height="360" Width="320">
+        Title="UnrealVoiceDetector" Height="300" Width="320">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -26,8 +26,17 @@
         <Label Grid.Row="0" Grid.Column="0" Content="State :" FontWeight="Bold"/>
         <Label Grid.Row="0" Grid.Column="1" Content="{Binding Path=State}" FontWeight="Bold"/>
 
-        <Label Grid.Row="1" Grid.Column="0" Content="Session :" FontWeight="Bold"/>
-        <TextBox Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=Session}"/>
+        <Label Grid.Row="1" Grid.Column="0" Content="Data Path :" FontWeight="Bold"/>
+        <TextBox Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=Path}"/>
+        
+        <Label Grid.Row="2" Grid.Column="0" Content="Session :" FontWeight="Bold"/>
+        <TextBox Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=Session}"/>
+
+        <Label Grid.Row="3" Grid.Column="0" Content="Action Delay :" FontWeight="Bold"/>
+        <TextBox Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=ActionDelay}"/>
+        
+        <Label Grid.Row="4" Grid.Column="0" Content="Url HttpRequest :" FontWeight="Bold"/>
+        <TextBox Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=HttpRequestUrl}"/>
 
         <!--<GroupBox Header="Synch Server" FontWeight="Bold" Grid.ColumnSpan="2" Grid.Row="1" >
             <Grid>
@@ -66,8 +75,9 @@
                 </Grid.RowDefinitions>
                 <CheckBox Grid.Row="0" Grid.Column="0" Name="Audio" Content="Audio" IsChecked="True"/>
                 <CheckBox Grid.Row="1" Grid.Column="0" Name="VoiceDetection" Content="VoiceDetection" IsChecked="True"/>
-                <CheckBox Grid.Row="2" Grid.Column="0" Name="Biopac" Content="Biopac" IsChecked="True"/>
+                <CheckBox Grid.Row="2" Grid.Column="0" Name="Biopac" Content="Biopac" IsChecked="False"/>
                 <CheckBox Grid.Row="3" Grid.Column="0" Name="UnrealRequest" Content="Unreal" IsChecked="True"/>
+                <CheckBox Grid.Row="4" Grid.Column="0" Name="HttpRequest" Content="HttpRequest" IsChecked="True"/>
                 <!--<CheckBox Grid.Row="1" Grid.Column="0" Name="Skeleton" Content="Skeleton"/>
                 <CheckBox Grid.Row="2" Grid.Column="0" Name="RGB" Content="RGB"/>
                 <ComboBox Grid.Row="2" Grid.Column="1" Name="ColoRes" ItemsSource="{Binding Path=ResolutionsList}" SelectedItem="{Binding Path=ColorResolution}"/>

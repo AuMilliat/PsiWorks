@@ -950,9 +950,9 @@ namespace BiopacInterop
 		// digital: (61200000 elements) X (2 bytes) = 122400000 bytes = 122400 kilobytes =  122.4 megabytes
 		// calculation: (61200000 elements) X (8 bytes) = 489600000 bytes = 489600 kilobytes =  489.6 megabytes
 
-		unsigned int analogDataSize = 10 * analogChannels.size();
-		unsigned int digitalDataSize = 10 * digitalChannels.size();
-		unsigned int calcDataSize = 10 * calcChannels.size();
+		unsigned int analogDataSize = analogChannels.size();
+		unsigned int digitalDataSize = digitalChannels.size();
+		unsigned int calcDataSize = calcChannels.size();
 		unsigned int dataTimeSize = 10;
 
 		//unsigned int analogDataSize = 30 * 60 * 2000 * analogChannels.size();
@@ -991,12 +991,12 @@ namespace BiopacInterop
 				if (iResult > 0)
 				{
 					sample = swapDouble(buf);
-					calcData.push_back(sample);
+					calcData.at(s) = sample;
 				}
 				else if (iResult == 0)
 				{
 					// needs to be implemented with std::nan()
-					calcData.push_back(DBL_MIN);
+					calcData.at(s) = sample;
 					zeroBytes++;
 				}
 				else
@@ -1020,12 +1020,12 @@ namespace BiopacInterop
 				if (iResult > 0)
 				{
 					sample = swapShort(buf);
-					analogData.push_back(sample);
+					analogData.at(s) = sample;
 				}
 				else if (iResult == 0)
 				{
 					// needs to be implemented with std::nan(), but it is short!!
-					analogData.push_back(SHRT_MIN);
+					analogData.at(s) = SHRT_MIN;
 					zeroBytes++;
 				}
 				else
@@ -1049,12 +1049,12 @@ namespace BiopacInterop
 				if (iResult > 0)
 				{
 					sample = swapShort(buf);
-					digitalData.push_back(sample);
+					digitalData.at(s) = sample;
 				}
 				else if (iResult == 0)
 				{
 					// needs to be implemented with std::nan(), but it is short!!
-					digitalData.push_back(SHRT_MIN);
+					digitalData.at(s) = SHRT_MIN;
 					zeroBytes++;
 				}
 				else
@@ -1207,24 +1207,32 @@ namespace BiopacInterop
 	}
 
 
-    int BiopacCommunicator::getAnalogData()
+    int BiopacCommunicator::getAnalogData(int index)
     {
-        return analogData.front();
+		if(index < analogData.size())
+			return analogData.at(index);
+		return (-1);
     }
 
-    int BiopacCommunicator::getDigitalData()
+    int BiopacCommunicator::getDigitalData(int index)
     {
-        return digitalData.front();
+		if (index < digitalData.size())
+			return digitalData.at(index);
+		return (-1);
     }
 
-	double BiopacCommunicator::getCalcData()
+	double BiopacCommunicator::getCalcData(int index)
 	{
-		return calcData.front();
+		if (index < getCalcData.size())
+			return getCalcData.at(index);
+		return (-1);
 	}
 
-    double BiopacCommunicator::getDataTimeData()
+    double BiopacCommunicator::getDataTimeData(int index)
     {
-        return dataTime.front();
+		if (index < dataTime.size())
+			return dataTime.at(index);
+		return (-1);
     }
 
     int BiopacCommunicator::getData()

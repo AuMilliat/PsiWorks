@@ -2,7 +2,10 @@
 using Microsoft.Psi;
 using SIPSorceryMedia.Abstractions;
 using SIPSorceryMedia.FFmpeg;
+using SIPSorcery.Media;
 using SIPSorcery.Net;
+using SIPSorceryMedia.SDL2;
+using Microsoft.Psi.Audio;
 
 namespace WebRTC
 {
@@ -15,31 +18,64 @@ namespace WebRTC
     public class WebRTCVideoStream : WebRTConnector
     {
         private FFmpegVideoEndPoint VideoDecoder;
+        private OpusCodec.OpusAudioEncoder AudioDecoder;
         private WebRTCVideoStreamConfiguration Configuration;
 
         /// <summary>
-        /// Gets the emitter of groups detected.
+        /// Gets the emitter images.
         /// </summary>
         public Emitter<Shared<Image>> OutImage { get; private set; }
+
+        /// <summary>
+        /// Gets the emitter audio.
+        /// </summary>
+        public Emitter<AudioBuffer> OutAudio { get; private set; }
 
         public WebRTCVideoStream(Pipeline parent, WebRTCVideoStreamConfiguration configuration, string name = nameof(WebRTCVideoStream), DeliveryPolicy? defaultDeliveryPolicy = null)
             : base(parent, configuration, name, defaultDeliveryPolicy)
         {
             Configuration = configuration;
             OutImage = parent.CreateEmitter<Shared<Image>>(this, nameof(OutImage));
+            OutAudio = parent.CreateEmitter<AudioBuffer>(this, nameof(OutAudio));
             FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_VERBOSE, configuration.FFMPEGFullPath);
             VideoDecoder = new FFmpegVideoEndPoint();
-            VideoDecoder.OnVideoSinkDecodedSampleFaster += VideoDecoder_OnVideoSinkDecodedSampleFaster;
+            if (configuration.AudioStreaming)
+            {
+                AudioDecoder = new OpusCodec.OpusAudioEncoder();
+            }
         }
 
         protected override void PrepareActions()
         {
-            var format = VideoDecoder.GetVideoSinkFormats();
             MediaStreamTrack videoTrack = new MediaStreamTrack(VideoDecoder.GetVideoSinkFormats(), MediaStreamStatusEnum.RecvOnly);
             PeerConnection.addTrack(videoTrack);
+            if (Configuration.AudioStreaming)
+            {
+                MediaStreamTrack audioTrack = new MediaStreamTrack(AudioDecoder.SupportedFormats, MediaStreamStatusEnum.RecvOnly);
+                PeerConnection.addTrack(audioTrack);
+                PeerConnection.AudioStream.OnRtpPacketReceivedByIndex += AudioStream_OnRtpPacketReceivedByIndex;
+            }
+
             PeerConnection.OnVideoFrameReceived += PeerConnection_OnVideoFrameReceived;
             VideoDecoder.OnVideoSinkDecodedSample += VideoEncoder_OnVideoSinkDecodedSample;
         }
+
+        private void AudioStream_OnRtpPacketReceivedByIndex(int arg1, System.Net.IPEndPoint arg2, SDPMediaTypesEnum arg3, RTPPacket arg4)
+        {
+            if (arg3 != SDPMediaTypesEnum.audio)
+                return;
+            short[] buffer = AudioDecoder.DecodeAudio(arg4.GetBytes(), AudioDecoder.SupportedFormats[0]);
+            AudioFormat form = AudioDecoder.SupportedFormats[0];
+            //WaveFormat wave = WaveFormat.Create(WaveFormatTag.WAVE_FORMAT_UNKNOWN, OpusCodec.OpusAudioEncoder.SAMPLE_RATE, OpusCodec.OpusAudioEncoder.MAX_FRAME_SIZE, 2, OpusCodec.OpusAudioEncoder.MAX_FRAME_SIZE * 2, OpusCodec.OpusAudioEncoder.SAMPLE_RATE * OpusCodec.OpusAudioEncoder.MAX_FRAME_SIZE);
+
+            //AudioBuffer audioBuffer = new AudioBuffer(arg4.GetBytes(), wave);
+            //try
+            //{
+            //    OutAudio.Post(new AudioBuffer(arg4.GetBytes(), wave), DateTime.UtcNow);
+            //}
+            //catch (Exception ex) { }
+        }
+
 
         private void PeerConnection_OnVideoFrameReceived(System.Net.IPEndPoint arg1, uint arg2, byte[] arg3, VideoFormat arg4)
         {
@@ -60,7 +96,10 @@ namespace WebRTC
             PixelFormat format = GetPixelFormat(rawImage.PixelFormat);
             Image image = new Image(rawImage.Sample, (int)rawImage.Width, (int)rawImage.Height, (int)rawImage.Stride, PixelFormat.BGR_24bpp);
             Shared<Image> imageS = ImagePool.GetOrCreate((int)rawImage.Width, (int)rawImage.Height, format);
-            imageS.Resource.CopyFrom(image.Flip(FlipMode.AlongHorizontalAxis));
+            if(Configuration.PixelStreamingConnection)
+                imageS.Resource.CopyFrom(image);
+            else
+                imageS.Resource.CopyFrom(image.Flip(FlipMode.AlongHorizontalAxis));
             OutImage.Post(imageS, DateTime.UtcNow);
             image.Dispose();
         }
