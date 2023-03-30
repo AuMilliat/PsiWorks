@@ -390,12 +390,13 @@ class Program
         WebRTCVideoStreamConfiguration config = new WebRTCVideoStreamConfiguration();
         config.WebsocketAddress = System.Net.IPAddress.Loopback;
         config.WebsocketPort = 80;
-        config.AudioStreaming = true;
+        config.AudioStreaming = false;
+        config.PixelStreamingConnection = true;
         WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
         var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
 
         store.Write(stream.OutImage, "Image");
-        store.Write(stream.OutAudio, "Audio");
+        //store.Write(stream.OutAudio, "Audio");
     }
 
 
@@ -480,7 +481,8 @@ class Program
         //WebRTC(p);
         //testBipoac(p);
         //testUnity(p);
-        testUnreal(p);
+        //testUnreal(p);
+        WebRTC(p);
         //TestOpenFace(p);
         //testTobii(p);
         // RunAsync the pipeline in non-blocking mode.

@@ -7,7 +7,6 @@ using Microsoft.Azure.Kinect.Sensor;
 
 // Enum that define the type of data available.
 // Bodies give the skeletons avec the depth calibration for visualistion.
-//public enum DataType { SOUND, BODIES, RGB, DEPTH };
 
 namespace RemoteConnectors
 {

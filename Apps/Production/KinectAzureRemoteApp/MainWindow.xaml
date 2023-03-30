@@ -35,13 +35,15 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
+                    <CheckBox Grid.Row="0" Grid.Column="0" Name="SyncServerIsActive" Content="Active"/>
 
-                    <Label Grid.Row="0" Grid.Column="0" Content="IP :" FontWeight="Bold"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=SynchServerIp}"/>
+                    <Label Grid.Row="1" Grid.Column="0" Content="IP :" FontWeight="Bold"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=SynchServerIp}"/>
 
-                    <Label Grid.Row="1" Grid.Column="0" Content="Port :" FontWeight="Bold"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=SynchServerPort}"/>
+                    <Label Grid.Row="2" Grid.Column="0" Content="Port :" FontWeight="Bold"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Text="{Binding Path=SynchServerPort}"/>
                  
                 </Grid>
             </GroupBox>

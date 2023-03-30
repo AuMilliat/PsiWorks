@@ -6,10 +6,8 @@ using Microsoft.Psi.Imaging;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media.Animation;
-using System;
+using System.Configuration;
+using System.Collections.Specialized;
 
 
 namespace KinectAzureRemoteApp
@@ -115,7 +113,7 @@ namespace KinectAzureRemoteApp
         public List<Resolution> ResolutionsList { get; }
 
 
-        private Resolution colorResolution = Resolution.Native;
+        private Resolution colorResolution = Resolution.R640_360;
         public Resolution ColorResolution
         {
             get => colorResolution;
@@ -154,14 +152,33 @@ namespace KinectAzureRemoteApp
             }
             // Enabling diagnotstics !!!
             pipeline = Pipeline.Create("WpfPipeline", enableDiagnostics: true);
+
             InitializeComponent();
+            SyncServerIsActive.IsChecked = Properties.Settings.Default.synchServerIsActive; 
+            SynchServerIp = Properties.Settings.Default.synchServerIp;
+            SynchServerPort = Properties.Settings.Default.synchServerPort;
+            RemotePort = Properties.Settings.Default.remotePort;
+            Audio.IsChecked = Properties.Settings.Default.audio;
+            Skeleton.IsChecked = Properties.Settings.Default.skeleton;
+            RGB.IsChecked = Properties.Settings.Default.rgb;
+            Depth.IsChecked = Properties.Settings.Default.depth;
+            DepthCalibration.IsChecked = Properties.Settings.Default.depthCalibration;
+            IMU.IsChecked = Properties.Settings.Default.IMU; 
         }
 
         private void PipelineSetup()
         {
-            State = "Waiting for synch server";
-            var remoteClockImporter = new RemoteClockImporter(pipeline, SynchServerIp, (int)SynchServerPort);
-            remoteClockImporter.Connected.WaitOne();
+            if (SyncServerIsActive.IsChecked == true)
+            {
+                State = "Waiting for synch server";
+                while (true)
+                {
+                    var remoteClockImporter = new RemoteClockImporter(pipeline, SynchServerIp, (int)SynchServerPort);
+                    if (remoteClockImporter.Connected.WaitOne())
+                        break;
+                    remoteClockImporter.Dispose();
+                }
+            }
 
             /*** KINECT SENSORS ***/
             int portCount = (int)RemotePort;
@@ -236,6 +253,17 @@ namespace KinectAzureRemoteApp
         {
             StopPipeline();
             base.OnClosing(e);
+            Properties.Settings.Default.synchServerIsActive = (bool)(SyncServerIsActive.IsChecked != null ? SyncServerIsActive.IsChecked : false);
+            Properties.Settings.Default.synchServerIp = synchServerIp;
+            Properties.Settings.Default.synchServerPort = synchServerPort;
+            Properties.Settings.Default.remotePort = remotePort;
+            Properties.Settings.Default.audio = (bool)(Audio.IsChecked != null ? Audio.IsChecked : false); 
+            Properties.Settings.Default.skeleton = (bool)(Skeleton.IsChecked != null ? Skeleton.IsChecked : false);
+            Properties.Settings.Default.rgb = (bool)(RGB.IsChecked != null ? RGB.IsChecked : false);
+            Properties.Settings.Default.depth = (bool)(Depth.IsChecked != null ? Depth.IsChecked : false);
+            Properties.Settings.Default.depthCalibration = (bool)(DepthCalibration.IsChecked != null ? DepthCalibration.IsChecked : false);
+            Properties.Settings.Default.IMU = (bool)(IMU.IsChecked != null ? IMU.IsChecked : false);
+            Properties.Settings.Default.Save();
         }
 
         private void BtnQuitClick(object sender, RoutedEventArgs e)

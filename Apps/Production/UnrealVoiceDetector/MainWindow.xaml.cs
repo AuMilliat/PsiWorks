@@ -107,6 +107,15 @@ namespace UnrealVoiceDetector
             config.Address = "http://127.0.0.1:30010/remote/object/call";
             unrealConnector = new UnrealRemoteConnector(pipeline, config);
             InitializeComponent();
+            Path = Properties.Settings.Default.path;
+            Session = Properties.Settings.Default.session;
+            ActionDelay = Properties.Settings.Default.actionDelay;
+            HttpRequestUrl = Properties.Settings.Default.httpRequestUrl;
+            Audio.IsChecked = Properties.Settings.Default.audio;
+            VoiceDetection.IsChecked = Properties.Settings.Default.voiceDetection;
+            UnrealRequest.IsChecked = Properties.Settings.Default.unrealRequest;
+            Biopac.IsChecked = Properties.Settings.Default.biopac;
+            HttpRequest.IsChecked = Properties.Settings.Default.httpRequest;
         }
         private void PipelineSetup()
         {
@@ -135,7 +144,7 @@ namespace UnrealVoiceDetector
                 },
                 DeliveryPolicy.LatestMessage);
 
-            if ((Audio.IsChecked | VoiceDetection.IsChecked | UnrealRequest.IsChecked | Biopac.IsChecked) == true)
+            if ((Audio.IsChecked | VoiceDetection.IsChecked | UnrealRequest.IsChecked | Biopac.IsChecked | HttpRequest.IsChecked) == true)
             {
                 // Create a new Dataset
                 var dataset = new Dataset("InterviewRoom_" + Session);
@@ -196,6 +205,18 @@ namespace UnrealVoiceDetector
         {
             StopPipeline();
             base.OnClosing(e);
+
+            Properties.Settings.Default.path = Path;
+            Properties.Settings.Default.session = Session;
+            Properties.Settings.Default.actionDelay = ActionDelay;
+            Properties.Settings.Default.httpRequestUrl = HttpRequestUrl;
+            Properties.Settings.Default.audio = (bool)Audio.IsChecked;
+            Properties.Settings.Default.voiceDetection = (bool)VoiceDetection.IsChecked;
+            Properties.Settings.Default.unrealRequest = (bool)UnrealRequest.IsChecked;
+            Properties.Settings.Default.biopac = (bool)Biopac.IsChecked;
+            Properties.Settings.Default.httpRequest = (bool)HttpRequest.IsChecked;
+
+            Properties.Settings.Default.Save();
         }
 
         private void BtnQuitClick(object sender, RoutedEventArgs e)
