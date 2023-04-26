@@ -75,7 +75,7 @@
                 </Grid.RowDefinitions>
                 <CheckBox Grid.Row="0" Grid.Column="0" Name="Audio" Content="Audio" IsChecked="True"/>
                 <CheckBox Grid.Row="1" Grid.Column="0" Name="VoiceDetection" Content="VoiceDetection" IsChecked="True"/>
-                <CheckBox Grid.Row="2" Grid.Column="0" Name="Biopac" Content="Biopac" IsChecked="False"/>
+                <CheckBox Grid.Row="2" Grid.Column="0" Name="Biopac" Content="Biopac" IsChecked="True"/>
                 <CheckBox Grid.Row="3" Grid.Column="0" Name="UnrealRequest" Content="Unreal" IsChecked="True"/>
                 <CheckBox Grid.Row="4" Grid.Column="0" Name="HttpRequest" Content="HttpRequest" IsChecked="True"/>
                 <!--<CheckBox Grid.Row="1" Grid.Column="0" Name="Skeleton" Content="Skeleton"/>

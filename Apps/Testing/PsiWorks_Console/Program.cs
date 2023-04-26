@@ -19,7 +19,6 @@ using WebRTC;
 using Microsoft.Psi.Imaging;
 using Emgu.CV.PpfMatch3d;
 using System.Windows.Media.Animation;
-using TinyJson;
 using Microsoft.Psi.Data;
 using KeyboardReader;
 using Biopac;
@@ -391,7 +390,8 @@ class Program
         config.WebsocketAddress = System.Net.IPAddress.Loopback;
         config.WebsocketPort = 80;
         config.AudioStreaming = false;
-        config.PixelStreamingConnection = true;
+        config.PixelStreamingConnection = false;
+        config.FFMPEGFullPath = "D:\\ffmpeg\\bin";
         WebRTCVideoStream stream = new WebRTCVideoStream(p, config);
         var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
 
@@ -419,10 +419,14 @@ class Program
         {
             throw new Exception("could not connect to server");
         }
-        var pos2 = posImp2.Importer.OpenStream<string>("Position");
-        pos2.Do(vec => Console.WriteLine("posImp 2: " + vec));
+        var pos2 = posImp2.Importer.OpenStream<AudioBuffer>("Sound");
+       // pos2.Do(vec => Console.WriteLine("posImp 2: " + vec));
         //var pos = posImp2.Importer.OpenStream<System.Numerics.Vector3>("Position2");
         //pos.Do(vec => Console.WriteLine("posImp : " + vec.ToString()));
+        var store = PsiStore.Create(p, "WebRTC", "F:\\Stores");
+
+        store.Write(pos2, "Audio");
+        //store.Write(stream.OutAudio, "Audio");
     }
 
     static void testUnreal(Pipeline p)
@@ -446,7 +450,7 @@ class Program
 
     static void testBipoac(Pipeline p)
     {
-        Biopac.Biopac biopac = new Biopac.Biopac(p);
+        Biopac.Biopac biopac = new Biopac.Biopac(p, true);
         var store = PsiStore.Create(p, "Biopac", "F:\\Stores");
 
         store.Write(biopac.Out, "Biopac");
@@ -479,10 +483,10 @@ class Program
         //TestConnectorAzureKinect(p);
 
         //WebRTC(p);
-        //testBipoac(p);
+        testBipoac(p);
         //testUnity(p);
         //testUnreal(p);
-        WebRTC(p);
+        //WebRTC(p);
         //TestOpenFace(p);
         //testTobii(p);
         // RunAsync the pipeline in non-blocking mode.
@@ -491,6 +495,6 @@ class Program
         Console.WriteLine("Press any key to stop the application.");
         Console.ReadLine();
         // Stop correctly the pipeline.
-        //p.Dispose();
+        p.Dispose();
     }
 }

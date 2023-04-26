@@ -19,7 +19,7 @@ namespace WebRTC
     {
         private const int MAX_RECEIVE_BUFFER = 8192;
         private const int MAX_SEND_BUFFER = 8192;
-        private const int WEB_SOCKET_CONNECTION_TIMEOUT_MS = 10000;
+        private const int WEB_SOCKET_CONNECTION_TIMEOUT_MS = 1200000;
 
         protected RTCPeerConnection? PeerConnection = null;
         protected CancellationToken CToken;
@@ -48,24 +48,8 @@ namespace WebRTC
             PeerConnection = await CreatePeerConnection().ConfigureAwait(false);
             log($"websocket-client attempting to connect to {WebSocketServerUri}.");
 
-            var webSocketClient = new ClientWebSocket();
-            // As best I can tell the point of the CreateClientBuffer call is to set the size of the internal
-            // web socket buffers. The return buffer seems to be for cases where direct access to the raw
-            // web socket data is desired.
-            _ = WebSocket.CreateClientBuffer(MAX_RECEIVE_BUFFER, MAX_SEND_BUFFER);
-            CancellationTokenSource connectCts = new CancellationTokenSource();
-            connectCts.CancelAfter(WEB_SOCKET_CONNECTION_TIMEOUT_MS);
-            await webSocketClient.ConnectAsync(WebSocketServerUri, connectCts.Token).ConfigureAwait(false);
+            _ = Task.Run(() => WebSocketConnection(PeerConnection, CToken)).ConfigureAwait(false);
 
-            if (webSocketClient.State == WebSocketState.Open)
-            {
-                log($"websocket-client starting receive task for server {WebSocketServerUri}.");
-                _ = Task.Run(() => ReceiveFromWebSocket(PeerConnection, webSocketClient, CToken)).ConfigureAwait(false);
-            }
-            else
-            {
-                PeerConnection.Close("web socket connection failure");
-            }
             notifyCompletionTime(DateTime.MaxValue);
         }
 
@@ -140,6 +124,45 @@ namespace WebRTC
 
         protected virtual void PrepareActions()
         {}
+
+        private async Task WebSocketConnection(RTCPeerConnection pc, CancellationToken ct)
+        {
+            _ = WebSocket.CreateClientBuffer(MAX_RECEIVE_BUFFER, MAX_SEND_BUFFER);
+            CancellationTokenSource connectCts = new CancellationTokenSource();
+            connectCts.CancelAfter(WEB_SOCKET_CONNECTION_TIMEOUT_MS);
+            bool loop = true;
+            while(loop)
+            {
+                var webSocketClient = new ClientWebSocket();
+                // As best I can tell the point of the CreateClientBuffer call is to set the size of the internal
+                // web socket buffers. The return buffer seems to be for cases where direct access to the raw
+                // web socket data is desired.
+                _ = WebSocket.CreateClientBuffer(MAX_RECEIVE_BUFFER, MAX_SEND_BUFFER);
+
+                try
+                {
+                    connectCts.CancelAfter(WEB_SOCKET_CONNECTION_TIMEOUT_MS);
+                    await webSocketClient.ConnectAsync(WebSocketServerUri, connectCts.Token).ConfigureAwait(true);
+                }
+                catch (Exception ex)
+                {
+                    loop = true;
+                    continue;
+                }
+            
+                loop = false;
+                if (webSocketClient.State == WebSocketState.Open)
+                {
+                    log($"websocket-client starting receive task for server {WebSocketServerUri}.");
+                    _ = Task.Run(() => ReceiveFromWebSocket(pc, webSocketClient, ct)).ConfigureAwait(false);
+                }
+                else
+                {
+                    pc.Close("web socket connection failure");
+                }
+            }
+        }
+
 
         private async Task ReceiveFromWebSocket(RTCPeerConnection pc, ClientWebSocket ws, CancellationToken ct)
         {

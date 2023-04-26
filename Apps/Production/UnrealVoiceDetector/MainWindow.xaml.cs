@@ -172,10 +172,10 @@ namespace UnrealVoiceDetector
                 if (Biopac.IsChecked == true)
                 {
                     // Create the biopac component
-                    Biopac.Biopac biopac = new Biopac.Biopac(pipeline);
-                    var storeBiopac = PsiStore.Create(pipeline, "Biopac",Path + Session);
-                    var partition = session.AddPsiStorePartition("Biopac",Path + Session, "Biopac");
-                    storeBiopac.Write(biopac.Out, "Biopac");
+                    Biopac.Biopac biopac = new Biopac.Biopac(pipeline, true);
+                    //var storeBiopac = PsiStore.Create(pipeline, "Biopac",Path + Session);
+                    //var partition = session.AddPsiStorePartition("Biopac",Path + Session, "Biopac");
+                    //storeBiopac.Write(biopac.Out, "Biopac");
                 }
                 if(HttpRequest.IsChecked == true)
                 {

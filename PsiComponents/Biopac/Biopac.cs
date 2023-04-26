@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Media.Animation;
 using BiopacInterop;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
@@ -7,25 +8,31 @@ namespace Biopac {
     /// <summary>
     /// StringProducer class.
     /// </summary>
-    public class Biopac : Generator, IProducer<int> {
+    public class Biopac : ISourceComponent, IProducer<int> {
 
         private BiopacCommunicatorWrapper communicator;
+
+        private Thread? captureThread = null;
+        private bool shutdown = false;
+        private bool isSynchOnly;
+        private readonly Pipeline pipelineLocal;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StringProducer"/> class.
         /// </summary>
         /// <param name="pipeline">The pipeline.</param>
-        public Biopac(Pipeline pipeline) : base(pipeline) {
+        public Biopac(Pipeline pipeline, bool syncOnly = false)
+        {
             OutString = pipeline.CreateEmitter<string>(this, nameof(OutString));
             Out = pipeline.CreateEmitter<int>(this, nameof(Out));
 
             pipelineLocal = pipeline;
 
-            communicator = new BiopacCommunicatorWrapper();
-            communicator.StartCommunication();
+            communicator = new BiopacCommunicatorWrapper(syncOnly);
 
             // Application exit callback
             pipeline.ComponentCompleted += OnExitMethod;
+            isSynchOnly = syncOnly;
         }
 
         /// <summary>
@@ -49,28 +56,22 @@ namespace Biopac {
         /// <summary>
         /// Generates and time-stamps a string.
         /// </summary>
-        protected override DateTime GenerateNext(DateTime previous) {
-            int data = communicator.GetData();
-            //string s = "Biopac";
+        private void CaptureThreadProc()
+        {
+            while (!this.shutdown)
+            {
+                DateTime originatingTime = pipelineLocal.GetCurrentTime();
+                int data = communicator.GetData();
+                //string s = "Biopac";
 
-            // No more data
-            if (data == -1) {
-                return DateTime.MaxValue;
+                // No more data
+                if (data == -1)
+                   continue;
+
+                Out.Post(data, originatingTime);
+                OutString.Post(data.ToString(), originatingTime);
             }
-
-            // Originating time.
-            DateTime originatingTime = pipelineLocal.GetCurrentTime();
-
-            Out.Post(data, originatingTime);
-            OutString.Post(data.ToString(), originatingTime);
-
-            return originatingTime;
         }
-
-        /// <summary>
-        /// Local pipeline.
-        /// </summary>
-        private readonly Pipeline pipelineLocal;
 
         /// <summary>
         /// Application exit method.
@@ -78,5 +79,32 @@ namespace Biopac {
         private void OnExitMethod(object sender, EventArgs e) {
             Reset();
         }
+
+        public void Start(Action<DateTime> notifyCompletionTime)
+        {
+            communicator.StartSyncedCommunication();
+            // notify that this is an infinite source component
+            notifyCompletionTime(DateTime.MaxValue);
+            if (!isSynchOnly)
+            {
+                this.captureThread = new Thread(new ThreadStart(this.CaptureThreadProc));
+                this.captureThread.Start();
+            }
+        }
+
+        public void Stop(DateTime finalOriginatingTime, Action notifyCompleted)
+        {
+            Reset();
+            shutdown = true;
+            TimeSpan waitTime = TimeSpan.FromSeconds(1);
+            if (this.captureThread != null && this.captureThread.Join(waitTime) != true)
+            {
+                captureThread.Abort();
+            }
+            finalOriginatingTime = pipelineLocal.GetCurrentTime();
+            notifyCompleted();
+        }
+
+
     }
 }

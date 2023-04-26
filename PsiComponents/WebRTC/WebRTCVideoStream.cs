@@ -6,9 +6,34 @@ using SIPSorcery.Media;
 using SIPSorcery.Net;
 using SIPSorceryMedia.SDL2;
 using Microsoft.Psi.Audio;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace WebRTC
 {
+
+    public class UnityLogger : IDisposable, Microsoft.Extensions.Logging.ILogger
+    {
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            return this;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            Console.WriteLine("[" + eventId + "] " + formatter(state, exception));
+        }
+    }
+
 
     public class WebRTCVideoStreamConfiguration : WebRTConnectorConfiguration
     {
@@ -35,9 +60,10 @@ namespace WebRTC
             : base(parent, configuration, name, defaultDeliveryPolicy)
         {
             Configuration = configuration;
+            var logger = new UnityLogger();
             OutImage = parent.CreateEmitter<Shared<Image>>(this, nameof(OutImage));
             OutAudio = parent.CreateEmitter<AudioBuffer>(this, nameof(OutAudio));
-            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_VERBOSE, configuration.FFMPEGFullPath);
+            FFmpegInit.Initialise(FfmpegLogLevelEnum.AV_LOG_VERBOSE, configuration.FFMPEGFullPath, logger);
             VideoDecoder = new FFmpegVideoEndPoint();
             if (configuration.AudioStreaming)
             {
@@ -47,7 +73,7 @@ namespace WebRTC
 
         protected override void PrepareActions()
         {
-            MediaStreamTrack videoTrack = new MediaStreamTrack(VideoDecoder.GetVideoSinkFormats(), MediaStreamStatusEnum.RecvOnly);
+            MediaStreamTrack videoTrack = new MediaStreamTrack(VideoDecoder.GetVideoSourceFormats(), MediaStreamStatusEnum.RecvOnly);
             PeerConnection.addTrack(videoTrack);
             if (Configuration.AudioStreaming)
             {
@@ -55,9 +81,10 @@ namespace WebRTC
                 PeerConnection.addTrack(audioTrack);
                 PeerConnection.AudioStream.OnRtpPacketReceivedByIndex += AudioStream_OnRtpPacketReceivedByIndex;
             }
-
+            PeerConnection.OnVideoFormatsNegotiated += WebRTCPeer_OnVideoFormatsNegotiated;
             PeerConnection.OnVideoFrameReceived += PeerConnection_OnVideoFrameReceived;
             VideoDecoder.OnVideoSinkDecodedSample += VideoEncoder_OnVideoSinkDecodedSample;
+            //VideoDecoder.OnVideoSinkDecodedSampleFaster += VideoDecoder_OnVideoSinkDecodedSampleFaster;
         }
 
         private void AudioStream_OnRtpPacketReceivedByIndex(int arg1, System.Net.IPEndPoint arg2, SDPMediaTypesEnum arg3, RTPPacket arg4)
@@ -75,7 +102,6 @@ namespace WebRTC
             //}
             //catch (Exception ex) { }
         }
-
 
         private void PeerConnection_OnVideoFrameReceived(System.Net.IPEndPoint arg1, uint arg2, byte[] arg3, VideoFormat arg4)
         {
@@ -119,6 +145,14 @@ namespace WebRTC
                 case VideoPixelFormatsEnum.I420:
                     throw new Exception("PixelFormat: " + pixelFormat.ToString() + " not supported.");
             } 
+        }
+
+        private void WebRTCPeer_OnVideoFormatsNegotiated(List<VideoFormat> obj)
+        {
+            VideoFormat format = obj.Last();
+
+            VideoDecoder.SetVideoSourceFormat(format);
+            VideoDecoder.SetVideoSinkFormat(format);
         }
     }
 }
